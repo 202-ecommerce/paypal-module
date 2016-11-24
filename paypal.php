@@ -380,6 +380,14 @@ class PayPal extends PaymentModule
         }
         $this->_postProcess();
 
+        // Check if all Braintree credentials are present
+        $braintree_configured = false;
+        if( Configuration::get('PAYPAL_BRAINTREE_ACCESS_TOKEN') && Configuration::get('PAYPAL_BRAINTREE_EXPIRES_AT') && Configuration::get('PAYPAL_BRAINTREE_REFRESH_TOKEN')) {
+            $braintree_configured = true;
+        }
+
+        $braintree_redirect_url = _PS_BASE_URL_.__PS_BASE_URI__.'modules/'.$this->name.'/endpoint.php';
+
         if (($id_lang = Language::getIdByIso('EN')) == 0) {
             $english_language_id = (int) $this->context->employee->id_lang;
         } else {
@@ -433,6 +441,15 @@ class PayPal extends PaymentModule
             'PayPal_braintree_merchant_id'=> Configuration::get('PAYPAL_BRAINTREE_MERCHANT_ID'),
             'PayPal_check3Dsecure'=> Configuration::get('PAYPAL_USE_3D_SECURE'),
             'PayPal_braintree_enabled'=> Configuration::get('PAYPAL_BRAINTREE_ENABLED'),
+            // Pour le bouton Braintree
+            'User_Country' => Context::getContext()->country->iso_code,
+            'User_Mail' => Context::getContext()->employee->email,
+            'Business_Name' =>  Context::getContext()->shop->name,
+            'Braintree_Redirect_Url' => $braintree_redirect_url,
+            'Braintree_Configured' => $braintree_configured,
+            'Braintree_Access_Token' => Configuration::get('PAYPAL_BRAINTREE_ACCESS_TOKEN'),
+            'Braintree_Refresh_Token' => Configuration::get('PAYPAL_BRAINTREE_REFRESH_TOKEN'),
+            'Braintree_Expires_At' => strtotime( Configuration::get('PAYPAL_BRAINTREE_EXPIRES_AT') ),
         ));
 
         $this->getTranslations();
@@ -675,7 +692,8 @@ class PayPal extends PaymentModule
 
             if($transction_id)
             {
-                include_once _PS_MODULE_DIR_.'paypal/classes/Braintree.php';
+                //include_once _PS_MODULE_DIR_.'paypal/classes/Braintree.php';
+                include_once(_PS_MODULE_DIR_.'paypal/classes/Braintreev2.php');
                 $braintree = new PrestaBraintree();
                 $braintree->void($transction_id);
             }
@@ -687,6 +705,8 @@ class PayPal extends PaymentModule
         if (!$this->canBeUsed()) {
             return;
         }
+
+        echo '@@@début hook@@@';
 
         $use_mobile = $this->useMobile();
 
@@ -714,12 +734,19 @@ class PayPal extends PaymentModule
             ? $iso_lang[$this->context->language->iso_code] : 'en_US',
         ));
 
+        echo '@@@avant BT@@@';
+
         if ($method == PVZ || Configuration::get('PAYPAL_BRAINTREE_ENABLED')) {
             if(version_compare(PHP_VERSION, '5.4.0', '<'))
             {
                 return;
             }
 
+            $this->_checkToken();
+
+            echo '@@@dans BT, après _checkToken()@@@';
+
+            /*
             $id_account_braintree = $this->set_good_context();
 
             $currency = new Currency($this->context->cart->id_currency);
@@ -728,8 +755,9 @@ class PayPal extends PaymentModule
             $braintree = new PrestaBraintree();
             $clientToken = $braintree->createToken($id_account_braintree);
             $this->reset_context();
+            */
 
-            
+            $clientToken = Configuration::get('PAYPAL_BRAINTREE_ACCESS_TOKEN');
             
             if(!$clientToken)
             {
@@ -742,13 +770,16 @@ class PayPal extends PaymentModule
                 'braintreeAmount'=>$this->context->cart->getOrderTotal(),
                 'check3Dsecure'=>Configuration::get('PAYPAL_USE_3D_SECURE'),
             ));
-            $return_braintree = $this->fetchTemplate('braintree_payment.tpl');
+            //$return_braintree = $this->fetchTemplate('braintree_payment.tpl');
+            return $this->fetchTemplate('braintree_payment.tpl');
 
         }
         else
         {
             $return_braintree = '';
         }
+
+        echo '@@@après BT@@@';
 
         if ($method == HSS) {
             $billing_address = new Address($this->context->cart->id_address_invoice);
@@ -1327,6 +1358,9 @@ class PayPal extends PaymentModule
 
     public function getPaymentMethods()
     {
+        // /!\ à enlever /!\
+        return array(WPS, HSS, ECS, PVZ);
+        
         if (Configuration::get('PAYPAL_UPDATED_COUNTRIES_OK')) {
             return AuthenticatePaymentMethods::authenticatePaymentMethodByLang(Tools::strtoupper($this->context->language->iso_code));
         } else {
@@ -1594,7 +1628,8 @@ class PayPal extends PaymentModule
             }
 
 
-            include_once(_PS_MODULE_DIR_.'paypal/classes/Braintree.php');
+            //include_once(_PS_MODULE_DIR_.'paypal/classes/Braintree.php');
+            include_once(_PS_MODULE_DIR_.'paypal/classes/Braintreev2.php');
             $braintree = new PrestaBraintree();
             $result = $braintree->refund($id_transaction,$amt);
             return $result;
@@ -1755,7 +1790,8 @@ class PayPal extends PaymentModule
 
         if($transaction_braintree)
         {
-            include_once(_PS_MODULE_DIR_.'paypal/classes/Braintree.php');
+            //include_once(_PS_MODULE_DIR_.'paypal/classes/Braintree.php');
+            include_once(_PS_MODULE_DIR_.'paypal/classes/Braintreev2.php');
             $braintree = new PrestaBraintree();
             $result_transaction = $braintree->submitForSettlement($transaction_braintree,$amount);
             if(!$result_transaction)
@@ -2284,5 +2320,43 @@ class PayPal extends PaymentModule
     <tr><td></td><td></td></tr>
 </table>';
         return $tab;
+    }
+    
+    /**
+     * Check if token is still valid by comparing the "expiresAt" parameter to the time
+     */
+    private function _checkToken() {
+        /*
+        date_default_timezone_set('UTC');
+        
+        $return = time() . "\n" . strtotime( Configuration::get('PAYPAL_BRAINTREE_EXPIRES_AT') );
+
+        return $return;
+
+        if( time() > strtotime( Configuration::get('PAYPAL_BRAINTREE_EXPIRES_AT') ) ){*/
+            echo 'http://137.74.166.211:81/prestashop/refreshToken?refreshToken='.Configuration::get('PAYPAL_BRAINTREE_REFRESH_TOKEN');
+            return true;
+
+            $ch = curl_init();
+            
+            curl_setopt($ch, CURLOPT_URL, 'http://137.74.166.211:81/prestashop/refreshToken?refreshToken='.Configuration::get('PAYPAL_BRAINTREE_REFRESH_TOKEN') );
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_USERAGENT, 'Prestashop');
+
+            $resp = curl_exec($ch);
+
+            curl_close($ch);
+
+            $json = json_decode($resp);
+
+            Configuration::updateValue('PAYPAL_BRAINTREE_ACCESS_TOKEN', $json->data->accessToken);
+            Configuration::updateValue('PAYPAL_BRAINTREE_REFRESH_TOKEN', $json->data->refreshToken);
+            Configuration::updateValue('PAYPAL_BRAINTREE_EXPIRES_AT', $json->data->expiresAt);
+
+            //return true;
+            return $resp;
+        /*}
+
+        return false;*/
     }
 }
