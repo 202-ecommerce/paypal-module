@@ -7,7 +7,7 @@ Expires At: {$Braintree_Expires_At}<br />
 <script>
 	$(document).ready(function(){
 		$('#test_refresh').on('click', function(){
-			$.get('http://137.74.166.211:81/prestashop/refreshToken', {
+			$.get('{$Proxy_Host}prestashop/refreshToken', {
 				refreshToken: '{$Braintree_Refresh_Token}'
 			}).done(function(data){
 				console.log(data);
@@ -29,8 +29,7 @@ Expires At: {$Braintree_Expires_At}<br />
 <script src="https://assets.braintreegateway.com/v1/braintree-oauth-connect.js"></script>
 <script>
 	$(document).ready(function(){
-		//$.get('http://192.168.0.204:81/prestashop/getUrlConnect2', {
-		$.get('http://137.74.166.211:81/prestashop/getUrlConnect', {
+		$.get('{$Proxy_Host}prestashop/getUrlConnect', {
 			user_country: '{$User_Country}',
 			user_email:'{$User_Mail}',
 			business_name: '{$Business_Name}',

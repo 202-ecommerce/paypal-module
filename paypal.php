@@ -46,6 +46,8 @@ define('ECS', 4); //Paypal Option +
 define('PPP', 5); //Paypal Plus
 define('PVZ', 6); //Braintree ONLY
 
+define('PROXY_HOST', 'http://vps340297.ovh.net:81/');
+
 /* Tracking */
 define('TRACKING_INTEGRAL_EVOLUTION', 'FR_PRESTASHOP_H3S');
 define('TRACKING_INTEGRAL', 'PRESTASHOP_EC');
@@ -386,7 +388,9 @@ class PayPal extends PaymentModule
             $braintree_configured = true;
         }
 
-        $braintree_redirect_url = _PS_BASE_URL_.__PS_BASE_URI__.'modules/'.$this->name.'/endpoint.php';
+        $admin_dir = explode('/',_PS_ADMIN_DIR_);
+
+        $braintree_redirect_url = _PS_BASE_URL_.__PS_BASE_URI__. $admin_dir[ ( count($admin_dir) - 1 ) ] .'/index.php?controller=AdminModules&tab_module=payments_gateways&configure='.$this->name.'&module_name='.$this->name.'&token='.Tools::getAdminTokenLite('AdminModules');
 
         if (($id_lang = Language::getIdByIso('EN')) == 0) {
             $english_language_id = (int) $this->context->employee->id_lang;
@@ -445,6 +449,7 @@ class PayPal extends PaymentModule
             'User_Country' => Context::getContext()->country->iso_code,
             'User_Mail' => Context::getContext()->employee->email,
             'Business_Name' =>  Context::getContext()->shop->name,
+            'Proxy_Host' => PROXY_HOST,
             'Braintree_Redirect_Url' => $braintree_redirect_url,
             'Braintree_Configured' => $braintree_configured,
             'Braintree_Access_Token' => Configuration::get('PAYPAL_BRAINTREE_ACCESS_TOKEN'),
@@ -1603,6 +1608,11 @@ class PayPal extends PaymentModule
                 $this->_html = $this->displayError(implode('<br />', $this->_errors)); // Not displayed at this time
                 $this->context->smarty->assign('PayPal_save_failure', true);
             }
+        } else if (  Tools::getValue('accessToken') ) {
+            Configuration::updateValue('PAYPAL_BRAINTREE_ACCESS_TOKEN', Tools::getValue('accessToken'));
+            Configuration::updateValue('PAYPAL_BRAINTREE_EXPIRES_AT', Tools::getValue('expiresAt'));
+            Configuration::updateValue('PAYPAL_BRAINTREE_REFRESH_TOKEN', Tools::getValue('refreshToken'));
+            Configuration::updateValue('PAYPAL_BRAINTREE_MERCHANT_ID', Tools::getValue('merchantId'));
         }
 
         return $this->loadLangDefault();

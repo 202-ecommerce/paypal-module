@@ -188,6 +188,7 @@ class PayPalInstall
         Configuration::deleteByName('PAYPAL_BRAINTREE_ACCESS_TOKEN');
         Configuration::deleteByName('PAYPAL_BRAINTREE_EXPIRE_AT');
         Configuration::deleteByName('PAYPAL_BRAINTREE_REFRESH_TOKEN');
+        Configuration::deleteByName('PAYPAL_BRAINTREE_MERCHANT_ID');
     }
 
     /**
