@@ -697,8 +697,7 @@ class PayPal extends PaymentModule
 
             if($transction_id)
             {
-                //include_once _PS_MODULE_DIR_.'paypal/classes/Braintree.php';
-                include_once(_PS_MODULE_DIR_.'paypal/classes/Braintreev2.php');
+                include_once _PS_MODULE_DIR_.'paypal/classes/Braintree.php';
                 $braintree = new PrestaBraintree();
                 $braintree->void($transction_id);
             }
@@ -710,8 +709,6 @@ class PayPal extends PaymentModule
         if (!$this->canBeUsed()) {
             return;
         }
-
-        echo '@@@début hook@@@';
 
         $use_mobile = $this->useMobile();
 
@@ -739,8 +736,6 @@ class PayPal extends PaymentModule
             ? $iso_lang[$this->context->language->iso_code] : 'en_US',
         ));
 
-        echo '@@@avant BT@@@';
-
         if ($method == PVZ || Configuration::get('PAYPAL_BRAINTREE_ENABLED')) {
             if(version_compare(PHP_VERSION, '5.4.0', '<'))
             {
@@ -749,20 +744,13 @@ class PayPal extends PaymentModule
 
             $this->_checkToken();
 
-            echo '@@@dans BT, après _checkToken()@@@';
-
-            /*
             $id_account_braintree = $this->set_good_context();
 
-            $currency = new Currency($this->context->cart->id_currency);
-            include_once _PS_MODULE_DIR_.'paypal/classes/Braintree.php';
-
             $braintree = new PrestaBraintree();
+            
             $clientToken = $braintree->createToken($id_account_braintree);
+            
             $this->reset_context();
-            */
-
-            $clientToken = Configuration::get('PAYPAL_BRAINTREE_ACCESS_TOKEN');
             
             if(!$clientToken)
             {
@@ -775,7 +763,7 @@ class PayPal extends PaymentModule
                 'braintreeAmount'=>$this->context->cart->getOrderTotal(),
                 'check3Dsecure'=>Configuration::get('PAYPAL_USE_3D_SECURE'),
             ));
-            //$return_braintree = $this->fetchTemplate('braintree_payment.tpl');
+            
             return $this->fetchTemplate('braintree_payment.tpl');
 
         }
@@ -783,8 +771,6 @@ class PayPal extends PaymentModule
         {
             $return_braintree = '';
         }
-
-        echo '@@@après BT@@@';
 
         if ($method == HSS) {
             $billing_address = new Address($this->context->cart->id_address_invoice);
@@ -1613,6 +1599,12 @@ class PayPal extends PaymentModule
             Configuration::updateValue('PAYPAL_BRAINTREE_EXPIRES_AT', Tools::getValue('expiresAt'));
             Configuration::updateValue('PAYPAL_BRAINTREE_REFRESH_TOKEN', Tools::getValue('refreshToken'));
             Configuration::updateValue('PAYPAL_BRAINTREE_MERCHANT_ID', Tools::getValue('merchantId'));
+
+            $admin_dir = explode('/',_PS_ADMIN_DIR_);
+
+            $redirect = _PS_BASE_URL_.__PS_BASE_URI__. $admin_dir[ ( count($admin_dir) ) - 1] .'/index.php?controller=AdminModules&tab_module=payments_gateways&configure='.$this->name.'&module_name='.$this->name.'&token='.Tools::getAdminTokenLite('AdminModules');
+
+            Tools::redirect($redirect);
         }
 
         return $this->loadLangDefault();
@@ -1638,8 +1630,7 @@ class PayPal extends PaymentModule
             }
 
 
-            //include_once(_PS_MODULE_DIR_.'paypal/classes/Braintree.php');
-            include_once(_PS_MODULE_DIR_.'paypal/classes/Braintreev2.php');
+            include_once(_PS_MODULE_DIR_.'paypal/classes/Braintree.php');
             $braintree = new PrestaBraintree();
             $result = $braintree->refund($id_transaction,$amt);
             return $result;
@@ -1800,8 +1791,7 @@ class PayPal extends PaymentModule
 
         if($transaction_braintree)
         {
-            //include_once(_PS_MODULE_DIR_.'paypal/classes/Braintree.php');
-            include_once(_PS_MODULE_DIR_.'paypal/classes/Braintreev2.php');
+            include_once(_PS_MODULE_DIR_.'paypal/classes/Braintree.php');
             $braintree = new PrestaBraintree();
             $result_transaction = $braintree->submitForSettlement($transaction_braintree,$amount);
             if(!$result_transaction)
@@ -2336,26 +2326,26 @@ class PayPal extends PaymentModule
      * Check if token is still valid by comparing the "expiresAt" parameter to the time
      */
     private function _checkToken() {
-        /*
-        date_default_timezone_set('UTC');
-        
-        $return = time() . "\n" . strtotime( Configuration::get('PAYPAL_BRAINTREE_EXPIRES_AT') );
+        $debut = microtime(true);
 
-        return $return;
+        $datetime_bt = DateTime::createFromFormat(DateTime::ISO8601, Configuration::get('PAYPAL_BRAINTREE_EXPIRES_AT'));
+        $datetime_now = new DateTime();
 
-        if( time() > strtotime( Configuration::get('PAYPAL_BRAINTREE_EXPIRES_AT') ) ){*/
-            echo 'http://137.74.166.211:81/prestashop/refreshToken?refreshToken='.Configuration::get('PAYPAL_BRAINTREE_REFRESH_TOKEN');
-            return true;
+        $datetime_bt->format(DateTime::ISO8601);
+        $datetime_now->format(DateTime::ISO8601);
 
+        if( $datetime_now->getTimestamp() >= $datetime_bt->getTimestamp() ){
             $ch = curl_init();
-            
-            curl_setopt($ch, CURLOPT_URL, 'http://137.74.166.211:81/prestashop/refreshToken?refreshToken='.Configuration::get('PAYPAL_BRAINTREE_REFRESH_TOKEN') );
+
+            curl_setopt($ch, CURLOPT_URL, PROXY_HOST.'prestashop/refreshToken?refreshToken='.urlencode(Configuration::get('PAYPAL_BRAINTREE_REFRESH_TOKEN')) );
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_USERAGENT, 'Prestashop');
+            curl_setopt($ch, CURLOPT_ENCODING, '');
 
             $resp = curl_exec($ch);
 
             curl_close($ch);
+
+            echo '#tps curl :' . (microtime(true) - $debut);
 
             $json = json_decode($resp);
 
@@ -2363,10 +2353,8 @@ class PayPal extends PaymentModule
             Configuration::updateValue('PAYPAL_BRAINTREE_REFRESH_TOKEN', $json->data->refreshToken);
             Configuration::updateValue('PAYPAL_BRAINTREE_EXPIRES_AT', $json->data->expiresAt);
 
-            //return true;
-            return $resp;
-        /*}
+            return true;
+        }
 
-        return false;*/
-    }
+        return true;}
 }
