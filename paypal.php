@@ -250,7 +250,7 @@ class PayPal extends PaymentModule
             return true;
         }
 
-        if ($payment_method == PVZ)
+        if ($payment_method == PVZ || Configuration::get('PAYPAL_BRAINTREE_ENABLED'))
         {
             return true;
         }
@@ -746,6 +746,8 @@ class PayPal extends PaymentModule
 
             $id_account_braintree = $this->set_good_context();
 
+            include_once _PS_MODULE_DIR_.'paypal/classes/Braintree.php';
+
             $braintree = new PrestaBraintree();
             
             $clientToken = $braintree->createToken($id_account_braintree);
@@ -1022,7 +1024,6 @@ class PayPal extends PaymentModule
             if ($this->_canRefund((int) $params['id_order'])) {
                 $admin_templates[] = 'refund';
             }
-
         }
 
         if (count($admin_templates) > 0) {
@@ -1595,6 +1596,9 @@ class PayPal extends PaymentModule
                 $this->context->smarty->assign('PayPal_save_failure', true);
             }
         } else if (  Tools::getValue('accessToken') ) {
+            Configuration::updateValue('PAYPAL_BRAINTREE_ENABLED', PVZ);
+            Configuration::updateValue('PAYPAL_PAYMENT_METHOD', PVZ);
+
             Configuration::updateValue('PAYPAL_BRAINTREE_ACCESS_TOKEN', Tools::getValue('accessToken'));
             Configuration::updateValue('PAYPAL_BRAINTREE_EXPIRES_AT', Tools::getValue('expiresAt'));
             Configuration::updateValue('PAYPAL_BRAINTREE_REFRESH_TOKEN', Tools::getValue('refreshToken'));
@@ -1628,7 +1632,6 @@ class PayPal extends PaymentModule
                     FROM `'._DB_PREFIX_.'orders` o
                     WHERE o.`id_order` = '.(int) $id_order);
             }
-
 
             include_once(_PS_MODULE_DIR_.'paypal/classes/Braintree.php');
             $braintree = new PrestaBraintree();
