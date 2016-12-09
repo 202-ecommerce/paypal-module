@@ -26,30 +26,21 @@
 $(document).ready(function () {
     var identificationButtonClicked = false;
 
-    var version = $.fn.jquery.split('.');
-    if(version[0] >= 1 && version[1] >= 7)
-    {
-        $("body").on('change','#braintree_enabled', function() {displayConfigurationBraintree();});
-    }
-    else
-    {
-        $('#braintree_enabled').live('change',displayConfigurationBraintree());
-    }
-
+    $('#braintree_enabled').on('change', displayConfigurationBraintree() );
 
     function displayConfigurationBraintree()
     {
         if($('#braintree_enabled:checked').val())
         {
             $('#braintree').slideDown();
-            $('#braintree-credentials').slideDown();
+            //$('#braintree-credentials').slideDown();
             $('#paypal_3D_secure').slideDown();
-            $('html,body').animate({scrollTop: $("#braintree-credentials").offset().top}, 'slow');
+            //$('html,body').animate({scrollTop: $("#braintree-credentials").offset().top}, 'slow');
         }
         else
         {
             $('#braintree').slideUp();
-            $('#braintree-credentials').slideUp();
+            //$('#braintree-credentials').slideUp();
             $('#paypal_3D_secure').slideUp();
         }
     }
@@ -271,22 +262,25 @@ $(document).ready(function () {
         }
     }
 
-    $('input[name="business"], input[name="paypal_payment_method"], input[name="integral_evolution_solution"]').live('change', function () {
+    $('input[name="business"], input[name="paypal_payment_method"], input[name="integral_evolution_solution"]').on('change', function () {
         displayConfiguration();
     });
 
-    $('label, a').live('mouseover', function () {
-        $(this).children('.toolbox').show();
-    }).live('mouseout', function () {
-        var id = $(this).attr('for');
-        var input = $('input#' + id);
+    $('label, a').hover(
+        function () {
+            $(this).children('.toolbox').show();
+        }, function () {
+            var id = $(this).attr('for');
+            var input = $('input#' + id);
 
-        if ( (!input.is(':checked')) || (($(this).attr('id') == 'paypal-get-identification') &&
-                (identificationButtonClicked == false)))
-            $(this).children('.toolbox').hide();
-    });
+            if ( (!input.is(':checked')) || (($(this).attr('id') == 'paypal-get-identification') &&
+                (identificationButtonClicked == false))) {
+                $(this).children('.toolbox').hide();
+            }
+        }
+    );
 
-    $('a.paypal-signup-button, a#step3').live('click', function () {
+    $('a.paypal-signup-button, a#step3').on('click', function () {
         var paypal_business = $('input[name="business"]:checked').val();
         var paypal_payment_method = $('input[name="paypal_payment_method"]:checked').val();
 
@@ -313,9 +307,8 @@ $(document).ready(function () {
     });
 
 
-
     if ($("#paypal-wrapper").length > 0) {
-        $('input[type="submit"]').live('click', function () {
+        $('input[type="submit"]').on('click', function () {
             var paypal_business = $('input[name="business"]:checked').val();
             var paypal_payment_method = $('input[name="paypal_payment_method"]:checked').val();
 
@@ -335,7 +328,7 @@ $(document).ready(function () {
             return true;
         });
 
-        $('input[name="sandbox_mode"]').live('change', function () {
+        $('input[name="sandbox_mode"]').on('change', function () {
             if ($('input[name="sandbox_mode"]:checked').val() == '1') {
                 $('input[name="sandbox_mode"]').filter('[value="0"]').attr('checked', true);
                 var div = $('<div id="paypal-test-mode-confirmation">');
@@ -346,7 +339,7 @@ $(document).ready(function () {
             return true;
         });
 
-        $('button.fancy_confirm').live('click', function () {
+        $('button.fancy_confirm').on('click', function () {
             jQuery.fancybox.close();
             if ($(this).val() == '1') {
                 $('input[name="sandbox_mode"]').filter('[value="1"]').attr('checked', true);
@@ -363,7 +356,7 @@ $(document).ready(function () {
 
         }
 
-        $('#paypal-get-identification').live('click', function () {
+        $('#paypal-get-identification').on('click', function () {
 
             identificationButtonClicked = true;
             sandbox_prefix = $('#paypal_payment_test_mode').is(':checked') ? 'sandbox.' : '';
@@ -373,14 +366,14 @@ $(document).ready(function () {
             return false;
         });
 
-        $('a#paypal_country_change').live('click', function () {
+        $('a#paypal_country_change').on('click', function () {
             var div = $('<div id="paypal-country-form">');
             var inner = $('#paypal-country-form-content').clone().html();
             $.fancybox({'content': div.append(inner)});
             return false;
         });
 
-        $('#paypal_country_default').live('change', function () {
+        $('#paypal_country_default').on('change', function () {
             var form = $('#paypal_configuration');
             form.append('<input type="hidden" name="paypal_country_only" value="' + $(this).val() + '" />');
             form.submit();

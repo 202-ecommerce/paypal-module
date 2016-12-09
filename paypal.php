@@ -440,8 +440,8 @@ class PayPal extends PaymentModule
             'Currencies' => Currency::getCurrencies(),
             'PayPal_account_braintree' => (array) Tools::jsonDecode(Configuration::get('PAYPAL_ACCOUNT_BRAINTREE')),
             'Currency_default'=> Configuration::get('PS_CURRENCY_DEFAULT'),
-            'PayPal_braintree_public_key'=> Configuration::get('PAYPAL_BRAINTREE_PUBLIC_KEY'),
-            'PayPal_braintree_private_key'=> Configuration::get('PAYPAL_BRAINTREE_PRIVATE_KEY'),
+            //*TO DELETE* 'PayPal_braintree_public_key'=> Configuration::get('PAYPAL_BRAINTREE_PUBLIC_KEY'),
+            //*TO DELETE* 'PayPal_braintree_private_key'=> Configuration::get('PAYPAL_BRAINTREE_PRIVATE_KEY'),
             'PayPal_braintree_merchant_id'=> Configuration::get('PAYPAL_BRAINTREE_MERCHANT_ID'),
             'PayPal_check3Dsecure'=> Configuration::get('PAYPAL_USE_3D_SECURE'),
             'PayPal_braintree_enabled'=> Configuration::get('PAYPAL_BRAINTREE_ENABLED'),
@@ -1437,7 +1437,7 @@ class PayPal extends PaymentModule
             FROM `'._DB_PREFIX_.'paypal_braintree`
             WHERE `id_order` = '.(int) $id_order);
 
-        return ($paypal_order && ($paypal_order['payment_status'] == 'Completed' || $paypal_order['payment_status'] == 'approved') && $paypal_order['capture'] == 0);
+        return ($paypal_order && ($paypal_order['payment_status'] == 'completed' || $paypal_order['payment_status'] == 'approved') && $paypal_order['capture'] == 0);
     }
 
     private function _needValidation($id_order)
@@ -1543,8 +1543,8 @@ class PayPal extends PaymentModule
                 Configuration::updateValue('PAYPAL_LOGIN_TPL', (int) Tools::getValue('paypal_login_client_template'));
 
                 Configuration::updateValue('PAYPAL_BRAINTREE_ENABLED',Tools::getValue('braintree_enabled'));
-                Configuration::updateValue('PAYPAL_BRAINTREE_PUBLIC_KEY', Tools::getValue('braintree_public_key'));
-                Configuration::updateValue('PAYPAL_BRAINTREE_PRIVATE_KEY', Tools::getValue('braintree_private_key'));
+                //*TO DELETE* Configuration::updateValue('PAYPAL_BRAINTREE_PUBLIC_KEY', Tools::getValue('braintree_public_key'));
+                //*TO DELETE* Configuration::updateValue('PAYPAL_BRAINTREE_PRIVATE_KEY', Tools::getValue('braintree_private_key'));
                 Configuration::updateValue('PAYPAL_BRAINTREE_MERCHANT_ID', Tools::getValue('braintree_merchant_id'));
                 Configuration::updateValue('PAYPAL_USE_3D_SECURE',Tools::getValue('check3Dsecure'));
                 
@@ -1598,7 +1598,7 @@ class PayPal extends PaymentModule
         } else if (  Tools::getValue('accessToken') ) {
             Configuration::updateValue('PAYPAL_BRAINTREE_ENABLED', PVZ);
             Configuration::updateValue('PAYPAL_PAYMENT_METHOD', PVZ);
-
+            
             Configuration::updateValue('PAYPAL_BRAINTREE_ACCESS_TOKEN', Tools::getValue('accessToken'));
             Configuration::updateValue('PAYPAL_BRAINTREE_EXPIRES_AT', Tools::getValue('expiresAt'));
             Configuration::updateValue('PAYPAL_BRAINTREE_REFRESH_TOKEN', Tools::getValue('refreshToken'));
@@ -2119,6 +2119,9 @@ class PayPal extends PaymentModule
             }
 
             if (count($transaction) > 0) {
+                /*var_dump($transaction);
+                die();*/        
+
                 PayPalOrder::saveOrder((int) $this->currentOrder, $transaction);
             }
 
@@ -2347,8 +2350,6 @@ class PayPal extends PaymentModule
             $resp = curl_exec($ch);
 
             curl_close($ch);
-
-            echo '#tps curl :' . (microtime(true) - $debut);
 
             $json = json_decode($resp);
 

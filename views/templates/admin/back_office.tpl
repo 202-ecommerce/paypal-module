@@ -190,6 +190,7 @@
                             <span class="description"></span>
                             <!-- <p class="toolbox"></p> -->
                         </label>
+						{include './button_braintree.tpl'}
                     {/if}
                 {/if}
 				<hr />
@@ -400,8 +401,8 @@
 					<p class="description">{l s='Choose your way of processing payments (automatically vs.manual authorization).' mod='paypal'}</p>
 					<input type="radio" name="payment_capture" id="paypal_direct_sale" value="0" {if $PayPal_payment_capture == 0}checked="checked"{/if} /> <label for="paypal_direct_sale">{l s='Direct sales (recommended)' mod='paypal'}</label><br />
 					<input type="radio" name="payment_capture" id="paypal_manual_capture" value="1" {if $PayPal_payment_capture == 1}checked="checked"{/if} /> <label for="paypal_manual_capture">{l s='Authorization/Manual capture (payment shipping)' mod='paypal'}</label>
-
 					<div id="braintree-credentials" class="paypal-hide">
+						{*
 						<h3>{l s='Braintree Configuration' mod='paypal'} <a href="http://202-ecommerce.com/d/braintree-{$default_lang_iso}.pdf" class="bo_paypal_help">?</a></h3>
 						<h4>{l s='Please make sure you configure the currency to be used on your account. If the wrong currency is selected conversion will take place at withdrawal.' mod='paypal'}</h4>
 
@@ -415,8 +416,10 @@
 						</dl>
 						<div class="clear"></div>
 						<span class="description">{l s='Please check once more that you pasted all the characters.' mod='paypal'}</span>
+						*}
 					</div>
 					<div class="paypal-hide" id="braintree">
+						{*
 						<dl>
 
 							{foreach from=$Currencies item=currency}
@@ -424,6 +427,7 @@
 								<dd><input type='text' name="account_braintree[{$currency.iso_code|escape:'html':'UTF-8'}]" id="account_braintree_{$currency.iso_code|escape:'html':'UTF-8'}" value="{if isset($PayPal_account_braintree.{$currency.iso_code})}{$PayPal_account_braintree.{$currency.iso_code}|escape:'html':'UTF-8'}{/if}" autocomplete="off" size="85"/></dd>
 							{/foreach}
 						</dl>
+						*}
 					</div>
 					<div class="clear"></div>
 					<div id="paypal_3D_secure" style="display: none;">
