@@ -23,54 +23,43 @@
 *  International Registered Trademark & Property of PrestaShop SA
 *}
 
+
 {*Displaying a button or the iframe*}
-<div style="display:block; width:100%; ">
+<div id="ppplusDiv" style="display:block; width:100%; ">
 <div id="ppplus" style="display:block; width:100%;"></div>
 </div>
 
 {literal}
-    <script type="application/javascript">
-    
+<script type="application/javascript">
+
+    // presta 160
+    $("input[name=payment_option]").on("click", function(){
+
+         $("#confirmOrder").show();
+         ppp.deselectPaymentMethod();
+    });
+    // presta 161
+    $(".payment_module").on("click", function(){
+
+        $("#confirmOrder").show();
+        ppp.deselectPaymentMethod();
+        if($(this).next().first().children().attr("id") == "ppplusDiv"){
+            $("#ppplus").show();
+        }else{
+            $("#ppplus").hide();
+        }
+
+    });
 
 
-
-        // presta 160
-        $("input[name=payment_option]").on("click", function(){
-
-
-             $("#confirmOrder").show();
-             ppp.deselectPaymentMethod();
-
-
-             //$("payment_option_form #ppplus").hide();
-
-        });
-
-        // presta 161
-        $(".payment_module").on("click", function(){
-
-             $("#confirmOrder").show();
-             ppp.deselectPaymentMethod();
-
-
-            if($(this).next().first().children().attr("id") == "ppplusDiv"){
-                $("#ppplus").show();
-            }else{
-                $("#ppplus").hide();
-            }
-
-        });
-
-
-
-        var ppp = PAYPAL.apps.PPP({
-            "approvalUrl": "{/literal}{$approval_url|escape:'UTF-8'}{literal}",
-            "placeholder": "ppplus",
-            "mode": "{/literal}{$mode|escape:'htmlall':'UTF-8'}{literal}",
+    var ppp = PAYPAL.apps.PPP({
+        "approvalUrl": "{/literal}{$approval_url|escape:'UTF-8'}{literal}",
+        "placeholder": "ppplus",
+        "mode": "{/literal}{$mode|escape:'htmlall':'UTF-8'}{literal}",
             {/literal}{if $mode == 'sandbox'}"showPuiOnSandbox": "true",{/if}{literal}
 
-            "language": "{/literal}{$language|escape:'htmlall':'UTF-8'}{literal}",
-            "country": "{/literal}{$country|escape:'htmlall':'UTF-8'}{literal}",
+        "language": "{/literal}{$language|escape:'htmlall':'UTF-8'}{literal}",
+        "country": "{/literal}{$country|escape:'htmlall':'UTF-8'}{literal}",
             "buttonLocation": "inside",
 
             "enableContinue": function (){
@@ -82,7 +71,7 @@
             },
 
 
-            "onContinue" : function () {
+           "onContinue" : function () {
 
 
                 // eu-legal
@@ -91,13 +80,13 @@
 
                     if($("#cgv-legal").is(":checked")){
 
-                $('#ppplus iframe').slideUp();
-                $('#ppplus').html('<img style="display:block;margin:15px auto;" src="{/literal}{$img_loader}{literal}"/>');
-                doPatch(ppp);
+                        $('#ppplus iframe').slideUp();
+                        $('#ppplus').html('<img style="display:block;margin:15px auto;" src="{/literal}{$img_loader}{literal}"/>');
+                        doPatch(ppp);
 
                     }else{
 
-                        alert("Bitte akzeptieren Sie die Allgemeinen Geschäftsbedingungen");
+                        alert("{/literal}{l s='Please accept the terms and conditions' mod='paypal'}{literal}");
                     }
 
                 }else if($("#cgv").length != 0){ // advanced eu 161
@@ -111,7 +100,7 @@
 
                     }else{
 
-                        alert("Bitte akzeptieren Sie die Allgemeinen Geschäftsbedingungen");
+                        alert("{/literal}{l s='Please accept the terms and conditions' mod='paypal'}{literal}");
                     }
 
                 }else{
@@ -123,21 +112,20 @@
 
             },
 
-            "onLoad": function(){
-                //deselect payment methods
-                ppp.deselectPaymentMethod();
-            }
-        });
-
-        function doPatch(ppp) {
-            jQuery.ajax({
-                url : "{/literal}{$ajaxUrl}{literal}",
-                success: function(){
-                   ppp.doCheckout();
-               }
-
-            });
+        "onLoad": function(){
+            //deselect payment methods
+            ppp.deselectPaymentMethod();
         }
-    </script>
-{/literal}
+    });
 
+    function doPatch(ppp) {
+        jQuery.ajax({
+            url : "{/literal}{$ajaxUrl}{literal}",
+            success: function(){
+                ppp.doCheckout();
+            }
+
+        });
+    }
+</script>
+{/literal}

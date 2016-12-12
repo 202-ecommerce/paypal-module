@@ -870,10 +870,18 @@ class PayPal extends PaymentModule
                 'form' => $this->fetchTemplate('express_checkout_payment_eu.tpl'),
             );
         } elseif ($method == PPP ) {
+            if(Module::isEnabled('eu_legal'))
+            {
+                return array(
+                    'cta_text' => $this->l('Paypal, Lastschrift, Kreditkarte, Rechnung'),
+                    'logo' => $logo,
+                    'form' => $this->fetchTemplate('paypal_plus_payment_eu_legal.tpl'),
+                );
+            }
             return array(
                 'cta_text' => $this->l('Paypal, Lastschrift, Kreditkarte, Rechnung'),
                 'logo' => $logo,
-                'form' => $this->fetchTemplate('express_checkout_payment_eu.tpl'),
+                'form' => $this->fetchTemplate('paypal_plus_payment_eu.tpl'),
             );
         }
 
