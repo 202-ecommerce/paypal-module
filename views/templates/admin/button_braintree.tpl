@@ -7,7 +7,7 @@
 			$.get('{$Proxy_Host}prestashop/refreshToken', {
 				refreshToken: '{$Braintree_Refresh_Token}'
 			}).done(function(data){
-				document.location.href = '{$Braintree_Redirect_Url}&accessToken='+encodeURIComponent(data.data.accessToken)+'&expiresAt='+encodeURIComponent(data.data.expiresAt.date)+'&refreshToken='+encodeURIComponent(data.data.refreshToken);
+				document.location.href = '{$Braintree_Redirect_Url}&accessToken='+encodeURIComponent(data.data.accessToken)+'&expiresAt='+encodeURIComponent(data.data.expiresAt)+'&refreshToken='+encodeURIComponent(data.data.refreshToken);
 			});
 		});
 	});

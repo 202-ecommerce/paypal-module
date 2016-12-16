@@ -659,6 +659,11 @@ class PayPal extends PaymentModule
             return false;
         }
 
+        //If no expiration date for the Braintree token or no refresh token for Braintree
+        if( !Configuration::get('PAYPAL_BRAINTREE_EXPIRES_AT') || !Configuration::get('PAYPAL_BRAINTREE_REFRESH_TOKEN') ) {
+            return false;
+        }
+
         //If merchant has not upgraded and payment method is out of country's specs
         if (!Configuration::get('PAYPAL_UPDATED_COUNTRIES_OK') && !in_array((int) Configuration::get('PAYPAL_PAYMENT_METHOD'), $this->getPaymentMethods())) {
             return false;
@@ -741,8 +746,6 @@ class PayPal extends PaymentModule
             {
                 return;
             }
-
-            $this->_checkToken();
 
             $id_account_braintree = $this->set_good_context();
 
@@ -2327,38 +2330,4 @@ class PayPal extends PaymentModule
 </table>';
         return $tab;
     }
-    
-    /**
-     * Check if token is still valid by comparing the "expiresAt" parameter to the time
-     */
-    private function _checkToken() {
-        $debut = microtime(true);
-
-        $datetime_bt = DateTime::createFromFormat(DateTime::ISO8601, Configuration::get('PAYPAL_BRAINTREE_EXPIRES_AT'));
-        $datetime_now = new DateTime();
-
-        $datetime_bt->format(DateTime::ISO8601);
-        $datetime_now->format(DateTime::ISO8601);
-
-        if( $datetime_now->getTimestamp() >= $datetime_bt->getTimestamp() ){
-            $ch = curl_init();
-
-            curl_setopt($ch, CURLOPT_URL, PROXY_HOST.'prestashop/refreshToken?refreshToken='.urlencode(Configuration::get('PAYPAL_BRAINTREE_REFRESH_TOKEN')) );
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_ENCODING, '');
-
-            $resp = curl_exec($ch);
-
-            curl_close($ch);
-
-            $json = json_decode($resp);
-
-            Configuration::updateValue('PAYPAL_BRAINTREE_ACCESS_TOKEN', $json->data->accessToken);
-            Configuration::updateValue('PAYPAL_BRAINTREE_REFRESH_TOKEN', $json->data->refreshToken);
-            Configuration::updateValue('PAYPAL_BRAINTREE_EXPIRES_AT', $json->data->expiresAt);
-
-            return true;
-        }
-
-        return true;}
 }

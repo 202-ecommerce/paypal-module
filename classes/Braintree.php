@@ -36,6 +36,8 @@ class PrestaBraintree{
      */
     private function initConfig()
     {
+        $this->_checkToken();
+
         $this->gateway = new Braintree_Gateway(['accessToken' => Configuration::get('PAYPAL_BRAINTREE_ACCESS_TOKEN') ]);
     }
 
@@ -125,7 +127,7 @@ class PrestaBraintree{
     public function saveTransaction($data)
     {
         Db::getInstance()->Execute('INSERT INTO `'._DB_PREFIX_.'paypal_braintree`(`id_cart`,`nonce_payment_token`,`client_token`,`datas`)
-			VALUES (\''.pSQL($data['id_cart']).'\',\''.pSQL($data['nonce_payment_token']).'\',\''.pSQL($data['client_token']).'\',\''.pSQL($data['datas']).'\')');
+            VALUES (\''.pSQL($data['id_cart']).'\',\''.pSQL($data['nonce_payment_token']).'\',\''.pSQL($data['client_token']).'\',\''.pSQL($data['datas']).'\')');
         return Db::getInstance()->Insert_ID();
     }
 
@@ -254,5 +256,46 @@ class PrestaBraintree{
             PrestaShopLogger::addLog($e->getCode().'=>'.$e->getMessage());
             return false;
         }
+    }
+
+    /**
+     * Check if token is still valid by comparing the "expiresAt" parameter to the time
+     */
+    private function _checkToken() {
+        $debut = microtime(true);
+        
+        if( Configuration::get('PAYPAL_BRAINTREE_EXPIRES_AT') && Configuration::get('PAYPAL_BRAINTREE_REFRESH_TOKEN') ) {
+        
+            $datetime_bt = DateTime::createFromFormat(DateTime::ISO8601, Configuration::get('PAYPAL_BRAINTREE_EXPIRES_AT'));
+            $datetime_now = new DateTime();
+
+            $datetime_bt->format(DateTime::ISO8601);
+            $datetime_now->format(DateTime::ISO8601);
+
+            if( $datetime_now->getTimestamp() >= $datetime_bt->getTimestamp() ){
+                $ch = curl_init();
+
+                curl_setopt($ch, CURLOPT_URL, PROXY_HOST.'prestashop/refreshToken?refreshToken='.urlencode(Configuration::get('PAYPAL_BRAINTREE_REFRESH_TOKEN')) );
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_ENCODING, '');
+
+                $resp = curl_exec($ch);
+
+                curl_close($ch);
+
+                $json = json_decode($resp);
+
+                Configuration::updateValue('PAYPAL_BRAINTREE_ACCESS_TOKEN', $json->data->accessToken);
+                Configuration::updateValue('PAYPAL_BRAINTREE_REFRESH_TOKEN', $json->data->refreshToken);
+                Configuration::updateValue('PAYPAL_BRAINTREE_EXPIRES_AT', $json->data->expiresAt);
+
+                return true;
+            }
+
+            return true;
+        
+        } else {
+            return false;
+        } 
     }
 }

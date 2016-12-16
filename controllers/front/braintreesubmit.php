@@ -25,8 +25,7 @@
  *  International Registered Trademark & Property of PrestaShop SA
  */
 
-//include_once(_PS_MODULE_DIR_.'paypal/classes/Braintree.php');
-include_once(_PS_MODULE_DIR_.'paypal/classes/Braintreev2.php');
+include_once(_PS_MODULE_DIR_.'paypal/classes/Braintree.php');
 include_once(_PS_MODULE_DIR_.'paypal/paypal.php');
 
 class PayPalBraintreeSubmitModuleFrontController extends ModuleFrontController
