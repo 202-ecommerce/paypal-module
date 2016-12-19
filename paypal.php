@@ -645,9 +645,9 @@ class PayPal extends PaymentModule
         return true;
     }
 
-    public function hookDisplayMobileHeader()
+    public function hookDisplayMobileHeader($params = NULL)
     {
-        return $this->hookHeader();
+        return $this->hookHeader($params);
     }
 
     public function hookDisplayMobileShoppingCartTop()
@@ -1026,7 +1026,7 @@ class PayPal extends PaymentModule
             $this->context->smarty->assign(
                 array(
                     'authorization' => (int) Configuration::get('PAYPAL_OS_AUTHORIZATION'),
-                    'base_url' => _PS_BASE_URL_.__PS_BASE_URI__,
+                    'base_url' => Tools::getHttpHost().__PS_BASE_URI__,
                     'module_name' => $this->name,
                     'order_state' => $order_state,
                     'params' => $params,
