@@ -76,6 +76,7 @@ class AuthenticatePaymentMethods
             'MT'=>array(WPS, ECS),
             'MC'=>array(WPS, ECS),
             'IS'=>array(WPS, ECS),
+            'MK'=>array(WPS, ECS),
 
             //ASIE
             'CN'=>array(WPS, ECS),
