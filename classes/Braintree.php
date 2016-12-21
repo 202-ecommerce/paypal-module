@@ -262,8 +262,7 @@ class PrestaBraintree{
      * Check if token is still valid by comparing the "expiresAt" parameter to the time
      */
     private function _checkToken() {
-        $debut = microtime(true);
-        
+
         if( Configuration::get('PAYPAL_BRAINTREE_EXPIRES_AT') && Configuration::get('PAYPAL_BRAINTREE_REFRESH_TOKEN') ) {
         
             $datetime_bt = DateTime::createFromFormat(DateTime::ISO8601, Configuration::get('PAYPAL_BRAINTREE_EXPIRES_AT'));
