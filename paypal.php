@@ -80,6 +80,8 @@ class PayPal extends PaymentModule
             || !Configuration::updateValue('PAYPAL_API_SIGNATURE', '')
             || !Configuration::updateValue('PAYPAL_SANDBOX', 0)
             || !Configuration::updateValue('PAYPAL_API_INTENT', 0)
+            || !Configuration::updateValue('PAYPAL_API_ADVANTAGES', 0)
+            || !Configuration::updateValue('PAYPAL_API_CARD', 0)
         ) {
             return false;
         }
@@ -263,9 +265,10 @@ class PayPal extends PaymentModule
 
     public function getContent()
     {
+
         $this->_postProcess();
 //http://iuliia-17.work.202-ecommerce.com/admin524drqi1g/index.php?controller=AdminModules&configure=paypal&token=f39f05142ce7edf40e2b990f7aaad5a7
-        $url = $this->getURL().'webapps/merchantboarding/webflow/externalpartnerflow?';
+        $url = $this->getURL().'webapps/merchantboarding/signin/authorize?';
         $params = array(
             'countryCode' => $this->context->country->iso_code,
             'returnToPartnerUrl' => urlencode($this->context->link->getAdminLink('AdminModules', true).'&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name),
@@ -278,6 +281,10 @@ class PayPal extends PaymentModule
         );
 
         $PartnerboardingURL = http_build_query($params);
+
+        if (Tools::getValue('test')) {
+            header('Location: https://www.sandbox.paypal.com/signin/authorize?response_type=code&scope=profile+email+address+phone+https%3A%2F%2Furi.paypal.com%2Fservices%2Fpaypalattributes&redirect_uri='.urlencode($this->context->link->getAdminLink('AdminModules', true).'&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name), true, 302);
+        }
 
          $this->context->smarty->assign(array(
              'path' => $this->_path,
@@ -327,6 +334,43 @@ class PayPal extends PaymentModule
                         'name' => 'name'
                     ),
                 ),
+                array(
+                    'type' => 'switch',
+                    'label' => $this->l('Activate payment by cart'),
+                    'name' => 'paypal_card',
+                    'is_bool' => true,
+                    'values' => array(
+                        array(
+                            'id' => 'paypal_card_on',
+                            'value' => 1,
+                            'label' => $this->l('Enabled'),
+                        ),
+                        array(
+                            'id' => 'paypal_card_off',
+                            'value' => 0,
+                            'label' => $this->l('Disabled'),
+                        )
+                    ),
+                ),
+                array(
+                    'type' => 'switch',
+                    'label' => $this->l('Afficher advantages Paypal for clients during payment'),
+                    'name' => 'paypal_show_advantage',
+                    'desc' => $this->l(''),
+                    'is_bool' => true,
+                    'values' => array(
+                        array(
+                            'id' => 'paypal_show_advantage_on',
+                            'value' => 1,
+                            'label' => $this->l('Enabled'),
+                        ),
+                        array(
+                            'id' => 'paypal_show_advantage_off',
+                            'value' => 0,
+                            'label' => $this->l('Disabled'),
+                        )
+                    ),
+                ),
             ),
             'submit' => array(
                 'title' => $this->l('Save'),
@@ -338,6 +382,8 @@ class PayPal extends PaymentModule
         $fields_value = array(
             'paypal_sandbox' => Configuration::get('PAYPAL_SANDBOX'),
             'paypal_intent' => Configuration::get('PAYPAL_API_INTENT'),
+            'paypal_card' => Configuration::get('PAYPAL_API_CARD'),
+            'paypal_show_advantage' => Configuration::get('PAYPAL_API_ADVANTAGES'),
         );
         $helper = new HelperForm();
         $helper->module = $this;
@@ -381,6 +427,8 @@ class PayPal extends PaymentModule
         if (Tools::isSubmit('paypal_config')) {
             Configuration::updateValue('PAYPAL_SANDBOX', Tools::getValue('paypal_sandbox'));
             Configuration::updateValue('PAYPAL_API_INTENT', Tools::getValue('paypal_intent'));
+            Configuration::updateValue('PAYPAL_API_CARD', Tools::getValue('paypal_card'));
+            Configuration::updateValue('PAYPAL_API_ADVANTAGES', Tools::getValue('paypal_show_advantage'));
         }
 
     }
@@ -388,9 +436,15 @@ class PayPal extends PaymentModule
     public function hookPaymentOptions($params)
     {
         $payment_options = new PaymentOption();
-        $payment_options->setCallToActionText($this->l('Pay Paypal'));
+        $action_text = $this->l('Pay Paypal');
+        $payment_options->setLogo(Media::getMediaPath(_PS_MODULE_DIR_.$this->name.'/views/img/paypal.png'));
+        if (Configuration::get('PAYPAL_API_ADVANTAGES')) {
+            $action_text .= ' | '.$this->l('Frais de retour remboursés').' | '.$this->l('Protection des achats');
+        }
+        $payment_options->setCallToActionText($action_text);
         $payment_options->setAction($this->context->link->getModuleLink($this->name, 'ec_init', array(), true));
         $payment_options->setAdditionalInformation($this->context->smarty->fetch('module:paypal/views/templates/front/payment_infos.tpl'));
+
         $payment_options = [
             $payment_options,
         ];

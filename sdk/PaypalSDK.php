@@ -43,7 +43,21 @@ class PaypalSDK
         $this->action = 'POST';
         $this->endpoint = 'v1/oauth2/token';
         $body = array("grant_type" => "client_credentials");
-        $this->makeCall($this->getBody($body), null, "EOJ2S-Z6OoN_le_KS1d75wsZ6y0SFdVsY9183IvxFyZp:EClusMEUk8e9ihI7ZdVLF5cZ6y0SFdVsY9183IvxFyZp");
+        $this->makeCall($this->getBody($body), $this->endpoint, $this->action, "application/x-www-form-urlencoded", "AQkquBDf1zctJOWGKWUEtKXm6qVhueUEMvXO_-MCI4DQQ4-LWvkDLIN2fGsd:L1tVxAjhT7cJimnz5-Nsx9k2reTKSVfErNQF-CmrwJgxRtylkGTKlU4RvrX");
+
+        return $this->response;
+    }
+
+    public function grantToken($body)
+    {
+        $this->action = 'POST';
+        $this->endpoint = 'v1/identity/openidconnect/tokenservice'; // also possible to refresh token with this endpoint to recieve new access token
+        $body = array(
+            "grant_type" => "authorization_code", //refresh_token
+            "code" => "Authorization-Code", // refresh token code and no url required
+            "redirect_uri" => "http://iuliia-17.work.202-ecommerce.com/admin524drqi1g/index.php?controller=AdminModules&configure=paypal&token=f39f05142ce7edf40e2b990f7aaad5a7"
+            );
+        $this->makeCall($this->getBody($body),  $this->endpoint, $this->action, "application/x-www-form-urlencoded", "EOJ2S-Z6OoN_le_KS1d75wsZ6y0SFdVsY9183IvxFyZp:EClusMEUk8e9ihI7ZdVLF5cZ6y0SFdVsY9183IvxFyZp");
 
         return $this->response;
     }
@@ -52,7 +66,7 @@ class PaypalSDK
     {
         $this->action = 'GET';
         $this->endpoint = '/v1/identity/applications/@classic/owner/LQWH2R7C7XS7C/credentials';
-        $this->makeCall();
+        $this->makeCall(null, $this->endpoint, $this->action);
 
         return $this->response;
     }
@@ -144,14 +158,7 @@ class PaypalSDK
         return Tools::jsonDecode($response);
     }
 
-    public function grantToken($body, $api_key)
-    {
-        $this->action = 'POST';
-        $this->endpoint = 'v1/identity/openidconnect/tokenservice';
-        $this->makeCall($this->getBody($body), $api_key);
 
-        return $this->response;
-    }
 
 
     protected function getBody(array $fields)
@@ -183,7 +190,7 @@ class PaypalSDK
         curl_setopt($curl, CURLOPT_URL, $this->getURL().$url);
         curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 5);
         if ($user) {
-            curl_setopt($curl, CURLOPT_USERPWD, "username:password");
+            curl_setopt($curl, CURLOPT_USERPWD, $user);
         }
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
         if ($action == "PUT" || $action == "DELETE" || $action == "PATCH") {

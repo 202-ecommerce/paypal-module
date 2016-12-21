@@ -43,7 +43,10 @@ class MethodEC extends AbstractMethodPaypal
 
          $params = array(
              'intent' => Configuration::get('PAYPAL_API_INTENT'), //sale
-             'payer' => array('payment_method' => 'paypal'),
+             'payer' => array(
+                 'payment_method' => 'paypal', //credit_card
+                // 'funding_instruments' => array(array('credit_card' => array())),
+             ),
              'note_to_payer' => 'Contact us for any questions on your order.',
              'redirect_urls' => array(
                  'return_url' => Context::getContext()->link->getModuleLink($this->name, 'ec_validation', array(), true),
@@ -76,11 +79,9 @@ class MethodEC extends AbstractMethodPaypal
          $sdk = new PaypalSDK($this);
          $payment = $sdk->createPayment($params);
 
-         foreach ($payment->links as $redirect_urls) {
-             if ($redirect_urls->method == "REDIRECT") {
-                 Tools::redirect($redirect_urls->href);
-             }
-         }
+         return $payment;
+
+
      }
 
      public function validation()
@@ -96,7 +97,6 @@ class MethodEC extends AbstractMethodPaypal
          $total = (float)$cart->getOrderTotal(true, Cart::BOTH);
          $paypal = Module::getInstanceByName('paypal');
          $paypal->validateOrder($cart->id, Configuration::get('PS_OS_PAYPAL'), $total, 'paypal', NULL, $exec_payment, (int)$currency->id, false, $customer->secure_key);
-         Tools::redirect('index.php?controller=order-confirmation&id_cart='.$cart->id.'&id_module='.$paypal->id.'&id_order='.$paypal->currentOrder.'&key='.$customer->secure_key);
 
      }
 
