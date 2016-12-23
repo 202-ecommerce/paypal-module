@@ -27,16 +27,8 @@
 class PaypalSDK
 {
 
-    protected $api_key;
-
-    public function getURL()
-    {
-        if (Configuration::get('PAYPAL_SANDBOX')) {
-            return 'https://api.sandbox.paypal.com/';
-        } else {
-            return 'https://api.paypal.com/';
-        }
-    }
+    protected $action;
+    protected $endpoint;
 
     public function createAccessToken()
     {
@@ -76,7 +68,15 @@ class PaypalSDK
         $this->action = 'POST';
         $this->endpoint = 'v1/payments/payment';
         $response = $this->makeCall($this->getBody($body), $this->endpoint, $this->action);
-        return Tools::jsonDecode($response);
+        return json_decode($response);
+    }
+
+    public function createWebExperience($body)
+    {
+        $this->action = 'POST';
+        $this->endpoint = 'v1/payment-experience/web-profiles';
+        $response = $this->makeCall($this->getBody($body), $this->endpoint, $this->action);
+        return json_decode($response);
     }
 
     public function executePayment($payment_id, $payer_id)
@@ -86,7 +86,7 @@ class PaypalSDK
         $body = array('payer_id' => $payer_id);
         $response = $this->makeCall($this->getBody($body), $this->endpoint, $this->action);
 
-        return Tools::jsonDecode($response);
+        return json_decode($response);
     }
 
     public function updatePayment($payment_id, $body)
@@ -95,7 +95,7 @@ class PaypalSDK
         $this->endpoint = 'v1/payments/payment/'.$payment_id;
         $response = $this->makeCall($this->getBody($body), $this->endpoint, $this->action);
 
-        return Tools::jsonDecode($response);
+        return json_decode($response);
     }
 
     public function refundSale($body, $sale_id)
@@ -103,7 +103,7 @@ class PaypalSDK
         $this->action = 'POST';
         $this->endpoint = 'v1/payments/sale/'.$sale_id.'/refund';
         $response = $this->makeCall($this->getBody($body), $this->endpoint, $this->action);
-        return Tools::jsonDecode($response);
+        return json_decode($response);
     }
 
     public function showRefund($sale_id)
@@ -112,7 +112,7 @@ class PaypalSDK
         $sale_id = "2MU78835H4515710F";
         $this->endpoint = 'v1/payments/refund/'.$sale_id;
         $response = $this->makeCall(null, $this->endpoint, $this->action);
-        return Tools::jsonDecode($response);
+        return json_decode($response);
     }
 
     public function showAuthorization($authorization_id)
@@ -121,7 +121,7 @@ class PaypalSDK
         $authorization_id = "2DC87612EK520411B";
         $this->endpoint = 'v1/payments/authorization/'.$authorization_id;
         $response = $this->makeCall(null, $this->endpoint, $this->action);
-        return Tools::jsonDecode($response);
+        return json_decode($response);
     }
 
     public function captureAuthorization($body, $authorization_id)
@@ -129,7 +129,7 @@ class PaypalSDK
         $this->action = 'POST';
         $this->endpoint = 'v1/payments/authorization/'.$authorization_id.'/capture';
         $response = $this->makeCall($this->getBody($body), $this->endpoint, $this->action);
-        return Tools::jsonDecode($response);
+        return json_decode($response);
     }
 
     public function voidAuthorization($body)
@@ -138,7 +138,7 @@ class PaypalSDK
         $authorization_id = "2DC87612EK520411B";
         $this->endpoint = 'v1/payments/authorization/'.$authorization_id.'/void';
         $response = $this->makeCall(null, $this->endpoint, $this->action);
-        return Tools::jsonDecode($response);
+        return json_decode($response);
     }
 
     public function showCapture($capture_id)
@@ -147,7 +147,7 @@ class PaypalSDK
         $capture_id = "8F148933LY9388354";
         $this->endpoint = 'v1/payments/capture/'.$capture_id;
         $response = $this->makeCall(null, $this->endpoint, $this->action);
-        return Tools::jsonDecode($response);
+        return json_decode($response);
     }
 
     public function refundCapture($body, $capture_id)
@@ -155,7 +155,7 @@ class PaypalSDK
         $this->action = 'POST';
         $this->endpoint = 'v1/payments/capture/'.$capture_id.'/refund';
         $response = $this->makeCall($this->getBody($body), $this->endpoint, $this->action);
-        return Tools::jsonDecode($response);
+        return json_decode($response);
     }
 
 
@@ -187,7 +187,7 @@ class PaypalSDK
             $url = $url.$body;
         }
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($curl, CURLOPT_URL, $this->getURL().$url);
+        curl_setopt($curl, CURLOPT_URL, Paypal::getURLSDK().$url);
         curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 5);
         if ($user) {
             curl_setopt($curl, CURLOPT_USERPWD, $user);
@@ -208,7 +208,7 @@ class PaypalSDK
         curl_setopt($curl, CURLOPT_HTTPHEADER, array(
             "Content-type: ".$cnt_type,
             'Content-Length: ' . strlen($body),
-            "Authorization: Bearer A101.J7r7-Vy8A9wPTMrWhorTPsp87CSQJEgpmsyESd0Rh6UYroz2Q6lTmGH6DdgnQ_uX.u3cZapHkbmvAVMhs4168L7e1ZTC"
+            "Authorization: Bearer A101.6CNeRhvWgqH94HB2JjnGsI2-rQ4v0of6mTJPHPHZB9JsKh4vq4pVFZKTBlbPz59r.vW92TwKasp2QNDJW8v2ivmANt30"
         ));
 
         $response = curl_exec($curl);

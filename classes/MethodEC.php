@@ -33,13 +33,16 @@ class MethodEC extends AbstractMethodPaypal
 
      public function init()
      {
-
+         $sdk = new PaypalSDK();
          $cart = Context::getContext()->cart;
          $currency = Context::getContext()->currency;
          $total = (float)$cart->getOrderTotal(true, Cart::BOTH);
-         $cart_rules = $cart->getOrderedCartRulesIds();
+        // $cart_rules = $cart->getOrderedCartRulesIds();
          $shipping_cost = $cart->getTotalShippingCost();
-         $shipping_addr = new Address($cart->id_address_delivery);
+        // $shipping_addr = new Address($cart->id_address_delivery);
+         $summary = $cart->getSummaryDetails();
+
+         $products = $cart->getProducts();
 
          $params = array(
              'intent' => Configuration::get('PAYPAL_API_INTENT'), //sale
@@ -53,18 +56,35 @@ class MethodEC extends AbstractMethodPaypal
                  'cancel_url' => Tools::getShopDomain(true, true).'/index.php?controller=order&step=1',
              ),
          );
+
+         $params['experience_profile_id'] = Configuration::get('PAYPAL_EXPERIENCE_PROFILE');
+         foreach ($products as $product) {
+             $items = array(
+                 'quantity' => $product['cart_quantity'],
+                 'name' => $product['name'],
+                 'price' =>  $product['price'],
+                 'currency' => $currency->iso_code,
+                 'description' => $product['description_short'],
+                 'tax' => $product['total_wt'] - $product['total'],
+             );
+         }
          $params['transactions'][] = array(
              'amount' => array(
                  'total' => $total,
                  'currency' => $currency->iso_code,
-                 /*'details' => array(
-                     'subtotal' => 1,
-                     'tax' => 1,
+                 'details' => array(
+                     'subtotal' => $summary['total_products'],
+                     'tax' => $summary['total_tax'],
                      'shipping' => $shipping_cost,
-                     'handling_fee' => 1,
-                     'shipping_discount' => 1,
-                     'insurance' => 1,
-                 ),*/
+                    /* 'handling_fee' => "0",
+                     'shipping_discount' => "0",
+                     'insurance' => "0",*/
+                 ),
+             ),
+             'item_list' => array(
+                 'items' => array(
+                     $items
+                 ),
              ),
             /* 'shipping_address' => array(
                  'recipient_name' => $shipping_addr->firstname.' '.$shipping_addr->lastname,
@@ -76,7 +96,9 @@ class MethodEC extends AbstractMethodPaypal
                  'phone' => $shipping_addr->phone,
              )*/
          );
-         $sdk = new PaypalSDK($this);
+
+
+
          $payment = $sdk->createPayment($params);
 
          return $payment;
@@ -87,7 +109,7 @@ class MethodEC extends AbstractMethodPaypal
      public function validation()
      {
 
-         $sdk = new PaypalSDK($this);
+         $sdk = new PaypalSDK();
          $exec_payment = $sdk->executePayment(Tools::getValue('paymentId'), Tools::getValue('PayerID'));
          $cart = Context::getContext()->cart;
          $customer = new Customer($cart->id_customer);
@@ -96,13 +118,18 @@ class MethodEC extends AbstractMethodPaypal
          $currency = Context::getContext()->currency;
          $total = (float)$cart->getOrderTotal(true, Cart::BOTH);
          $paypal = Module::getInstanceByName('paypal');
-         $paypal->validateOrder($cart->id, Configuration::get('PS_OS_PAYPAL'), $total, 'paypal', NULL, $exec_payment, (int)$currency->id, false, $customer->secure_key);
+         if (Configuration::get('PAYPAL_API_INTENT') == "sale") {
+             $order_state = Configuration::get('PS_OS_PAYMENT');
+         } else {
+             $order_state = Configuration::get('PS_OS_PAYPAL');
+         }
+         $paypal->validateOrder($cart->id, $order_state, $total, 'paypal', NULL, $exec_payment, (int)$currency->id, false, $customer->secure_key);
 
      }
 
      public function confirmCapture()
      {
-         $sdk = new PaypalSDK($this);
+         $sdk = new PaypalSDK();
          $paypal_order = new PaypalOrder(Tools::getValue('id_paypal_order'));
          $body = array(
              'amount' => array(
@@ -136,7 +163,7 @@ class MethodEC extends AbstractMethodPaypal
 
      public function refund()
      {
-         $sdk = new PaypalSDK($this);
+         $sdk = new PaypalSDK();
          $id_paypal_order = Tools::getValue('id_paypal_order');
          $paypal_order = new PaypalOrder($id_paypal_order);
          $body = array(
@@ -163,6 +190,10 @@ class MethodEC extends AbstractMethodPaypal
                  $paypal_order->result = $response->sate;
                  $paypal_order->update();
              }
+         }
+         if (isset($response->id)) {
+             $order = new Order(Tools::getValue('id_order'));
+             $order->setCurrentState(_PS_OS_REFUND_);
          }
 
 

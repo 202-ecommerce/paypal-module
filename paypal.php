@@ -263,36 +263,47 @@ class PayPal extends PaymentModule
         }
     }
 
+    public static function getURLSDK()
+    {
+        if (Configuration::get('PAYPAL_SANDBOX')) {
+            return 'https://api.sandbox.paypal.com/';
+        } else {
+            return 'https://api.paypal.com/';
+        }
+    }
+
     public function getContent()
     {
-
+//print_r(Configuration::get('PAYPAL_EXPERIENCE_PROFILE'));die;
         $this->_postProcess();
-//http://iuliia-17.work.202-ecommerce.com/admin524drqi1g/index.php?controller=AdminModules&configure=paypal&token=f39f05142ce7edf40e2b990f7aaad5a7
         $url = $this->getURL().'webapps/merchantboarding/signin/authorize?';
         $params = array(
             'countryCode' => $this->context->country->iso_code,
             'returnToPartnerUrl' => urlencode($this->context->link->getAdminLink('AdminModules', true).'&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name),
             'productIntentID' => 'addipmt',
             'integrationType' => 'F',
-            'subIntegrationType' => 'S',
-            'permissionNeeded' => 'EXPRESS_CHECKOUT',
+            'subIntegrationType' => 'C',
+            'permissionNeeded' => 'EXPRESS_CHECKOUT,AUTH_CAPTURE,REFUND', //DIRECT_PAYMENT for cards,TRANSACTION_DETAILS for get info
+            'receiveCredentials' => 'TRUE',
             'displayMode' => 'minibrowser',
-            'showPermissions' => 'true',
+            'showPermissions' => 'TRUE',
         );
 
         $PartnerboardingURL = http_build_query($params);
 
         if (Tools::getValue('test')) {
-            header('Location: https://www.sandbox.paypal.com/signin/authorize?response_type=code&scope=profile+email+address+phone+https%3A%2F%2Furi.paypal.com%2Fservices%2Fpaypalattributes&redirect_uri='.urlencode($this->context->link->getAdminLink('AdminModules', true).'&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name), true, 302);
+            header('Location: https://www.sandbox.paypal.com/signin/authorize?redirect_uri='.urlencode($this->context->link->getAdminLink('AdminModules', true).'&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name), true, 302);
         }
 
          $this->context->smarty->assign(array(
              'path' => $this->_path,
             'PartnerboardingURL' => $url.$PartnerboardingURL,
         ));
+        $this->context->controller->addCSS($this->_path.'views/css/paypal-bo.css', 'all');
         $fields_form[0]['form'] = array(
             'legend' => array(
                 'title' => $this->l('Configuration'),
+                'image' => $this->_path.'/views/img/paypal_icon.png',
             ),
             'input' => array(
                 array(
@@ -301,6 +312,7 @@ class PayPal extends PaymentModule
                     'name' => 'paypal_sandbox',
                     'desc' => $this->l(''),
                     'is_bool' => true,
+                    'hint' => $this->l('help block'),
                     'values' => array(
                         array(
                             'id' => 'paypal_sandbox_on',
@@ -319,6 +331,7 @@ class PayPal extends PaymentModule
                     'label' => $this->l('Mode intent'),
                     'name' => 'paypal_intent',
                     'desc' => $this->l(''),
+                    'hint' => $this->l('help block'),
                     'options' => array(
                         'query' => array(
                             array(
@@ -415,13 +428,14 @@ class PayPal extends PaymentModule
     {
         if (Tools::getValue('merchantId')) {
             Configuration::updateValue('PAYPAL_MERCHANT_ID', Tools::getValue('merchantId'));
-            $sdk = new PaypalSDK($this);
+            $sdk = new PaypalSDK();
             $access_token = $sdk->createAccessToken();
             $credentials = $sdk->getCredentials($access_token);
             Configuration::updateValue('PAYPAL_API_CREDENTIAL', $credentials->api_credential);
             Configuration::updateValue('PAYPAL_API_USERNAME', $credentials->api_username);
             Configuration::updateValue('PAYPAL_API_PSWD', $credentials->api_password);
             Configuration::updateValue('PAYPAL_API_SIGNATURE', $credentials->api_signature);
+            $permissions = $credentials->granted_permissions; //active products of Paypal for this user
         }
 
         if (Tools::isSubmit('paypal_config')) {
@@ -429,6 +443,24 @@ class PayPal extends PaymentModule
             Configuration::updateValue('PAYPAL_API_INTENT', Tools::getValue('paypal_intent'));
             Configuration::updateValue('PAYPAL_API_CARD', Tools::getValue('paypal_card'));
             Configuration::updateValue('PAYPAL_API_ADVANTAGES', Tools::getValue('paypal_show_advantage'));
+            if (Configuration::get('PAYPAL_API_CARD')) {
+                $landing_page_type = "billing";
+            } else {
+                $landing_page_type = "login";
+            }
+            $profile = array(
+                'name' => Configuration::get('PS_SHOP_NAME').microtime(true),
+                'flow_config' => array(
+                    'landing_page_type' => $landing_page_type,
+                    'bank_txn_pending_url' => Context::getContext()->link->getModuleLink($this->name, 'ec_validation', array(), true),
+                ),
+            );
+            $sdk = new PaypalSDK();
+            $web_experience = $sdk->createWebExperience($profile);
+
+            if (isset($web_experience->id)) {
+                Configuration::updateValue('PAYPAL_EXPERIENCE_PROFILE', $web_experience->id);
+            }
         }
 
     }
