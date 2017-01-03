@@ -26,22 +26,17 @@
 $(document).ready(function () {
     var identificationButtonClicked = false;
 
-    $('#braintree_enabled').on('change', displayConfigurationBraintree() );
+    $('#braintree_enabled').on('change', displayConfigurationBraintree );
 
     function displayConfigurationBraintree()
     {
         if($('#braintree_enabled:checked').val())
         {
-            $('#braintree').slideDown();
-            //$('#braintree-credentials').slideDown();
-            $('#paypal_3D_secure').slideDown();
-            //$('html,body').animate({scrollTop: $("#braintree-credentials").offset().top}, 'slow');
+            $('#paypal_braintree').show();
         }
         else
         {
-            $('#braintree').slideUp();
-            //$('#braintree-credentials').slideUp();
-            $('#paypal_3D_secure').slideUp();
+            $('#paypal_braintree').hide();
         }
     }
 

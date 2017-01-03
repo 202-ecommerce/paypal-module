@@ -382,6 +382,19 @@ class PayPal extends PaymentModule
         }
         $this->_postProcess();
 
+        $braintree_message = '';
+        $braintree_style = '';
+
+        if( Tools::getValue('braintree_configured') ) {
+            $braintree_message = $this->l('Braintree configured');
+            $braintree_style = 'color:#008000;';
+        }
+        
+        if( Tools::getValue('error') ) {
+            $braintree_message = $this->l('Braintree not configured');
+            $braintree_style = 'color:#dc143c;';
+        }
+
         // Check if all Braintree credentials are present
         $braintree_configured = false;
         if( Configuration::get('PAYPAL_BRAINTREE_ACCESS_TOKEN') && Configuration::get('PAYPAL_BRAINTREE_EXPIRES_AT') && Configuration::get('PAYPAL_BRAINTREE_REFRESH_TOKEN')) {
@@ -452,6 +465,8 @@ class PayPal extends PaymentModule
             'Proxy_Host' => PROXY_HOST,
             'Braintree_Redirect_Url' => $braintree_redirect_url,
             'Braintree_Configured' => $braintree_configured,
+            'Braintree_Message' => $braintree_message,
+            'Braintree_Style' => $braintree_style,
             'Braintree_Access_Token' => Configuration::get('PAYPAL_BRAINTREE_ACCESS_TOKEN'),
             'Braintree_Refresh_Token' => Configuration::get('PAYPAL_BRAINTREE_REFRESH_TOKEN'),
             'Braintree_Expires_At' => strtotime( Configuration::get('PAYPAL_BRAINTREE_EXPIRES_AT') ),
@@ -741,12 +756,7 @@ class PayPal extends PaymentModule
             ? $iso_lang[$this->context->language->iso_code] : 'en_US',
         ));
 
-        if ($method == PVZ || Configuration::get('PAYPAL_BRAINTREE_ENABLED')) {
-            if(version_compare(PHP_VERSION, '5.4.0', '<'))
-            {
-                return;
-            }
-
+        if (($method == PVZ || Configuration::get('PAYPAL_BRAINTREE_ENABLED')) && version_compare(PHP_VERSION, '5.4.0', '>')) {
             $id_account_braintree = $this->set_good_context();
 
             include_once _PS_MODULE_DIR_.'paypal/classes/Braintree.php';
@@ -759,18 +769,17 @@ class PayPal extends PaymentModule
             
             if(!$clientToken)
             {
-                return;
-            }
-
-            $this->context->smarty->assign(array(
-                'braintreeToken'=>$clientToken,
-                'braintreeSubmitUrl'=>$this->context->link->getModuleLink('paypal','braintreesubmit'),
-                'braintreeAmount'=>$this->context->cart->getOrderTotal(),
-                'check3Dsecure'=>Configuration::get('PAYPAL_USE_3D_SECURE'),
-            ));
+                $return_braintree = '';
+            } else {
+                $this->context->smarty->assign(array(
+                    'braintreeToken'=>$clientToken,
+                    'braintreeSubmitUrl'=>$this->context->link->getModuleLink('paypal','braintreesubmit'),
+                    'braintreeAmount'=>$this->context->cart->getOrderTotal(),
+                    'check3Dsecure'=>Configuration::get('PAYPAL_USE_3D_SECURE'),
+                ));
             
-            return $this->fetchTemplate('braintree_payment.tpl');
-
+                return $this->fetchTemplate('braintree_payment.tpl');
+            }
         }
         else
         {

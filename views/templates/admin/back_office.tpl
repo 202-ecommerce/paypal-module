@@ -190,7 +190,10 @@
                             <span class="description"></span>
                             <!-- <p class="toolbox"></p> -->
                         </label>
-						{include './button_braintree.tpl'}
+                        <span id="braintree_message" style="{$Braintree_Style}">{$Braintree_Message}</span>
+                        <div id="paypal_braintree">
+							{include './button_braintree.tpl'}
+						</div>
                     {/if}
                 {/if}
 				<hr />
