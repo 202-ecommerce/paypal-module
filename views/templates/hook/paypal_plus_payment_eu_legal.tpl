@@ -26,31 +26,12 @@
 
 {*Displaying a button or the iframe*}
 <div id="ppplusDiv" style="display:block; width:100%; ">
+    <form></form>
 <div id="ppplus" style="display:block; width:100%;"></div>
 </div>
 
 {literal}
 <script type="application/javascript">
-
-    // presta 160
-    $("input[name=payment_option]").on("click", function(){
-
-         $("#confirmOrder").show();
-         ppp.deselectPaymentMethod();
-    });
-    // presta 161
-    $(".payment_module").on("click", function(){
-
-        $("#confirmOrder").show();
-        ppp.deselectPaymentMethod();
-        if($(this).next().first().children().attr("id") == "ppplusDiv"){
-            $("#ppplus").show();
-        }else{
-            $("#ppplus").hide();
-        }
-
-    });
-
 
     var ppp = PAYPAL.apps.PPP({
         "approvalUrl": "{/literal}{$approval_url|escape:'UTF-8'}{literal}",
@@ -60,65 +41,24 @@
 
         "language": "{/literal}{$language|escape:'htmlall':'UTF-8'}{literal}",
         "country": "{/literal}{$country|escape:'htmlall':'UTF-8'}{literal}",
-            "buttonLocation": "inside",
-
-            "enableContinue": function (){
-                $("#confirmOrder").hide();
-            },
-
-            "disableContinue": function (){
-                $("#confirmOrder").show();
-            },
-
-
-           "onContinue" : function () {
-
-
-                // eu-legal
-                if($("#cgv-legal").length != 0){
-
-
-                    if($("#cgv-legal").is(":checked")){
-
-                        $('#ppplus iframe').slideUp();
-                        $('#ppplus').html('<img style="display:block;margin:15px auto;" src="{/literal}{$img_loader}{literal}"/>');
-                        doPatch(ppp);
-
-                    }else{
-
-                        alert("{/literal}{l s='Please accept the terms and conditions' mod='paypal'}{literal}");
-                    }
-
-                }else if($("#cgv").length != 0){ // advanced eu 161
-
-
-                    if($("#cgv").is(":checked")){
-
-                        $('#ppplus iframe').slideUp();
-                        $('#ppplus').html('<img style="display:block;margin:15px auto;" src="{/literal}{$img_loader}{literal}"/>');
-                        doPatch(ppp);
-
-                    }else{
-
-                        alert("{/literal}{l s='Please accept the terms and conditions' mod='paypal'}{literal}");
-                    }
-
-                }else{
-                    $('#ppplus iframe').slideUp();
-                    $('#ppplus').html('<img style="display:block;margin:15px auto;" src="{/literal}{$img_loader}{literal}"/>');
-                    doPatch(ppp);
-                }
-
-
-            },
-
+        "buttonLocation": "outside",
         "onLoad": function(){
             //deselect payment methods
             ppp.deselectPaymentMethod();
         }
     });
-
+    $('#paypal_payment form').on('submit',function(){
+        event.preventDefault();
+        console.log('submit2');
+        doPatch(ppp);
+        console.log('submit3');
+        return false;
+    });
     function doPatch(ppp) {
+
+        $('#ppplus iframe').slideUp();
+        $('#ppplus').html('<img style="display:block;margin:15px auto;" src="{/literal}{$img_loader}{literal}"/>');
+
         jQuery.ajax({
             url : "{/literal}{$ajaxUrl}{literal}",
             success: function(){

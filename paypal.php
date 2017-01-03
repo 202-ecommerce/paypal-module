@@ -37,7 +37,7 @@ include_once _PS_MODULE_DIR_.'paypal/paypal_login/paypal_login.php';
 include_once _PS_MODULE_DIR_.'paypal/paypal_login/PayPalLoginUser.php';
 include_once _PS_MODULE_DIR_.'paypal/classes/PaypalCapture.php';
 include_once _PS_MODULE_DIR_.'paypal/classes/AuthenticatePaymentMethods.php';
-include_once _PS_MODULE_DIR_.'paypal/classes/TLSVerificator.php';
+//include_once _PS_MODULE_DIR_.'paypal/classes/TLSVerificator.php';
 include_once _PS_MODULE_DIR_.'paypal/classes/PaypalPlusPui.php';
 
 define('WPS', 1); //Paypal Integral
@@ -98,7 +98,7 @@ class PayPal extends PaymentModule
     {
         $this->name = 'paypal';
         $this->tab = 'payments_gateways';
-        $this->version = '3.11.1';
+        $this->version = '3.11.2';
         $this->author = 'PrestaShop';
         $this->is_eu_compatible = 1;
 
