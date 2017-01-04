@@ -29,13 +29,42 @@ class PaypalSDK
 
     protected $action;
     protected $endpoint;
+    protected $urlAPI;
+
+    public function __construct($sandbox)
+    {
+        if ($sandbox) {
+            $this->urlAPI = 'https://api.sandbox.paypal.com/';
+        } else {
+            $this->urlAPI = 'https://api.paypal.com/';
+        }
+    }
+
 
     public function createAccessToken()
     {
-        $this->action = 'POST';
-        $this->endpoint = 'v1/oauth2/token';
+        $this->action = 'GET';
+        $this->endpoint = 'v1/oauth2/token?';
         $body = array("grant_type" => "client_credentials");
-        $this->makeCall($this->getBody($body), $this->endpoint, $this->action, "application/x-www-form-urlencoded", "AQkquBDf1zctJOWGKWUEtKXm6qVhueUEMvXO_-MCI4DQQ4-LWvkDLIN2fGsd:L1tVxAjhT7cJimnz5-Nsx9k2reTKSVfErNQF-CmrwJgxRtylkGTKlU4RvrX");
+        $this->makeCall($body, $this->endpoint, $this->action, "application/x-www-form-urlencoded", "AReLzfjunEgE3vvOxUgjPQZZXe2L9tcxI0NVIUzOF8BAmB8G4I0qsEUwptPtVF1Ioyu1TpAMQtG_nAeG:EAhYgH_trpF1FGeXQzia4UWAPasM6zVVCY6gCFT9m7RsDbe7nCV2LXs2Ewn9YW32nEIqh1bR0zNfrZOS");
+
+        return $this->response;
+    }
+
+    public function createPartnerReferrals($body)
+    {
+        $this->action = 'POST';
+        $this->endpoint = 'v1/customer/partner-referrals';
+        $this->makeCall($this->getBody($body), $this->endpoint, $this->action);
+
+        return $this->response;
+    }
+
+    public function getPartnerReferrals($referral_id)
+    {
+        $this->action = 'GET';
+        $this->endpoint = 'v1/customer/partner-referrals/'.$referral_id;
+        $this->makeCall(null, $this->endpoint, $this->action);
 
         return $this->response;
     }
@@ -186,13 +215,15 @@ class PaypalSDK
             $body = (is_array($body)) ? http_build_query($body) : $body;
             $url = $url.$body;
         }
+
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($curl, CURLOPT_URL, Paypal::getURLSDK().$url);
+        curl_setopt($curl, CURLOPT_URL, $this->urlAPI.$url);
         curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 5);
         if ($user) {
             curl_setopt($curl, CURLOPT_USERPWD, $user);
         }
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
         if ($action == "PUT" || $action == "DELETE" || $action == "PATCH") {
             curl_setopt($curl, CURLOPT_CUSTOMREQUEST, $action);
         }
@@ -208,11 +239,11 @@ class PaypalSDK
         curl_setopt($curl, CURLOPT_HTTPHEADER, array(
             "Content-type: ".$cnt_type,
             'Content-Length: ' . strlen($body),
-            "Authorization: Bearer A101.6CNeRhvWgqH94HB2JjnGsI2-rQ4v0of6mTJPHPHZB9JsKh4vq4pVFZKTBlbPz59r.vW92TwKasp2QNDJW8v2ivmANt30"
+            //"Authorization: Bearer A101.TuINerbWjOCBkCQ_cVwWryhARK1FvviAcn5CdFT1l23XNGbVLiKbQrdldAThG6HS.6UFOq1q-9Ns_FqNhInPzqwbXbi8"
         ));
 
         $response = curl_exec($curl);
-
+        //var_dump(curl_errno($curl));die;
         if (curl_errno($curl)) {
             die('error occured during curl exec. Additioanl info: ' . curl_errno($curl).':'. curl_error($curl));
         }

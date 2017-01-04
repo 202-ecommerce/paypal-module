@@ -263,23 +263,14 @@ class PayPal extends PaymentModule
         }
     }
 
-    public static function getURLSDK()
-    {
-        if (Configuration::get('PAYPAL_SANDBOX')) {
-            return 'https://api.sandbox.paypal.com/';
-        } else {
-            return 'https://api.paypal.com/';
-        }
-    }
-
     public function getContent()
     {
-//print_r(Configuration::get('PAYPAL_EXPERIENCE_PROFILE'));die;
         $this->_postProcess();
         $url = $this->getURL().'webapps/merchantboarding/signin/authorize?';
+        $return_url = urlencode($this->context->link->getAdminLink('AdminModules', true).'&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name);
         $params = array(
             'countryCode' => $this->context->country->iso_code,
-            'returnToPartnerUrl' => urlencode($this->context->link->getAdminLink('AdminModules', true).'&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name),
+            'returnToPartnerUrl' => $return_url,
             'productIntentID' => 'addipmt',
             'integrationType' => 'F',
             'subIntegrationType' => 'C',
@@ -419,6 +410,35 @@ class PayPal extends PaymentModule
         );
         $form = $helper->generateForm($fields_form);
 
+        $sdk = new PaypalSDK(Configuration::get('PAYPAL_SANDBOX'));
+       /* $access_token = $sdk->createAccessToken();
+        print_r($access_token);die;*/
+        $sdk = new PaypalSDK(Configuration::get('PAYPAL_SANDBOX'));
+        $partner_info = array(
+            'customer_data' => array(
+                'customer_type' => 'MERCHANT',
+                'person_details' => array(
+                    'email_address' => Configuration::get('PS_SHOP_EMAIL'),
+                    'name' => array(
+                        'given_name' => 'Iuliia',
+                        'surname' => 'Fedotchenko',
+                    ),
+                ),
+                'business_details' => array(
+                    'business_address' => array(
+                        'line1' => Configuration::get('PS_SHOP_ADDR1'),
+                        'city' => Configuration::get('PS_SHOP_CITY'),
+                        'country_code' => 'FR', //Configuration::get('PS_SHOP_COUNTRY_ID')
+                        'postal_code' => Configuration::get('PS_SHOP_CODE'),
+                    ),
+                ),
+            ),
+            'web_experience_preference' => array(
+                'return_url' => $return_url,
+            ),
+            'products' => array('EXPRESS_CHECKOUT'),
+        );
+      //  $test = $sdk->createPartnerReferrals($partner_info);
 
         return $this->display(__FILE__, 'views/templates/admin/configuration.tpl').$form;
 
@@ -428,7 +448,7 @@ class PayPal extends PaymentModule
     {
         if (Tools::getValue('merchantId')) {
             Configuration::updateValue('PAYPAL_MERCHANT_ID', Tools::getValue('merchantId'));
-            $sdk = new PaypalSDK();
+            $sdk = new PaypalSDK(Configuration::get('PAYPAL_SANDBOX'));
             $access_token = $sdk->createAccessToken();
             $credentials = $sdk->getCredentials($access_token);
             Configuration::updateValue('PAYPAL_API_CREDENTIAL', $credentials->api_credential);
@@ -455,7 +475,7 @@ class PayPal extends PaymentModule
                     'bank_txn_pending_url' => Context::getContext()->link->getModuleLink($this->name, 'ec_validation', array(), true),
                 ),
             );
-            $sdk = new PaypalSDK();
+            $sdk = new PaypalSDK(Configuration::get('PAYPAL_SANDBOX'));
             $web_experience = $sdk->createWebExperience($profile);
 
             if (isset($web_experience->id)) {

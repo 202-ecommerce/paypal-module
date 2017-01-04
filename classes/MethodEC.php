@@ -33,7 +33,7 @@ class MethodEC extends AbstractMethodPaypal
 
      public function init()
      {
-         $sdk = new PaypalSDK();
+         $sdk = new PaypalSDK(Configuration::get('PAYPAL_SANDBOX'));
          $cart = Context::getContext()->cart;
          $currency = Context::getContext()->currency;
          $total = (float)$cart->getOrderTotal(true, Cart::BOTH);
@@ -109,7 +109,7 @@ class MethodEC extends AbstractMethodPaypal
      public function validation()
      {
 
-         $sdk = new PaypalSDK();
+         $sdk = new PaypalSDK(Configuration::get('PAYPAL_SANDBOX'));
          $exec_payment = $sdk->executePayment(Tools::getValue('paymentId'), Tools::getValue('PayerID'));
          $cart = Context::getContext()->cart;
          $customer = new Customer($cart->id_customer);
@@ -129,7 +129,7 @@ class MethodEC extends AbstractMethodPaypal
 
      public function confirmCapture()
      {
-         $sdk = new PaypalSDK();
+         $sdk = new PaypalSDK(Configuration::get('PAYPAL_SANDBOX'));
          $paypal_order = new PaypalOrder(Tools::getValue('id_paypal_order'));
          $body = array(
              'amount' => array(
@@ -163,7 +163,7 @@ class MethodEC extends AbstractMethodPaypal
 
      public function refund()
      {
-         $sdk = new PaypalSDK();
+         $sdk = new PaypalSDK(Configuration::get('PAYPAL_SANDBOX'));
          $id_paypal_order = Tools::getValue('id_paypal_order');
          $paypal_order = new PaypalOrder($id_paypal_order);
          $body = array(
