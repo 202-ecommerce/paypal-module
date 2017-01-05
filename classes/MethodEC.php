@@ -98,10 +98,14 @@ class MethodEC extends AbstractMethodPaypal
          );
 
 
-
+         $return = false;
          $payment = $sdk->createPayment($params);
-
-         return $payment;
+         foreach ($payment->links as $redirect_urls) {
+             if ($redirect_urls->method == "REDIRECT") {
+                 $return = Tools::redirect($redirect_urls->href);
+             }
+         }
+         return $return;
 
 
      }

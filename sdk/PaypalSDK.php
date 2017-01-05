@@ -27,9 +27,10 @@
 class PaypalSDK
 {
 
-    protected $action;
-    protected $endpoint;
-    protected $urlAPI;
+    private $action;
+    private $endpoint;
+    private $response;
+    private $urlAPI;
 
     public function __construct($sandbox)
     {
@@ -83,7 +84,7 @@ class PaypalSDK
         return $this->response;
     }
 
-    public function getCredentials($params)
+    public function getCredentials()
     {
         $this->action = 'GET';
         $this->endpoint = '/v1/identity/applications/@classic/owner/LQWH2R7C7XS7C/credentials';
@@ -137,8 +138,9 @@ class PaypalSDK
 
     public function showRefund($sale_id)
     {
-        $this->action = 'GET';
+        // TODO delete after test
         $sale_id = "2MU78835H4515710F";
+        $this->action = 'GET';
         $this->endpoint = 'v1/payments/refund/'.$sale_id;
         $response = $this->makeCall(null, $this->endpoint, $this->action);
         return json_decode($response);
@@ -146,8 +148,9 @@ class PaypalSDK
 
     public function showAuthorization($authorization_id)
     {
-        $this->action = 'GET';
+        // TODO delete after test
         $authorization_id = "2DC87612EK520411B";
+        $this->action = 'GET';
         $this->endpoint = 'v1/payments/authorization/'.$authorization_id;
         $response = $this->makeCall(null, $this->endpoint, $this->action);
         return json_decode($response);
@@ -161,10 +164,11 @@ class PaypalSDK
         return json_decode($response);
     }
 
-    public function voidAuthorization($body)
+    public function voidAuthorization($authorization_id)
     {
-        $this->action = 'POST';
+        // TODO delete after test
         $authorization_id = "2DC87612EK520411B";
+        $this->action = 'POST';
         $this->endpoint = 'v1/payments/authorization/'.$authorization_id.'/void';
         $response = $this->makeCall(null, $this->endpoint, $this->action);
         return json_decode($response);
@@ -172,8 +176,9 @@ class PaypalSDK
 
     public function showCapture($capture_id)
     {
-        $this->action = 'GET';
+        // TODO delete after test
         $capture_id = "8F148933LY9388354";
+        $this->action = 'GET';
         $this->endpoint = 'v1/payments/capture/'.$capture_id;
         $response = $this->makeCall(null, $this->endpoint, $this->action);
         return json_decode($response);
@@ -186,8 +191,6 @@ class PaypalSDK
         $response = $this->makeCall($this->getBody($body), $this->endpoint, $this->action);
         return json_decode($response);
     }
-
-
 
 
     protected function getBody(array $fields)

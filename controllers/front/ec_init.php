@@ -38,13 +38,9 @@ class PaypalEc_initModuleFrontController extends ModuleFrontController
 
         $method_ec = AbstractMethodPaypal::load('EC');
 
-        $payment = $method_ec->init();
-        if (isset($payment->links)) {
-            foreach ($payment->links as $redirect_urls) {
-                if ($redirect_urls->method == "REDIRECT") {
-                    Tools::redirect($redirect_urls->href);
-                }
-            }
+        $response = $method_ec->init();
+        if ($response) {
+            Tools::redirect($response);
         } else {
             Tools::redirect('index.php?controller=order&step=1');
         }
