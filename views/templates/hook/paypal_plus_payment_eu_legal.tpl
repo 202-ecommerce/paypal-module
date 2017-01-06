@@ -47,7 +47,7 @@
             ppp.deselectPaymentMethod();
         }
     });
-    $('#paypal_payment form').on('submit',function(){
+    $('#paypal_payment form').on('submit',function(event){
         event.preventDefault();
         console.log('submit2');
         doPatch(ppp);
