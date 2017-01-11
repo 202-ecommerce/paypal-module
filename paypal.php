@@ -1533,7 +1533,9 @@ class PayPal extends PaymentModule
                 /* USE PAYPAL PLUS */
                 if ((int) Tools::getValue('paypal_payment_method') == 5) {
                     
-                    $refresh_webprofile = Configuration::get('PAYPAL_PLUS_CLIENT_ID') != Tools::getValue('client_id') || Configuration::get('PAYPAL_PLUS_SECRET') != Tools::getValue('secret');
+                    $refresh_webprofile = Configuration::get('PAYPAL_PLUS_CLIENT_ID') != Tools::getValue('client_id')
+                        || Configuration::get('PAYPAL_PLUS_SECRET') != Tools::getValue('secret')
+                        || Configuration::get('PAYPAL_SANDBOX') != (int) Tools::getValue('sandbox_mode');
 
                     Configuration::updateValue('PAYPAL_PLUS_CLIENT_ID', Tools::getValue('client_id'));
                     Configuration::updateValue('PAYPAL_PLUS_SECRET', Tools::getValue('secret'));

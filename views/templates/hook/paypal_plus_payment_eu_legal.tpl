@@ -26,7 +26,6 @@
 
 {*Displaying a button or the iframe*}
 <div id="ppplusDiv" style="display:block; width:100%; ">
-    <form></form>
 <div id="ppplus" style="display:block; width:100%;"></div>
 </div>
 
@@ -49,9 +48,7 @@
     });
     $('#paypal_payment form').on('submit',function(event){
         event.preventDefault();
-        console.log('submit2');
         doPatch(ppp);
-        console.log('submit3');
         return false;
     });
     function doPatch(ppp) {
