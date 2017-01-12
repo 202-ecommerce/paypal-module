@@ -22,6 +22,7 @@
 			user_country: '{$User_Country}',
 			user_email:'{$User_Mail}',
 			business_name: '{$Business_Name}',
+			business_country: '{$Business_Country}',
 			redirect_url: '{$Braintree_Redirect_Url}'
 		}).done(function(data){
 			var partner = new BraintreeOAuthConnect({
