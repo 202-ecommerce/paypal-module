@@ -19,7 +19,7 @@
 <script>
 	$(document).ready(function(){
 		var user = [];
-		user['country'] = '{$User_Country}'';
+		user['country'] = '{$User_Country}';
 		user['email'] = '{$User_Mail}';
 
 		var business = [];
