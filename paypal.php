@@ -716,6 +716,7 @@ class PayPal extends PaymentModule
             'User_Country' => PayPal::countryIso2to3( Context::getContext()->country->iso_code ),
             'User_Mail' => Context::getContext()->employee->email,
             'Business_Name' => Configuration::get('PS_SHOP_NAME'),
+            'Business_Country' => PayPal::countryIso2to3( Context::getContext()->country->iso_code ),
             'Proxy_Host' => PROXY_HOST,
             'Braintree_Redirect_Url' => $braintree_redirect_url,
             'Braintree_Configured' => $braintree_configured,
