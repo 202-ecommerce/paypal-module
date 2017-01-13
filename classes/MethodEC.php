@@ -37,9 +37,7 @@ class MethodEC extends AbstractMethodPaypal
          $cart = Context::getContext()->cart;
          $currency = Context::getContext()->currency;
          $total = (float)$cart->getOrderTotal(true, Cart::BOTH);
-        // $cart_rules = $cart->getOrderedCartRulesIds();
          $shipping_cost = $cart->getTotalShippingCost();
-        // $shipping_addr = new Address($cart->id_address_delivery);
          $summary = $cart->getSummaryDetails();
 
          $products = $cart->getProducts();
@@ -48,7 +46,6 @@ class MethodEC extends AbstractMethodPaypal
              'intent' => Configuration::get('PAYPAL_API_INTENT'), //sale
              'payer' => array(
                  'payment_method' => 'paypal', //credit_card
-                // 'funding_instruments' => array(array('credit_card' => array())),
              ),
              'note_to_payer' => 'Contact us for any questions on your order.',
              'redirect_urls' => array(
@@ -62,7 +59,7 @@ class MethodEC extends AbstractMethodPaypal
              $items = array(
                  'quantity' => $product['cart_quantity'],
                  'name' => $product['name'],
-                 'price' =>  $product['price'],
+                 'price' =>  round($product['price'], 2),
                  'currency' => $currency->iso_code,
                  'description' => $product['description_short'],
                  'tax' => $product['total_wt'] - $product['total'],
@@ -76,9 +73,6 @@ class MethodEC extends AbstractMethodPaypal
                      'subtotal' => $summary['total_products'],
                      'tax' => $summary['total_tax'],
                      'shipping' => $shipping_cost,
-                    /* 'handling_fee' => "0",
-                     'shipping_discount' => "0",
-                     'insurance' => "0",*/
                  ),
              ),
              'item_list' => array(
@@ -86,23 +80,17 @@ class MethodEC extends AbstractMethodPaypal
                      $items
                  ),
              ),
-            /* 'shipping_address' => array(
-                 'recipient_name' => $shipping_addr->firstname.' '.$shipping_addr->lastname,
-                 'line1' => $shipping_addr->address1,
-                 'line2' => $shipping_addr->address2,
-                 'city' => $shipping_addr->city,
-                 'country_code' => Context::getContext()->country->iso_code,
-                 'postal_code' => $shipping_addr->postcode,
-                 'phone' => $shipping_addr->phone,
-             )*/
          );
 
 
          $return = false;
          $payment = $sdk->createPayment($params);
-         foreach ($payment->links as $redirect_urls) {
-             if ($redirect_urls->method == "REDIRECT") {
-                 $return = Tools::redirect($redirect_urls->href);
+
+         if (isset($payment->links)) {
+             foreach ($payment->links as $redirect_urls) {
+                 if ($redirect_urls->method == "REDIRECT") {
+                     $return = Tools::redirect($redirect_urls->href);
+                 }
              }
          }
          return $return;
@@ -134,10 +122,10 @@ class MethodEC extends AbstractMethodPaypal
      public function confirmCapture()
      {
          $sdk = new PaypalSDK(Configuration::get('PAYPAL_SANDBOX'));
-         $paypal_order = new PaypalOrder(Tools::getValue('id_paypal_order'));
+         $paypal_order = new PaypalOrder(Tools::getValue('capturePaypal'));
          $body = array(
              'amount' => array(
-                 'total' => $paypal_order->total_paid,
+                 'total' => number_format($paypal_order->total_paid, 2, ".", ","),
                  'currency' => $paypal_order->currency
              ),
              'is_final_capture' => true,
@@ -149,10 +137,11 @@ class MethodEC extends AbstractMethodPaypal
              Db::getInstance()->update(
                  'paypal_capture',
                  array(
+                     'id_capture' => $response->id,
                      'capture_amount' => $response->amount->total,
-                     'result' => $response->sate,
+                     'result' => $response->state,
                  ),
-                 'id_paypal_order = '.(int)Tools::getValue('id_paypal_order')
+                 'id_paypal_order = '.(int)Tools::getValue('capturePaypal')
              );
              $order = new Order(Tools::getValue('id_order'));
              $order->setCurrentState(_PS_OS_PAYMENT_);
@@ -168,11 +157,11 @@ class MethodEC extends AbstractMethodPaypal
      public function refund()
      {
          $sdk = new PaypalSDK(Configuration::get('PAYPAL_SANDBOX'));
-         $id_paypal_order = Tools::getValue('id_paypal_order');
+         $id_paypal_order = Tools::getValue('refundPaypal');
          $paypal_order = new PaypalOrder($id_paypal_order);
          $body = array(
              'amount' => array(
-                 'total' => $paypal_order->total_paid,
+                 'total' => number_format($paypal_order->total_paid, 2, ".", ","),
                  'currency' => $paypal_order->currency
              )
          );
@@ -183,7 +172,7 @@ class MethodEC extends AbstractMethodPaypal
                  Db::getInstance()->update(
                      'paypal_capture',
                      array(
-                         'result' => $response->sate,
+                         'result' => $response->state,
                      ),
                      'id_paypal_order = '.(int)$id_paypal_order
                  );

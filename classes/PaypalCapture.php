@@ -25,7 +25,10 @@
  */
 class PaypalCapture extends ObjectModel
 {
-    
+    public $id_capture;
+
+    public $id_paypal_order;
+
     public $capture_amount;
 
     public $result;
@@ -44,7 +47,7 @@ class PaypalCapture extends ObjectModel
         'fields' => array(
             'id_capture' => array('type' => self::TYPE_STRING, 'validate' => 'isString'),
             'id_paypal_order' => array('type' => self::TYPE_INT),
-            'capture_amount' => array('type' => self::TYPE_INT),
+            'capture_amount' => array('type' => self::TYPE_FLOAT),
             'result' => array('type' => self::TYPE_STRING, 'validate' => 'isString'),
             'date_add' => array('type' => self::TYPE_DATE, 'validate' => 'isDateFormat'),
             'date_upd' => array('type' => self::TYPE_DATE, 'validate' => 'isDateFormat'),

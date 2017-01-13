@@ -27,27 +27,28 @@
 class PaypalSDK
 {
 
-    private $action;
-    private $endpoint;
-    private $response;
-    private $urlAPI;
+    protected $action;
+    protected $endpoint;
+    protected $response;
+    protected $urlAPI;
+    protected $urlIntermediateServer;
 
     public function __construct($sandbox)
     {
         if ($sandbox) {
             $this->urlAPI = 'https://api.sandbox.paypal.com/';
+            $this->urlIntermediateServer = 'http://iuliia-17.dev.202-ecommerce.com/modules/paypal/test_server.php';
         } else {
             $this->urlAPI = 'https://api.paypal.com/';
+            $this->urlIntermediateServer = 'http://iuliia-17.dev.202-ecommerce.com/modules/paypal/test_server.php';
         }
     }
 
-
-    public function createAccessToken()
+    public function createAccessToken($body)
     {
-        $this->action = 'GET';
-        $this->endpoint = 'v1/oauth2/token?';
-        $body = array("grant_type" => "client_credentials");
-        $this->makeCall($body, $this->endpoint, $this->action, "application/x-www-form-urlencoded", "AReLzfjunEgE3vvOxUgjPQZZXe2L9tcxI0NVIUzOF8BAmB8G4I0qsEUwptPtVF1Ioyu1TpAMQtG_nAeG:EAhYgH_trpF1FGeXQzia4UWAPasM6zVVCY6gCFT9m7RsDbe7nCV2LXs2Ewn9YW32nEIqh1bR0zNfrZOS");
+        $this->action = 'POST';
+        $this->endpoint = 'v1/oauth2/token';
+        $this->makeCall($body, $this->endpoint, $this->action, "application/json", "AReLzfjunEgE3vvOxUgjPQZZXe2L9tcxI0NVIUzOF8BAmB8G4I0qsEUwptPtVF1Ioyu1TpAMQtG_nAeG:EAhYgH_trpF1FGeXQzia4UWAPasM6zVVCY6gCFT9m7RsDbe7nCV2LXs2Ewn9YW32nEIqh1bR0zNfrZOS");
 
         return $this->response;
     }
@@ -56,18 +57,35 @@ class PaypalSDK
     {
         $this->action = 'POST';
         $this->endpoint = 'v1/customer/partner-referrals';
-        $this->makeCall($this->getBody($body), $this->endpoint, $this->action);
+        $response = $this->makeCall($this->getBody($body), $this->endpoint, $this->action);
 
-        return $this->response;
+        return json_decode($response);
+    }
+
+    public function getUrlOnboarding()
+    {
+        $this->makeCallIntermediateServer();
+
+    }
+
+    private function makeCallIntermediateServer()
+    {
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($curl, CURLOPT_URL, $this->urlIntermediateServer);
+        $response = curl_exec($curl);
+        return $response;
+
     }
 
     public function getPartnerReferrals($referral_id)
     {
+        //TODO delete if not use !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         $this->action = 'GET';
         $this->endpoint = 'v1/customer/partner-referrals/'.$referral_id;
-        $this->makeCall(null, $this->endpoint, $this->action);
-
-        return $this->response;
+        $response = $this->makeCall(null, $this->endpoint, $this->action);
+ 
+        return json_decode($response);
     }
 
     public function grantToken($body)
@@ -222,9 +240,7 @@ class PaypalSDK
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($curl, CURLOPT_URL, $this->urlAPI.$url);
         curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 5);
-        if ($user) {
-            curl_setopt($curl, CURLOPT_USERPWD, $user);
-        }
+
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
         curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
         if ($action == "PUT" || $action == "DELETE" || $action == "PATCH") {
@@ -239,11 +255,19 @@ class PaypalSDK
         if ($action == "POST" || $action == "PUT" || $action == "DELETE") {
             curl_setopt($curl, CURLOPT_POSTFIELDS, $body);
         }
-        curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-            "Content-type: ".$cnt_type,
-            'Content-Length: ' . strlen($body),
-            //"Authorization: Bearer A101.TuINerbWjOCBkCQ_cVwWryhARK1FvviAcn5CdFT1l23XNGbVLiKbQrdldAThG6HS.6UFOq1q-9Ns_FqNhInPzqwbXbi8"
-        ));
+        if ($user) {
+            curl_setopt($curl, CURLOPT_HTTPHEADER, array(
+                "Accept: application/json",
+                "Accept-Language: en_US",
+                "Authorization: Basic ".base64_encode($user)
+            ));
+        } else {
+            curl_setopt($curl, CURLOPT_HTTPHEADER, array(
+                "Content-type: ".$cnt_type,
+                'Content-Length: ' . strlen($body),
+                "Authorization: Bearer A101.8Wk2sJqRDvXpQrMPogLYXO1M3pAFiTuSxfxLaaRmyibCNf870dXrTS-JF6mlZu93.fp_hDFlsm2FLRm7eAFoKasOIlY0",
+            ));
+        }
 
         $response = curl_exec($curl);
         //var_dump(curl_errno($curl));die;

@@ -45,14 +45,6 @@ class PaypalEc_validationModuleFrontController extends ModuleFrontController
         $paypal = Module::getInstanceByName('paypal');
         Tools::redirect('index.php?controller=order-confirmation&id_cart='.$cart->id.'&id_module='.$paypal->id.'&id_order='.$paypal->currentOrder.'&key='.$customer->secure_key);
 
-
-      //  $this->setTemplate('payment_return.tpl');
-
-
-
-       //  print_r($exec_payment);die;
-        // return $payment;
-        //controller=ec_validation&paymentId=PAY-2TM00266T9897621XLBJMH5A&token=EC-5CU78830P3146642A&PayerID=7YUE7HHKRPTSL
     }
 
 }
