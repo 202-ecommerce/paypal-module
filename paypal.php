@@ -46,8 +46,8 @@ define('ECS', 4); //Paypal Option +
 define('PPP', 5); //Paypal Plus
 define('PVZ', 6); //Braintree ONLY
 
-//define('PROXY_HOST', 'http://vps340297.ovh.net/');
-define('PROXY_HOST', 'http://pp.pp-ps-auth.com/');
+define('SANDBOX_PROXY_HOST', 'http://vps340297.ovh.net/');
+define('PROD_PROXY_HOST', 'http://pp.pp-ps-auth.com/');
 
 /* Tracking */
 define('TRACKING_INTEGRAL_EVOLUTION', 'FR_PRESTASHOP_H3S');
@@ -717,7 +717,7 @@ class PayPal extends PaymentModule
             'User_Mail' => Context::getContext()->employee->email,
             'Business_Name' => Configuration::get('PS_SHOP_NAME'),
             'Business_Country' => PayPal::countryIso2to3( Context::getContext()->country->iso_code ),
-            'Proxy_Host' => PROXY_HOST,
+            'Proxy_Host' => (Configuration::get('PAYPAL_SANDBOX')?SANDBOX_PROXY_HOST:PROD_PROXY_HOST),
             'Braintree_Redirect_Url' => $braintree_redirect_url,
             'Braintree_Configured' => $braintree_configured,
             'Braintree_Message' => $braintree_message,
