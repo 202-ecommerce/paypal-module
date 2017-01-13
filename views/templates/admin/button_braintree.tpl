@@ -31,6 +31,8 @@
 			business: business,
 			redirect_url: '{$Braintree_Redirect_Url}'
 		}).done(function(data){
+			console.log(data);
+
 			var partner = new BraintreeOAuthConnect({
 				connectUrl : data.data.url_connect,
 				container: 'button_braintree',
