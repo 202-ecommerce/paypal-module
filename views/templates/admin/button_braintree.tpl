@@ -1,17 +1,6 @@
 {if $Braintree_Configured}
-{l s='Your Braintree account is configured. You can ask a new token with the button below' mod='paypal'}<br />
-<button id="refresh">{l s='Ask a new token' mod='paypal'}</button>
-<script>
-	$(document).ready(function(){
-		$('#refresh').on('click', function(){
-			$.get('{$Proxy_Host}prestashop/refreshToken', {
-				refreshToken: '{$Braintree_Refresh_Token}'
-			}).done(function(data){
-				document.location.href = '{$Braintree_Redirect_Url}&accessToken='+encodeURIComponent(data.data.accessToken)+'&expiresAt='+encodeURIComponent(data.data.expiresAt)+'&refreshToken='+encodeURIComponent(data.data.refreshToken);
-			});
-		});
-	});
-</script>
+{l s='Your Braintree account is configured. You can join the Braintree support at xxxx' mod='paypal'}<br />
+
 {else}
 <div id="button_braintree">
 </div>

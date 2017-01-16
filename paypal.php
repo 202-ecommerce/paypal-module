@@ -640,12 +640,12 @@ class PayPal extends PaymentModule
         $braintree_style = '';
 
         if( Tools::getValue('braintree_configured') ) {
-            $braintree_message = $this->l('Braintree configured');
+            $braintree_message = $this->l('Your Braintree account is now configured. If you have problems, you can join Braintree support at xxxx');
             $braintree_style = 'color:#008000;';
         }
         
         if( Tools::getValue('error') ) {
-            $braintree_message = $this->l('Braintree not configured');
+            $braintree_message = $this->l('Braintree is not configured. If you have problems, you can join Braintree support at xxxx');
             $braintree_style = 'color:#dc143c;';
         }
 
@@ -1772,7 +1772,7 @@ class PayPal extends PaymentModule
                 $currency = new Currency(Configuration::get('PS_CURRENCY_DEFAULT'));
                 $account_braintree = Tools::getValue('account_braintree');
                 if ($payment_method == PVZ && empty($account_braintree[$currency->iso_code])) {
-                    $this->_errors[] = $this->l('Braintree Account '.$currency->iso_code.' field cannot be empty');
+                    $this->_errors[] = sprintf($this->l('Braintree Account %s field cannot be empty'), $currency->iso_code);
                 }
 
             }

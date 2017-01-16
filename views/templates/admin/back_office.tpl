@@ -120,7 +120,7 @@
 			<div class="box">
 
 				<div class="box right half" id="paypal-call-button">
-					<div id="paypal-call" class="box right"><span style="font-weight: bold">{l s='Need help ?' mod='paypal'}</span> {l s='Give us a call : xxxx' mod='paypal'} <img src="../modules/paypal/views/img/call.png" width="14px" alt="Phone" /></div>
+					<div id="paypal-call" class="box right"><span style="font-weight: bold">{l s='Need help ?' mod='paypal'}</span> <a href="https://www.paypal.com/webapps/mpp/contact-us">{l s='Contact us' mod='paypal'}</a></div>
 					<div id="paypal-call-foonote" class="box right paypal-clear">{l s=' ' mod='paypal'}</div>
 				</div>
 
