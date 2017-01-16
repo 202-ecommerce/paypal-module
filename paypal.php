@@ -1502,11 +1502,15 @@ class PayPal extends PaymentModule
             if (Tools::getValue('paypal_country_only')) {
                 Configuration::updateValue('PAYPAL_COUNTRY_DEFAULT', (int) Tools::getValue('paypal_country_only'));
             } elseif ($this->_preProcess()) {
-
-                if(Configuration::get('PAYPAL_SANDBOX') != Tools::getValue('sandbox_mode'))
+                if((int) Tools::getValue('paypal_payment_method') == 5)
                 {
-                    unset($this->context->cookie->paypal_access_token_time_max);
-                    unset($this->context->cookie->paypal_access_token_access_token);
+                    $refresh_webprofile = Configuration::get('PAYPAL_PLUS_CLIENT_ID') != Tools::getValue('client_id')
+                        || Configuration::get('PAYPAL_PLUS_SECRET') != Tools::getValue('secret')
+                        || Configuration::get('PAYPAL_SANDBOX') != (int) Tools::getValue('sandbox_mode');
+                }
+                else
+                {
+                    $refresh_webprofile = false;
                 }
                 Configuration::updateValue('PAYPAL_BUSINESS', (int) Tools::getValue('business'));
                 Configuration::updateValue('PAYPAL_PAYMENT_METHOD', (int) Tools::getValue('paypal_payment_method'));
@@ -1533,25 +1537,19 @@ class PayPal extends PaymentModule
                 /* USE PAYPAL PLUS */
                 if ((int) Tools::getValue('paypal_payment_method') == 5) {
                     
-                    $refresh_webprofile = Configuration::get('PAYPAL_PLUS_CLIENT_ID') != Tools::getValue('client_id')
-                        || Configuration::get('PAYPAL_PLUS_SECRET') != Tools::getValue('secret')
-                        || Configuration::get('PAYPAL_SANDBOX') != (int) Tools::getValue('sandbox_mode');
-
                     Configuration::updateValue('PAYPAL_PLUS_CLIENT_ID', Tools::getValue('client_id'));
                     Configuration::updateValue('PAYPAL_PLUS_SECRET', Tools::getValue('secret'));
-
-                    
-
                     if ((int) Tools::getValue('paypalplus_webprofile') == 1 || $refresh_webprofile) {
-
+                        unset($this->context->cookie->paypal_access_token_time_max);
+                        unset($this->context->cookie->paypal_access_token_access_token);
                         $ApiPaypalPlus = new ApiPaypalPlus();
                         $idWebProfile = $ApiPaypalPlus->getWebProfile();
-
                         if ($idWebProfile) {
                             Configuration::updateValue('PAYPAL_WEB_PROFILE_ID', $idWebProfile);
                         } else {
-                            Configuration::updateValue('PAYPAL_WEB_PROFILE_ID', 0);
+                            Configuration::updateValue('PAYPAL_WEB_PROFILE_ID', '0');
                         }
+
                     }
                 }
                 /* IS IN_CONTEXT_CHECKOUT ENABLED */
