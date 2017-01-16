@@ -7,17 +7,10 @@
 <script src="https://assets.braintreegateway.com/v1/braintree-oauth-connect.js"></script>
 <script>
 	$(document).ready(function(){
-		var user = [];
-		user['country'] = '{$User_Country}';
-		user['email'] = '{$User_Mail}';
-
-		var business = [];
-		business['name'] = '{$Business_Name}';
-		business['country'] = '{$Business_Country}';
-
 		$.get('{$Proxy_Host}prestashop/getUrlConnect', {
-			user: user,
-			business: business,
+			user_country: '{$User_Country}',
+			user_email:'{$User_Mail}',
+			business_name: '{$Business_Name}',
 			redirect_url: '{$Braintree_Redirect_Url}'
 		}).done(function(data){
 			console.log(data);
