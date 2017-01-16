@@ -46,6 +46,9 @@ define('ECS', 4); //Paypal Option +
 define('PPP', 5); //Paypal Plus
 define('PVZ', 6); //Braintree ONLY
 
+define('SANDBOX_PROXY_HOST', 'http://vps340297.ovh.net/');
+define('PROD_PROXY_HOST', 'http://pp.pp-ps-auth.com/');
+
 /* Tracking */
 define('TRACKING_INTEGRAL_EVOLUTION', 'FR_PRESTASHOP_H3S');
 define('TRACKING_INTEGRAL', 'PRESTASHOP_EC');
@@ -248,7 +251,7 @@ class PayPal extends PaymentModule
             return true;
         }
 
-        if ($payment_method == PVZ)
+        if ($payment_method == PVZ || Configuration::get('PAYPAL_BRAINTREE_ENABLED'))
         {
             return true;
         }
@@ -372,6 +375,259 @@ class PayPal extends PaymentModule
 
     }
 
+    public static function countryIso2to3($iso2){
+        //ISO 3166-1 alpha-2 -> alpha-3 correspondence array
+        $iso2to3 = array(
+          'AW' => 'ABW',
+          'AO' => 'AGO',
+          'AI' => 'AIA',
+          'AX' => 'ALA',
+          'AL' => 'ALB',
+          'AD' => 'AND',
+          'AN' => 'ANT',
+          'AE' => 'ARE',
+          'AR' => 'ARG',
+          'AM' => 'ARM',
+          'AS' => 'ASM',
+          'AQ' => 'ATA',
+          'TF' => 'ATF',
+          'AG' => 'ATG',
+          'AU' => 'AUS',
+          'AT' => 'AUT',
+          'AZ' => 'AZE',
+          'BI' => 'BDI',
+          'BE' => 'BEL',
+          'BJ' => 'BEN',
+          'BF' => 'BFA',
+          'BD' => 'BGD',
+          'BG' => 'BGR',
+          'BH' => 'BHR',
+          'BS' => 'BHS',
+          'BA' => 'BIH',
+          'BL' => 'BLM',
+          'BY' => 'BLR',
+          'BZ' => 'BLZ',
+          'BM' => 'BMU',
+          'BO' => 'BOL',
+          'BR' => 'BRA',
+          'BB' => 'BRB',
+          'BN' => 'BRN',
+          'BT' => 'BTN',
+          'BV' => 'BVT',
+          'BW' => 'BWA',
+          'CF' => 'CAF',
+          'CA' => 'CAN',
+          'CC' => 'CCK',
+          'CH' => 'CHE',
+          'CL' => 'CHL',
+          'CN' => 'CHN',
+          'CI' => 'CIV',
+          'CM' => 'CMR',
+          'CD' => 'COD',
+          'CG' => 'COG',
+          'CK' => 'COK',
+          'CO' => 'COL',
+          'KM' => 'COM',
+          'CV' => 'CPV',
+          'CR' => 'CRI',
+          'CU' => 'CUB',
+          'CX' => 'CXR',
+          'KY' => 'CYM',
+          'CY' => 'CYP',
+          'CZ' => 'CZE',
+          'DE' => 'DEU',
+          'DJ' => 'DJI',
+          'DM' => 'DMA',
+          'DK' => 'DNK',
+          'DO' => 'DOM',
+          'DZ' => 'DZA',
+          'EC' => 'ECU',
+          'EG' => 'EGY',
+          'ER' => 'ERI',
+          'EH' => 'ESH',
+          'ES' => 'ESP',
+          'EE' => 'EST',
+          'ET' => 'ETH',
+          'FI' => 'FIN',
+          'FJ' => 'FJI',
+          'FK' => 'FLK',
+          'FR' => 'FRA',
+          'FO' => 'FRO',
+          'FM' => 'FSM',
+          'GA' => 'GAB',
+          'GB' => 'GBR',
+          'GE' => 'GEO',
+          'GG' => 'GGY',
+          'GH' => 'GHA',
+          'GI' => 'GIB',
+          'GN' => 'GIN',
+          'GP' => 'GLP',
+          'GM' => 'GMB',
+          'GW' => 'GNB',
+          'GQ' => 'GNQ',
+          'GR' => 'GRC',
+          'GD' => 'GRD',
+          'GL' => 'GRL',
+          'GT' => 'GTM',
+          'GF' => 'GUF',
+          'GU' => 'GUM',
+          'GY' => 'GUY',
+          'HK' => 'HKG',
+          'HM' => 'HMD',
+          'HN' => 'HND',
+          'HR' => 'HRV',
+          'HT' => 'HTI',
+          'HU' => 'HUN',
+          'ID' => 'IDN',
+          'IM' => 'IMN',
+          'IN' => 'IND',
+          'IO' => 'IOT',
+          'IE' => 'IRL',
+          'IR' => 'IRN',
+          'IQ' => 'IRQ',
+          'IS' => 'ISL',
+          'IL' => 'ISR',
+          'IT' => 'ITA',
+          'JM' => 'JAM',
+          'JE' => 'JEY',
+          'JO' => 'JOR',
+          'JP' => 'JPN',
+          'KZ' => 'KAZ',
+          'KE' => 'KEN',
+          'KG' => 'KGZ',
+          'KH' => 'KHM',
+          'KI' => 'KIR',
+          'KN' => 'KNA',
+          'KR' => 'KOR',
+          'KW' => 'KWT',
+          'LA' => 'LAO',
+          'LB' => 'LBN',
+          'LR' => 'LBR',
+          'LY' => 'LBY',
+          'LC' => 'LCA',
+          'LI' => 'LIE',
+          'LK' => 'LKA',
+          'LS' => 'LSO',
+          'LT' => 'LTU',
+          'LU' => 'LUX',
+          'LV' => 'LVA',
+          'MO' => 'MAC',
+          'MF' => 'MAF',
+          'MA' => 'MAR',
+          'MC' => 'MCO',
+          'MD' => 'MDA',
+          'MG' => 'MDG',
+          'MV' => 'MDV',
+          'MX' => 'MEX',
+          'MH' => 'MHL',
+          'MK' => 'MKD',
+          'ML' => 'MLI',
+          'MT' => 'MLT',
+          'MM' => 'MMR',
+          'ME' => 'MNE',
+          'MN' => 'MNG',
+          'MP' => 'MNP',
+          'MZ' => 'MOZ',
+          'MR' => 'MRT',
+          'MS' => 'MSR',
+          'MQ' => 'MTQ',
+          'MU' => 'MUS',
+          'MW' => 'MWI',
+          'MY' => 'MYS',
+          'YT' => 'MYT',
+          'NC' => 'NCL',
+          'NE' => 'NER',
+          'NF' => 'NFK',
+          'NG' => 'NGA',
+          'NI' => 'NIC',
+          'NU' => 'NIU',
+          'NL' => 'NLD',
+          'NO' => 'NOR',
+          'NP' => 'NPL',
+          'NR' => 'NRU',
+          'NZ' => 'NZL',
+          'OM' => 'OMN',
+          'PK' => 'PAK',
+          'PA' => 'PAN',
+          'PN' => 'PCN',
+          'PE' => 'PER',
+          'PH' => 'PHL',
+          'PW' => 'PLW',
+          'PG' => 'PNG',
+          'PL' => 'POL',
+          'PR' => 'PRI',
+          'KP' => 'PRK',
+          'PT' => 'PRT',
+          'PY' => 'PRY',
+          'PS' => 'PSE',
+          'PF' => 'PYF',
+          'QA' => 'QAT',
+          'RE' => 'REU',
+          'RO' => 'ROU',
+          'RU' => 'RUS',
+          'RW' => 'RWA',
+          'SA' => 'SAU',
+          'SD' => 'SDN',
+          'SN' => 'SEN',
+          'SG' => 'SGP',
+          'GS' => 'SGS',
+          'SH' => 'SHN',
+          'SJ' => 'SJM',
+          'SB' => 'SLB',
+          'SL' => 'SLE',
+          'SV' => 'SLV',
+          'SM' => 'SMR',
+          'SO' => 'SOM',
+          'PM' => 'SPM',
+          'RS' => 'SRB',
+          'SS' => 'SSD',
+          'ST' => 'STP',
+          'SR' => 'SUR',
+          'SK' => 'SVK',
+          'SI' => 'SVN',
+          'SE' => 'SWE',
+          'SZ' => 'SWZ',
+          'SC' => 'SYC',
+          'SY' => 'SYR',
+          'TC' => 'TCA',
+          'TD' => 'TCD',
+          'TG' => 'TGO',
+          'TH' => 'THA',
+          'TJ' => 'TJK',
+          'TK' => 'TKL',
+          'TM' => 'TKM',
+          'TL' => 'TLS',
+          'TO' => 'TON',
+          'TT' => 'TTO',
+          'TN' => 'TUN',
+          'TR' => 'TUR',
+          'TV' => 'TUV',
+          'TW' => 'TWN',
+          'TZ' => 'TZA',
+          'UG' => 'UGA',
+          'UA' => 'UKR',
+          'UM' => 'UMI',
+          'UY' => 'URY',
+          'US' => 'USA',
+          'UZ' => 'UZB',
+          'VA' => 'VAT',
+          'VC' => 'VCT',
+          'VE' => 'VEN',
+          'VG' => 'VGB',
+          'VI' => 'VIR',
+          'VN' => 'VNM',
+          'VU' => 'VUT',
+          'WF' => 'WLF',
+          'WS' => 'WSM',
+          'YE' => 'YEM',
+          'ZA' => 'ZAF',
+          'ZM' => 'ZMB',
+          'ZW' => 'ZWE'
+        );
+
+        return $iso2to3[$iso2];
+    }
+
     public function getContent()
     {
         if(Tools::getIsset('BRAINTREE_ENABLED'))
@@ -379,6 +635,29 @@ class PayPal extends PaymentModule
             Configuration::updateValue('VZERO_ENABLED',1);
         }
         $this->_postProcess();
+
+        $braintree_message = '';
+        $braintree_style = '';
+
+        if( Tools::getValue('braintree_configured') ) {
+            $braintree_message = $this->l('Your Braintree account is now configured. If you have problems, you can join Braintree support at xxxx');
+            $braintree_style = 'color:#008000;';
+        }
+        
+        if( Tools::getValue('error') ) {
+            $braintree_message = $this->l('Braintree is not configured. If you have problems, you can join Braintree support at xxxx');
+            $braintree_style = 'color:#dc143c;';
+        }
+
+        // Check if all Braintree credentials are present
+        $braintree_configured = false;
+        if( Configuration::get('PAYPAL_BRAINTREE_ACCESS_TOKEN') && Configuration::get('PAYPAL_BRAINTREE_EXPIRES_AT') && Configuration::get('PAYPAL_BRAINTREE_REFRESH_TOKEN')) {
+            $braintree_configured = true;
+        }
+
+        $admin_dir = explode('/',_PS_ADMIN_DIR_);
+
+        $braintree_redirect_url = _PS_BASE_URL_.__PS_BASE_URI__. $admin_dir[ ( count($admin_dir) - 1 ) ] .'/index.php?controller=AdminModules&tab_module=payments_gateways&configure='.$this->name.'&module_name='.$this->name.'&token='.Tools::getAdminTokenLite('AdminModules');
 
         if (($id_lang = Language::getIdByIso('EN')) == 0) {
             $english_language_id = (int) $this->context->employee->id_lang;
@@ -428,11 +707,24 @@ class PayPal extends PaymentModule
             'Currencies' => Currency::getCurrencies(),
             'PayPal_account_braintree' => (array) Tools::jsonDecode(Configuration::get('PAYPAL_ACCOUNT_BRAINTREE')),
             'Currency_default'=> Configuration::get('PS_CURRENCY_DEFAULT'),
-            'PayPal_braintree_public_key'=> Configuration::get('PAYPAL_BRAINTREE_PUBLIC_KEY'),
-            'PayPal_braintree_private_key'=> Configuration::get('PAYPAL_BRAINTREE_PRIVATE_KEY'),
+            //*TO DELETE* 'PayPal_braintree_public_key'=> Configuration::get('PAYPAL_BRAINTREE_PUBLIC_KEY'),
+            //*TO DELETE* 'PayPal_braintree_private_key'=> Configuration::get('PAYPAL_BRAINTREE_PRIVATE_KEY'),
             'PayPal_braintree_merchant_id'=> Configuration::get('PAYPAL_BRAINTREE_MERCHANT_ID'),
             'PayPal_check3Dsecure'=> Configuration::get('PAYPAL_USE_3D_SECURE'),
             'PayPal_braintree_enabled'=> Configuration::get('PAYPAL_BRAINTREE_ENABLED'),
+            // Pour le bouton Braintree
+            'User_Country' => PayPal::countryIso2to3( Context::getContext()->country->iso_code ),
+            'User_Mail' => Context::getContext()->employee->email,
+            'Business_Name' => Configuration::get('PS_SHOP_NAME'),
+            'Business_Country' => PayPal::countryIso2to3( Context::getContext()->country->iso_code ),
+            'Proxy_Host' => (Configuration::get('PAYPAL_SANDBOX')?SANDBOX_PROXY_HOST:PROD_PROXY_HOST),
+            'Braintree_Redirect_Url' => $braintree_redirect_url,
+            'Braintree_Configured' => $braintree_configured,
+            'Braintree_Message' => $braintree_message,
+            'Braintree_Style' => $braintree_style,
+            'Braintree_Access_Token' => Configuration::get('PAYPAL_BRAINTREE_ACCESS_TOKEN'),
+            'Braintree_Refresh_Token' => Configuration::get('PAYPAL_BRAINTREE_REFRESH_TOKEN'),
+            'Braintree_Expires_At' => strtotime( Configuration::get('PAYPAL_BRAINTREE_EXPIRES_AT') ),
         ));
 
         $this->getTranslations();
@@ -637,6 +929,11 @@ class PayPal extends PaymentModule
             return false;
         }
 
+        //If no expiration date for the Braintree token or no refresh token for Braintree
+        if( !Configuration::get('PAYPAL_BRAINTREE_EXPIRES_AT') || !Configuration::get('PAYPAL_BRAINTREE_REFRESH_TOKEN') ) {
+            return false;
+        }
+
         //If merchant has not upgraded and payment method is out of country's specs
         if (!Configuration::get('PAYPAL_UPDATED_COUNTRIES_OK') && !in_array((int) Configuration::get('PAYPAL_PAYMENT_METHOD'), $this->getPaymentMethods())) {
             return false;
@@ -714,36 +1011,30 @@ class PayPal extends PaymentModule
             ? $iso_lang[$this->context->language->iso_code] : 'en_US',
         ));
 
-        if ($method == PVZ || Configuration::get('PAYPAL_BRAINTREE_ENABLED')) {
-            if(version_compare(PHP_VERSION, '5.4.0', '<'))
-            {
-                return;
-            }
-
+        if (($method == PVZ || Configuration::get('PAYPAL_BRAINTREE_ENABLED')) && version_compare(PHP_VERSION, '5.4.0', '>')) {
             $id_account_braintree = $this->set_good_context();
 
-            $currency = new Currency($this->context->cart->id_currency);
             include_once _PS_MODULE_DIR_.'paypal/classes/Braintree.php';
 
             $braintree = new PrestaBraintree();
-            $clientToken = $braintree->createToken($id_account_braintree);
-            $this->reset_context();
-
             
+            $clientToken = $braintree->createToken($id_account_braintree);
+            
+            $this->reset_context();
             
             if(!$clientToken)
             {
-                return;
+                $return_braintree = '';
+            } else {
+                $this->context->smarty->assign(array(
+                    'braintreeToken'=>$clientToken,
+                    'braintreeSubmitUrl'=>$this->context->link->getModuleLink('paypal','braintreesubmit'),
+                    'braintreeAmount'=>$this->context->cart->getOrderTotal(),
+                    'check3Dsecure'=>Configuration::get('PAYPAL_USE_3D_SECURE'),
+                ));
+            
+                return $this->fetchTemplate('braintree_payment.tpl');
             }
-
-            $this->context->smarty->assign(array(
-                'braintreeToken'=>$clientToken,
-                'braintreeSubmitUrl'=>$this->context->link->getModuleLink('paypal','braintreesubmit'),
-                'braintreeAmount'=>$this->context->cart->getOrderTotal(),
-                'check3Dsecure'=>Configuration::get('PAYPAL_USE_3D_SECURE'),
-            ));
-            $return_braintree = $this->fetchTemplate('braintree_payment.tpl');
-
         }
         else
         {
@@ -1008,7 +1299,6 @@ class PayPal extends PaymentModule
             if ($this->_canRefund((int) $params['id_order'])) {
                 $admin_templates[] = 'refund';
             }
-
         }
 
         if (count($admin_templates) > 0) {
@@ -1335,6 +1625,9 @@ class PayPal extends PaymentModule
 
     public function getPaymentMethods()
     {
+        // /!\ à enlever /!\
+        return array(WPS, HSS, ECS, PVZ);
+        
         if (Configuration::get('PAYPAL_UPDATED_COUNTRIES_OK')) {
             return AuthenticatePaymentMethods::authenticatePaymentMethodByLang(Tools::strtoupper($this->context->language->iso_code));
         } else {
@@ -1419,7 +1712,7 @@ class PayPal extends PaymentModule
             FROM `'._DB_PREFIX_.'paypal_braintree`
             WHERE `id_order` = '.(int) $id_order);
 
-        return ($paypal_order && ($paypal_order['payment_status'] == 'Completed' || $paypal_order['payment_status'] == 'approved') && $paypal_order['capture'] == 0);
+        return ($paypal_order && ($paypal_order['payment_status'] == 'completed' || $paypal_order['payment_status'] == 'approved') && $paypal_order['capture'] == 0);
     }
 
     private function _needValidation($id_order)
@@ -1487,7 +1780,7 @@ class PayPal extends PaymentModule
                 $currency = new Currency(Configuration::get('PS_CURRENCY_DEFAULT'));
                 $account_braintree = Tools::getValue('account_braintree');
                 if ($payment_method == PVZ && empty($account_braintree[$currency->iso_code])) {
-                    $this->_errors[] = $this->l('Braintree Account '.$currency->iso_code.' field cannot be empty');
+                    $this->_errors[] = sprintf($this->l('Braintree Account %s field cannot be empty'), $currency->iso_code);
                 }
 
             }
@@ -1529,8 +1822,8 @@ class PayPal extends PaymentModule
                 Configuration::updateValue('PAYPAL_LOGIN_TPL', (int) Tools::getValue('paypal_login_client_template'));
 
                 Configuration::updateValue('PAYPAL_BRAINTREE_ENABLED',Tools::getValue('braintree_enabled'));
-                Configuration::updateValue('PAYPAL_BRAINTREE_PUBLIC_KEY', Tools::getValue('braintree_public_key'));
-                Configuration::updateValue('PAYPAL_BRAINTREE_PRIVATE_KEY', Tools::getValue('braintree_private_key'));
+                //*TO DELETE* Configuration::updateValue('PAYPAL_BRAINTREE_PUBLIC_KEY', Tools::getValue('braintree_public_key'));
+                //*TO DELETE* Configuration::updateValue('PAYPAL_BRAINTREE_PRIVATE_KEY', Tools::getValue('braintree_private_key'));
                 Configuration::updateValue('PAYPAL_BRAINTREE_MERCHANT_ID', Tools::getValue('braintree_merchant_id'));
                 Configuration::updateValue('PAYPAL_USE_3D_SECURE',Tools::getValue('check3Dsecure'));
                 
@@ -1577,6 +1870,20 @@ class PayPal extends PaymentModule
                 $this->_html = $this->displayError(implode('<br />', $this->_errors)); // Not displayed at this time
                 $this->context->smarty->assign('PayPal_save_failure', true);
             }
+        } else if (  Tools::getValue('accessToken') ) {
+            Configuration::updateValue('PAYPAL_BRAINTREE_ENABLED', PVZ);
+            Configuration::updateValue('PAYPAL_PAYMENT_METHOD', PVZ);
+            
+            Configuration::updateValue('PAYPAL_BRAINTREE_ACCESS_TOKEN', Tools::getValue('accessToken'));
+            Configuration::updateValue('PAYPAL_BRAINTREE_EXPIRES_AT', Tools::getValue('expiresAt'));
+            Configuration::updateValue('PAYPAL_BRAINTREE_REFRESH_TOKEN', Tools::getValue('refreshToken'));
+            Configuration::updateValue('PAYPAL_BRAINTREE_MERCHANT_ID', Tools::getValue('merchantId'));
+
+            $admin_dir = explode('/',_PS_ADMIN_DIR_);
+
+            $redirect = _PS_BASE_URL_.__PS_BASE_URI__. $admin_dir[ ( count($admin_dir) ) - 1] .'/index.php?controller=AdminModules&tab_module=payments_gateways&configure='.$this->name.'&module_name='.$this->name.'&token='.Tools::getAdminTokenLite('AdminModules');
+
+            Tools::redirect($redirect);
         }
 
         return $this->loadLangDefault();
@@ -1600,7 +1907,6 @@ class PayPal extends PaymentModule
                     FROM `'._DB_PREFIX_.'orders` o
                     WHERE o.`id_order` = '.(int) $id_order);
             }
-
 
             include_once(_PS_MODULE_DIR_.'paypal/classes/Braintree.php');
             $braintree = new PrestaBraintree();
@@ -2088,6 +2394,9 @@ class PayPal extends PaymentModule
             }
 
             if (count($transaction) > 0) {
+                /*var_dump($transaction);
+                die();*/        
+
                 PayPalOrder::saveOrder((int) $this->currentOrder, $transaction);
             }
 
