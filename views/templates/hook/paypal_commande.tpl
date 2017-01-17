@@ -34,8 +34,10 @@
                 {l s='Capture paypal' mod='paypal'}
             </a>
         {/if}
-        <a href="{$link_suivi|escape:'html':'UTF-8'}&{$refund_link|escape:'html':'UTF-8'}" class="btn btn-primary">
-            {l s='Refund paypal' mod='paypal'}
-        </a>
+        {if isset($refund_link)}
+            <a href="{$link_suivi|escape:'html':'UTF-8'}&{$refund_link|escape:'html':'UTF-8'}" class="btn btn-primary">
+                {l s='Refund paypal' mod='paypal'}
+            </a>
+        {/if}
     </div>
 </div>

@@ -1,6 +1,6 @@
 <?php
 /*
-* 2007-2015 PrestaShop
+* 2007-2017 PrestaShop
 *
 * NOTICE OF LICENSE
 *
@@ -103,6 +103,7 @@ class MethodEC extends AbstractMethodPaypal
 
          $sdk = new PaypalSDK(Configuration::get('PAYPAL_SANDBOX'));
          $exec_payment = $sdk->executePayment(Tools::getValue('paymentId'), Tools::getValue('PayerID'));
+
          $cart = Context::getContext()->cart;
          $customer = new Customer($cart->id_customer);
          if (!Validate::isLoadedObject($customer))
@@ -115,6 +116,7 @@ class MethodEC extends AbstractMethodPaypal
          } else {
              $order_state = Configuration::get('PS_OS_PAYPAL');
          }
+
          $paypal->validateOrder($cart->id, $order_state, $total, 'paypal', NULL, $exec_payment, (int)$currency->id, false, $customer->secure_key);
 
      }
@@ -180,7 +182,7 @@ class MethodEC extends AbstractMethodPaypal
          } else {
              $response = $sdk->refundSale($body, $paypal_order->id_transaction);
              if (isset($response->id)) {
-                 $paypal_order->result = $response->sate;
+                 $paypal_order->result = $response->state;
                  $paypal_order->update();
              }
          }
@@ -188,7 +190,5 @@ class MethodEC extends AbstractMethodPaypal
              $order = new Order(Tools::getValue('id_order'));
              $order->setCurrentState(_PS_OS_REFUND_);
          }
-
-
      }
 }

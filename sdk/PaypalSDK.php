@@ -37,42 +37,35 @@ class PaypalSDK
     {
         if ($sandbox) {
             $this->urlAPI = 'https://api.sandbox.paypal.com/';
-            $this->urlIntermediateServer = 'http://iuliia-17.dev.202-ecommerce.com/modules/paypal/test_server.php';
+            $this->urlIntermediateServer = 'http://iuliia-1704.work.202-ecommerce.com/modules/paypal/test_server.php';
         } else {
             $this->urlAPI = 'https://api.paypal.com/';
-            $this->urlIntermediateServer = 'http://iuliia-17.dev.202-ecommerce.com/modules/paypal/test_server.php';
+            $this->urlIntermediateServer = 'http://iuliia-1704.work.202-ecommerce.com/modules/paypal/test_server.php';
         }
-    }
-
-    public function createAccessToken($body)
-    {
-        $this->action = 'POST';
-        $this->endpoint = 'v1/oauth2/token';
-        $this->makeCall($body, $this->endpoint, $this->action, "application/json", "AReLzfjunEgE3vvOxUgjPQZZXe2L9tcxI0NVIUzOF8BAmB8G4I0qsEUwptPtVF1Ioyu1TpAMQtG_nAeG:EAhYgH_trpF1FGeXQzia4UWAPasM6zVVCY6gCFT9m7RsDbe7nCV2LXs2Ewn9YW32nEIqh1bR0zNfrZOS");
-
-        return $this->response;
-    }
-
-    public function createPartnerReferrals($body)
-    {
-        $this->action = 'POST';
-        $this->endpoint = 'v1/customer/partner-referrals';
-        $response = $this->makeCall($this->getBody($body), $this->endpoint, $this->action);
-
-        return json_decode($response);
-    }
-
-    public function getUrlOnboarding()
-    {
-        $this->makeCallIntermediateServer();
 
     }
 
-    private function makeCallIntermediateServer()
+
+    public function getUrlOnboarding($partner_info)
     {
+        return $this->makeCallIntermediateServer($partner_info);
+
+    }
+
+    private function makeCallIntermediateServer($partner_info)
+    {
+
         $curl = curl_init();
+
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($curl, CURLOPT_POST, 1);
         curl_setopt($curl, CURLOPT_URL, $this->urlIntermediateServer);
+       // curl_setopt($curl, CURLOPT_URL, $this->urlIntermediateServer.'?method='.$method);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($partner_info));
+        curl_setopt($curl, CURLOPT_HTTPHEADER, array(
+            "Accept: application/json",
+            "Authorization: Basic ".base64_encode("202:mattdelg")
+        ));
         $response = curl_exec($curl);
         return $response;
 
@@ -265,7 +258,7 @@ class PaypalSDK
             curl_setopt($curl, CURLOPT_HTTPHEADER, array(
                 "Content-type: ".$cnt_type,
                 'Content-Length: ' . strlen($body),
-                "Authorization: Bearer A101.8Wk2sJqRDvXpQrMPogLYXO1M3pAFiTuSxfxLaaRmyibCNf870dXrTS-JF6mlZu93.fp_hDFlsm2FLRm7eAFoKasOIlY0",
+                "Authorization: Bearer A101.AeuzH29HiJvVSwpkeAxZGL8FPkAI-bX26QIh_Q2evXKX-fzJ6WUSrtKUuRWtnyoN.6WMol7MnSAqYrC8ylFTJXND_RnS",
             ));
         }
 

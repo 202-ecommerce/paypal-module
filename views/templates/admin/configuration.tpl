@@ -40,7 +40,7 @@
     <li class="active"><a data-toggle="pill" href="#paypal_conf"><span>{l s='Products' mod='paypal'}</span></a></li>
     <li><a data-toggle="pill" href="#paypal_params"><span>{l s='Parametres' mod='paypal'}</span></a></li>
 </ul>
-<div class="tab-content">
+    <div class="tab-content">
     <div id="paypal_conf"  class="tab-pane fade in active">
         <div class="box half left">
             <div class="logo">
@@ -69,7 +69,7 @@
         <div style="clear:both;"></div>
 
         <div class="active-products">
-            <p><b>{l s='Products that you have chosen'}</b></p>
+            <p><b>{l s='2 produits PayPal sélectionnés pour vous'}</b></p>
             <div class="col-sm-6">
                 <div class="panel">
                     <img class="paypal-products" src="{$path|escape:'html':'UTF-8'}/views/img/paypal.png">
@@ -80,7 +80,7 @@
                     <p><a herf="#">{l s='See more' mod='paypal'}</a></p>
                     <div class="bottom">
                     <img src="{$path|escape:'html':'UTF-8'}/views/img/paypal_btm.png" class="product-img">
-                    <a data-paypal-button="true" class="btn btn-default pull-right" href="{$PartnerboardingURL|escape:'html':'UTF-8'}" target="PPFrame">{l s='Activate' mod='paypal'}</a>
+                    <a class="btn btn-default pull-right" href="{$return_url|escape:'html':'UTF-8'}&method=EXPRESS_CHECKOUT">{l s='Activate' mod='paypal'}</a>
                     </div>
                 </div>
             </div>
@@ -94,7 +94,12 @@
                     <p><a herf="#">{l s='See more' mod='paypal'}</a></p>
                     <div class="bottom">
                     <img src="{$path|escape:'html':'UTF-8'}/views/img/paypal_btm.png" class="product-img">
-                    <a data-paypal-button="true" class="btn btn-default pull-right" href="{$PartnerboardingURL|escape:'html':'UTF-8'}" target="PPFrame">{l s='Activate' mod='paypal'}</a>
+                        <img src="{$path|escape:'html':'UTF-8'}/views/img/mastercard.png" class="product-img">
+                        <img src="{$path|escape:'html':'UTF-8'}/views/img/visa.png" class="product-img">
+                        <img src="{$path|escape:'html':'UTF-8'}/views/img/discover.png" class="product-img">
+                        <img src="{$path|escape:'html':'UTF-8'}/views/img/american_express.png" class="product-img">
+                        <img src="{$path|escape:'html':'UTF-8'}/views/img/maestro.png" class="product-img">
+                        <a class="btn btn-default pull-right" href="{$return_url|escape:'html':'UTF-8'}&method=EXPRESS_CHECKOUT">{l s='Activate' mod='paypal'}</a>
                     </div>
                 </div>
             </div>
@@ -106,8 +111,8 @@
             <div class="panel-body">
                 <div class="col-sm-8 help-left">
                     <img src="{$path|escape:'html':'UTF-8'}/views/img/paypal.png">
-                    {l s='Paypal products' mod='paypal'} :
-                    <a data-paypal-button="true" href="{$PartnerboardingURL|escape:'html':'UTF-8'}" target="PPFrame"> | {l s='Modifier' mod='paypal'}</a>
+                    {l s='Paypal products' mod='paypal'} : <b>{$active_products|escape:'html':'UTF-8'}</b>
+                    <a id="change_product" href=""> | {l s='Modifier' mod='paypal'}</a>
                     <p>{l s='Acceptez les paiements via PayPal et optimisez votre conversion.Accélérez les paiements de vos clients PayPal et avec One TouchTM, ils pourront régler leurs achats en un clin d\'œil.' mod='paypal'}</p>
                     <a href="#"><b>{l s='En savoir plus sur le site PayPal' mod='paypal'}</b></a>
                     </p>
@@ -119,16 +124,24 @@
             </div>
         </div>
     </div>
+
 </div>
 </div>
 
 <script type="text/javascript">
     $(document).ready(function(){
+        $('#change_product').click(function(event) {
+            event.preventDefault();
+            $('a[href=#paypal_conf]').click();
+        });
+        
         $('#configuration_form').insertAfter($('.parametres'));
         var activate_link = "{$PartnerboardingURL|escape:'html':'UTF-8'}";
 
+
         $('#configuration_form input[name=paypal_sandbox]').change(function(event) {
             sandbox = $('#configuration_form input[name=paypal_sandbox]:checked').val();
+            var no_ajax;
             $.ajax(
             {
                 type : 'POST',
@@ -136,38 +149,76 @@
                 dataType: 'json',
             });
             if(sandbox == 0) {
-                $.fancybox({
-                    helpers : {
-                        title: {
-                            type: 'outside',
-                            position: 'top'
-                        }
-                    },
-                    afterClose: function() {
-                        $.ajax(
-                        {
-                            type : 'POST',
-                            url : "{$path}"+"ajax/ajax.php?resetSandbox=1",
-                            dataType: 'json',
-                        });
-                        $('#configuration_form #paypal_sandbox_on').attr('checked', true);
-                    },
-                    'width':400,
-                    'height':200,
-                    'autoSize' : false,
-                    wrapCSS    : 'fancybox-paypal',
-                    'content': "<div id='ConfirmLive'><p><b>{l s='Désactiver le mode sandbox' mod='paypal'}</b></p>"+
-                    "<p>{l s='Vous souhaitez désactiver le mode sandbox.' mod='paypal'}</p>"+
-                    "<p style='margin-bottom: 30px;'>{l s='Nous vous redirigeons vers PayPal pour configurer le produit PayPal en production.' mod='paypal'}</p>"+
-                    "<a class='btn fancybox_close' role='button'>{l s='Rester en sandbox' mod='paypal'}</a><a href='"+activate_link+"' class='btn btn-info' role='button'>{l s='Passer en production' mod='paypal'}</a></div>"
-                });
-                $('.fancybox_close').on('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    $(this).parent().hide();
-                    $.fancybox.close();
-                });
+                var access_token_sandbox = "{$access_token_sandbox|escape:'html':'UTF-8'}";
+                if (access_token_sandbox) {
+                    content = "<div id='ConfirmLive'><p><b>{l s='Désactiver le mode sandbox' mod='paypal'}</b></p>"+
+                            "<p>{l s='Vous souhaitez désactiver le mode sandbox.' mod='paypal'}</p>"+
+                            "<p style='margin-bottom: 30px;'>{l s='You are sure ?' mod='paypal'}</p>"+
+                            "<a class='btn fancybox_close' role='button'>{l s='Rester en sandbox' mod='paypal'}</a><a href='"+activate_link+"' class='btn btn-info without-redirection' role='button'>{l s='Passer en production' mod='paypal'}</a></div>";
+                } else {
+                    content = "<div id='ConfirmLive'><p><b>{l s='Désactiver le mode sandbox' mod='paypal'}</b></p>"+
+                            "<p>{l s='Vous souhaitez désactiver le mode sandbox.' mod='paypal'}</p>"+
+                            "<p style='margin-bottom: 30px;'>{l s='Nous vous redirigeons vers PayPal pour configurer le produit PayPal en production.' mod='paypal'}</p>"+
+                            "<a class='btn fancybox_close' role='button'>{l s='Rester en sandbox' mod='paypal'}</a><a href='"+activate_link+"' class='btn btn-info' role='button'>{l s='Passer en production' mod='paypal'}</a></div>";
+                }
+                url = "sandbox=1";
+            } else {
+                var access_token_live = "{$access_token_live|escape:'html':'UTF-8'}";
+                if (access_token_live) {
+                    content = "<div id='ConfirmLive'><p><b>{l s='Désactiver le mode live' mod='paypal'}</b></p>"+
+                            "<p>{l s='Vous souhaitez désactiver le mode live.' mod='paypal'}</p>"+
+                            "<p style='margin-bottom: 30px;'>{l s='You are sure ?' mod='paypal'}</p>"+
+                            "<a class='btn fancybox_close' role='button'>{l s='Rester en production' mod='paypal'}</a><a href='"+activate_link+"' class='btn btn-info without-redirection' role='button'>{l s='Passer en sandbox' mod='paypal'}</a></div>";
+                } else {
+                    content = "<div id='ConfirmLive'><p><b>{l s='Désactiver le mode live' mod='paypal'}</b></p>"+
+                            "<p>{l s='Vous souhaitez désactiver le mode live.' mod='paypal'}</p>"+
+                            "<p style='margin-bottom: 30px;'>{l s='Nous vous redirigeons vers PayPal pour configurer le produit PayPal en sandbox.' mod='paypal'}</p>"+
+                            "<a class='btn fancybox_close' role='button'>{l s='Rester en production' mod='paypal'}</a><a href='"+activate_link+"' class='btn btn-info' role='button'>{l s='Passer en sandbox' mod='paypal'}</a></div>";
+                }
+                url = "sandbox=0";
             }
+            $.fancybox({
+                helpers : {
+                    title: {
+                        type: 'outside',
+                        position: 'top'
+                    }
+                },
+                afterClose: function() {
+                    if (no_ajax == false) {
+                        $.ajax(
+                                {
+                                    type : 'POST',
+                                    url : "{$path|escape:'html':'UTF-8'}"+"ajax/ajax.php?"+url,
+                                    dataType: 'json',
+                                });
+                        if(sandbox == 0) {
+                            $('#configuration_form #paypal_sandbox_on').attr('checked', true);
+                        } else {
+                            $('#configuration_form #paypal_sandbox_off').attr('checked', true);
+                        }
+                    }
+                },
+                'width':400,
+                'height':180,
+                'autoSize' : false,
+                wrapCSS    : 'fancybox-paypal',
+                'content': content,
+            });
+            $('.fancybox_close').on('click', function(e) {
+                no_ajax = false;
+                e.preventDefault();
+                e.stopPropagation();
+                $(this).parent().hide();
+                $.fancybox.close();
+            });
+            $('.without-redirection').on('click', function(e) {
+                no_ajax = true;
+                e.preventDefault();
+                e.stopPropagation();
+                $(this).parent().hide();
+                $.fancybox.close();
+            });
         });
     });
 
