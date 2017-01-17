@@ -67,6 +67,7 @@ class PaypalSDK
             "Authorization: Basic ".base64_encode("202:mattdelg")
         ));
         $response = curl_exec($curl);
+
         return $response;
 
     }

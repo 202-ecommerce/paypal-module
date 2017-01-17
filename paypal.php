@@ -292,7 +292,7 @@ class PayPal extends PaymentModule
          $this->context->controller->addCSS($this->_path.'views/css/paypal-bo.css', 'all');
          $fields_form[0]['form'] = array(
             'legend' => array(
-                'title' => $this->l('PARAMETRES du module'),
+                'title' => $this->l('PARAMETERS of the module'),
                 'image' => $this->_path.'/views/img/paypal_icon.png',
             ),
             'input' => array(
@@ -301,7 +301,7 @@ class PayPal extends PaymentModule
                     'label' => $this->l('Activate sandbox'),
                     'name' => 'paypal_sandbox',
                     'is_bool' => true,
-                    'hint' => $this->l('Mettez en place un environnement de test dans votre compte PayPal (seulement si vous êtes un développeur)'),
+                    'hint' => $this->l('Set up a test environment in your PayPal account (only if you are a developer)'),
                     'values' => array(
                         array(
                             'id' => 'paypal_sandbox_on',
@@ -328,7 +328,7 @@ class PayPal extends PaymentModule
                     'label' => $this->l('Mode intent'),
                     'name' => 'paypal_intent',
                     'desc' => $this->l(''),
-                    'hint' => $this->l('Sale : Procède au débit immédiat du client lors d’une commande. Authorization/capture : Le mode autorisation est un mode de paiement différé qui requiert de capturer les fonds manuellement quand vous souhaitez faire transiter l’argent. Ce mode est utilisé si vous souhaitez vous assurer que vous avez la marchandise avant d’encaisser l’argent par exemple. Attention, vous avez 29 jours pour capturer les fonds'),
+                    'hint' => $this->l('Sale: Performs the immediate debit of the customer during an order. Authorization / Capture: Authorization mode is a deferred payment method that requires manually capturing funds when you want to pass money. This mode is used if you want to make sure you have the merchandise before you cash the money for example. Attention, you have 29 days to capture the funds'),
                     'options' => array(
                         'query' => array(
                             array(
@@ -349,7 +349,7 @@ class PayPal extends PaymentModule
                     'label' => $this->l('Activate payment by cart'),
                     'name' => 'paypal_card',
                     'is_bool' => true,
-                    'hint' => $this->l('Vos clients peuvent régler leurs achats avec leurs cartes bancaires nationales ou internationales, qu\'ils possèdent déjà un compte PayPal ou non'),
+                    'hint' => $this->l('Your customers can pay for their purchases with their national or international bank cards, whether they already have a PayPal account or not'),
                     'values' => array(
                         array(
                             'id' => 'paypal_card_on',
@@ -365,11 +365,11 @@ class PayPal extends PaymentModule
                 ),
                 array(
                     'type' => 'switch',
-                    'label' => $this->l('Afficher advantages Paypal for clients during payment'),
+                    'label' => $this->l('Show Advantages Paypal for clients during payment'),
                     'name' => 'paypal_show_advantage',
                     'desc' => $this->l(''),
                     'is_bool' => true,
-                    'hint' => $this->l('Augmentez votre taux de conversion en présentant les avantages de PayPal à vos clients lors de la sélection de la méthode de paiement'),
+                    'hint' => $this->l('Increase your conversion rate by presenting the benefits of PayPal to your customers when selecting the payment method'),
                     'values' => array(
                         array(
                             'id' => 'paypal_show_advantage_on',
@@ -419,9 +419,9 @@ class PayPal extends PaymentModule
         $form = $helper->generateForm($fields_form);
 
         if (Configuration::get('PAYPAL_SANDBOX') == 1) {
-            $this->message .= $this->displayWarning($this->l('Votre compte PayPal est actuellement configuré pour accepter des paiement sur la Sandbox (environnement de test). Toute transaction sera fictive. Désactiver l’option, pour accepter les paiements réel (environnement de production) et connectez-vous avec vos identifiants PayPal'));
+            $this->message .= $this->displayWarning($this->l('Your PayPal account is currently configured to accept payments on the Sandbox (test environment). Any transaction will be fictitious. Disable the option, to accept actual payments (production environment) and log in with your PayPal credentials'));
         } elseif (Configuration::get('PAYPAL_SANDBOX') == 0) {
-            $this->message .= $this->displayConfirmation($this->l('Votre compte PayPal est correctement connecté, vous pouvez dès à présent recevoir des paiements '));
+            $this->message .= $this->displayConfirmation($this->l('Your PayPal account is properly connected, you can now receive payments'));
         }
 
         return $this->message.$this->display(__FILE__, 'views/templates/admin/configuration.tpl').$form;
@@ -430,6 +430,7 @@ class PayPal extends PaymentModule
 
     public function getPartnerInfo($method)
     {
+
         $return_url = $this->context->link->getAdminLink('AdminModules', true).'&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name;
         $partner_info = array(
             'customer_data' => array(
@@ -444,15 +445,18 @@ class PayPal extends PaymentModule
                         'country_code' => Tools::strtoupper($this->context->country->iso_code),
                         'postal_code' => Configuration::get('PS_SHOP_CODE'),
                     ),
+                    'website_urls' => array(Tools::getShopDomain(true)),
                 ),
                 'preferred_language_code' => 'en_US',
                 'primary_currency_code' => $this->context->currency->iso_code,
             ),
-            'web_experience_preference' => array(
-                'return_url' => urlencode($return_url.'&activate_method='.$method),
-            ),
             'products' => array('EXPRESS_CHECKOUT'),
         );
+        $web_experience_preference = new stdClass();
+        $web_experience_preference->return_url = ($return_url.'&activate_method='.$method);
+        $web_experience_preference->partner_logo_url = Tools::getShopDomain(true).'/img/logo.png';
+
+        $partner_info['web_experience_preference'] = $web_experience_preference;
         /* $partner_info['requested_capabilities'][] = array(
             'capability' => 'API_INTEGRATION',
             'api_integration_preference' => array(
@@ -536,7 +540,7 @@ class PayPal extends PaymentModule
         $action_text = $this->l('Pay by Paypal');
         $payment_options->setLogo(Media::getMediaPath(_PS_MODULE_DIR_.$this->name.'/views/img/paypal_sm.png'));
         if (Configuration::get('PAYPAL_API_ADVANTAGES')) {
-            $action_text .= ' | '.$this->l('C’est simple, facile, sécurisé');
+            $action_text .= ' | '.$this->l('It\'s simple, easy, secure');
         }
         $this->context->smarty->assign(array(
             'path' => $this->_path,

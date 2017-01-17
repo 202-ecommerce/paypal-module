@@ -23,7 +23,7 @@
 *  International Registered Trademark & Property of PrestaShop SA
 *}
 
-<p>{l s='Bénéficiez de nombreux avantages PayPal comme :' mod='paypal'}</p>
-<p><img src="{$path|escape:'html':'UTF-8'}views/img/protected.png" style="height: 43px; padding-right: 10px;">{l s='Vos achats protégés' mod='paypal'}*</p>
-<p><img src="{$path|escape:'html':'UTF-8'}views/img/rembourse.png" style=" height: 43px; padding-right: 10px;">{l s='Vos frais de retour remboursés' mod='paypal'}*</p>
-<p><i>{l s='* Voir conditions sur le site internet PayPal' mod='paypal'}</i></p>
+<p>{l s='Benefit from many PayPal advantages like :' mod='paypal'}</p>
+<p><img src="{$path|escape:'html':'UTF-8'}views/img/protected.png" style="height: 43px; padding-right: 10px;">{l s='Your purchases are protected' mod='paypal'}*</p>
+<p><img src="{$path|escape:'html':'UTF-8'}views/img/rembourse.png" style=" height: 43px; padding-right: 10px;">{l s='Your return costs refunded' mod='paypal'}*</p>
+<p><i>{l s='* See conditions on the PayPal website' mod='paypal'}</i></p>

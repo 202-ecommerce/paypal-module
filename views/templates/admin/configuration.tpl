@@ -47,13 +47,13 @@
                  <img src="{$path|escape:'html':'UTF-8'}/views/img/paypal_btm.png" alt=""  />
             </div>
             <div class="info">
-                <p class="paypal-bold">{l s='Pays du marchand' mod='paypal'} {$country|escape:'html':'UTF-8'}</p>
+                <p class="paypal-bold">{l s='Country of the dealer' mod='paypal'} {$country|escape:'html':'UTF-8'}</p>
                 <p><i>
-                    {l s='Si non spécifié, le pays par défaut est sélectionné. Pour modifier' mod='paypal'}
+                    {l s='If not specified, the default country is selected. To modify : ' mod='paypal'}
                     <a target="_blank" href="{$localization|escape:'html':'UTF-8'}">{l s='International > Localization' mod='paypal'}</a>
                 </i></p>
                 <p class="paypal-bold">
-                    {l s='Développez votre activité avec PayPal et bénéficiez d’une solution clé en main pour votre activité en ligne, sur mobile et à l’international.' mod='paypal'}
+                    {l s='Grow your business with PayPal and get a turnkey solution for your online business, mobile and internationally.' mod='paypal'}
                 </p>
             </div>
         </div>
@@ -69,13 +69,13 @@
         <div style="clear:both;"></div>
 
         <div class="active-products">
-            <p><b>{l s='2 produits PayPal sélectionnés pour vous'}</b></p>
+            <p><b>{l s='2 PayPal products selected for you'}</b></p>
             <div class="col-sm-6">
                 <div class="panel">
                     <img class="paypal-products" src="{$path|escape:'html':'UTF-8'}/views/img/paypal.png">
                     <span>{l s='Paypal' mod='paypal'}</span>
                     <p>
-                        {l s='Acceptez des paiements via notre produit PayPal Express Checkout. Vous toucherez nos plus de 192 millions de comptes PayPal actifs à travers le monde.' mod='paypal'}
+                        {l s='Accept payments via our PayPal Express Checkout product. You will receive our more than 192 million active PayPal accounts worldwide.' mod='paypal'}
                     </p>
                     <p><a herf="#">{l s='See more' mod='paypal'}</a></p>
                     <div class="bottom">
@@ -89,7 +89,7 @@
                     <img class="paypal-products" src="{$path|escape:'html':'UTF-8'}/views/img/paypal.png">
                     <span>{l s='Paypal and card' mod='paypal'}</span>
                     <p>
-                        {l s='Acceptez des paiements via notre produit PayPal Express Checkout. Non seulement vous acceptez PayPal avec ces 192 millions de comptes actifs mais aussi vous acceptez de nombreuses cartes bancaires à travers le monde.' mod='paypal'}
+                        {l s='Accept payments via our PayPal Express Checkout product. Not only do you accept PayPal with these 192 million active accounts but also you accept many bank cards throughout the world.' mod='paypal'}
                     </p>
                     <p><a herf="#">{l s='See more' mod='paypal'}</a></p>
                     <div class="bottom">
@@ -112,9 +112,9 @@
                 <div class="col-sm-8 help-left">
                     <img src="{$path|escape:'html':'UTF-8'}/views/img/paypal.png">
                     {l s='Paypal products' mod='paypal'} : <b>{$active_products|escape:'html':'UTF-8'}</b>
-                    <a id="change_product" href=""> | {l s='Modifier' mod='paypal'}</a>
-                    <p>{l s='Acceptez les paiements via PayPal et optimisez votre conversion.Accélérez les paiements de vos clients PayPal et avec One TouchTM, ils pourront régler leurs achats en un clin d\'œil.' mod='paypal'}</p>
-                    <a href="#"><b>{l s='En savoir plus sur le site PayPal' mod='paypal'}</b></a>
+                    <a id="change_product" href=""> | {l s='Edit' mod='paypal'}</a>
+                    <p>{l s='Accept payments via PayPal and optimize conversion. Accelerate payments from your PayPal customers with One Touch ™, they can pay for their purchases in the blink\'s eye.' mod='paypal'}</p>
+                    <a href="#"><b>{l s='Learn more about PayPal' mod='paypal'}</b></a>
                     </p>
                 </div>
                 <div class="col-sm-3 help-right">
@@ -151,29 +151,29 @@
             if(sandbox == 0) {
                 var access_token_sandbox = "{$access_token_sandbox|escape:'html':'UTF-8'}";
                 if (access_token_sandbox) {
-                    content = "<div id='ConfirmLive'><p><b>{l s='Désactiver le mode sandbox' mod='paypal'}</b></p>"+
-                            "<p>{l s='Vous souhaitez désactiver le mode sandbox.' mod='paypal'}</p>"+
+                    content = "<div id='ConfirmLive'><p><b>{l s='Disable sandbox mode' mod='paypal'}</b></p>"+
+                            "<p>{l s='You want to disable the sandbox mode.' mod='paypal'}</p>"+
                             "<p style='margin-bottom: 30px;'>{l s='You are sure ?' mod='paypal'}</p>"+
-                            "<a class='btn fancybox_close' role='button'>{l s='Rester en sandbox' mod='paypal'}</a><a href='"+activate_link+"' class='btn btn-info without-redirection' role='button'>{l s='Passer en production' mod='paypal'}</a></div>";
+                            "<a class='btn fancybox_close' role='button'>{l s='Stay in sandbox' mod='paypal'}</a><a href='"+activate_link+"' class='btn btn-info without-redirection' role='button'>{l s='Passer en production' mod='paypal'}</a></div>";
                 } else {
-                    content = "<div id='ConfirmLive'><p><b>{l s='Désactiver le mode sandbox' mod='paypal'}</b></p>"+
-                            "<p>{l s='Vous souhaitez désactiver le mode sandbox.' mod='paypal'}</p>"+
-                            "<p style='margin-bottom: 30px;'>{l s='Nous vous redirigeons vers PayPal pour configurer le produit PayPal en production.' mod='paypal'}</p>"+
-                            "<a class='btn fancybox_close' role='button'>{l s='Rester en sandbox' mod='paypal'}</a><a href='"+activate_link+"' class='btn btn-info' role='button'>{l s='Passer en production' mod='paypal'}</a></div>";
+                    content = "<div id='ConfirmLive'><p><b>{l s='Disable sandbox mode' mod='paypal'}</b></p>"+
+                            "<p>{l s='You want to disable the sandbox mode.' mod='paypal'}</p>"+
+                            "<p style='margin-bottom: 30px;'>{l s='We redirect you to PayPal to configure the PayPal product in production.' mod='paypal'}</p>"+
+                            "<a class='btn fancybox_close' role='button'>{l s='Stay in sandbox' mod='paypal'}</a><a href='"+activate_link+"' class='btn btn-info' role='button'>{l s='Passer en production' mod='paypal'}</a></div>";
                 }
                 url = "sandbox=1";
             } else {
                 var access_token_live = "{$access_token_live|escape:'html':'UTF-8'}";
                 if (access_token_live) {
-                    content = "<div id='ConfirmLive'><p><b>{l s='Désactiver le mode live' mod='paypal'}</b></p>"+
-                            "<p>{l s='Vous souhaitez désactiver le mode live.' mod='paypal'}</p>"+
+                    content = "<div id='ConfirmLive'><p><b>{l s='Disable production mode' mod='paypal'}</b></p>"+
+                            "<p>{l s='You want to disable the production mode.' mod='paypal'}</p>"+
                             "<p style='margin-bottom: 30px;'>{l s='You are sure ?' mod='paypal'}</p>"+
-                            "<a class='btn fancybox_close' role='button'>{l s='Rester en production' mod='paypal'}</a><a href='"+activate_link+"' class='btn btn-info without-redirection' role='button'>{l s='Passer en sandbox' mod='paypal'}</a></div>";
+                            "<a class='btn fancybox_close' role='button'>{l s='Stay in production' mod='paypal'}</a><a href='"+activate_link+"' class='btn btn-info without-redirection' role='button'>{l s='Passer en sandbox' mod='paypal'}</a></div>";
                 } else {
-                    content = "<div id='ConfirmLive'><p><b>{l s='Désactiver le mode live' mod='paypal'}</b></p>"+
-                            "<p>{l s='Vous souhaitez désactiver le mode live.' mod='paypal'}</p>"+
-                            "<p style='margin-bottom: 30px;'>{l s='Nous vous redirigeons vers PayPal pour configurer le produit PayPal en sandbox.' mod='paypal'}</p>"+
-                            "<a class='btn fancybox_close' role='button'>{l s='Rester en production' mod='paypal'}</a><a href='"+activate_link+"' class='btn btn-info' role='button'>{l s='Passer en sandbox' mod='paypal'}</a></div>";
+                    content = "<div id='ConfirmLive'><p><b>{l s='Disable production mode' mod='paypal'}</b></p>"+
+                            "<p>{l s='You want to disable the production mode.' mod='paypal'}</p>"+
+                            "<p style='margin-bottom: 30px;'>{l s='We redirect you to PayPal to configure the PayPal product in sandbox.' mod='paypal'}</p>"+
+                            "<a class='btn fancybox_close' role='button'>{l s='Stay in production' mod='paypal'}</a><a href='"+activate_link+"' class='btn btn-info' role='button'>{l s='Passer en sandbox' mod='paypal'}</a></div>";
                 }
                 url = "sandbox=0";
             }
