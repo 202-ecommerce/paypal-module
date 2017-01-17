@@ -13,12 +13,12 @@
 			business_name: '{$Business_Name}',
 			redirect_url: '{$Braintree_Redirect_Url}'
 		}).done(function(data){
-			console.log(data);
+			//console.log(data);
 
 			var partner = new BraintreeOAuthConnect({
 				connectUrl : data.data.url_connect,
 				container: 'button_braintree',
-                environment: 'sandbox',
+                environment: {if $PayPal_sandbox_mode}'sandbox'{else}'production'{/if},
                 onError: function (errorObject) {
                     console.warn(errorObject.message);
                 }

@@ -46,8 +46,8 @@ define('ECS', 4); //Paypal Option +
 define('PPP', 5); //Paypal Plus
 define('PVZ', 6); //Braintree ONLY
 
-define('SANDBOX_PROXY_HOST', 'http://vps340297.ovh.net/');
 define('PROD_PROXY_HOST', 'http://pp.pp-ps-auth.com/');
+define('SANDBOX_PROXY_HOST', 'http://pp-sandbox.pp-ps-auth.com/');
 
 /* Tracking */
 define('TRACKING_INTEGRAL_EVOLUTION', 'FR_PRESTASHOP_H3S');
