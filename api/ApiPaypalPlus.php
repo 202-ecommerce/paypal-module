@@ -132,9 +132,8 @@ class ApiPaypalPlus
 
         $presentation = new stdClass();
         $presentation->brand_name = Configuration::get('PS_SHOP_NAME');
-        $presentation->logo_image = Tools::getHttpHost().__PS_BASE_URI__.'img/logo.jpg';
+        $presentation->logo_image = Tools::getHttpHost(true).__PS_BASE_URI__.'img/logo.jpg';
         $presentation->locale_code = Tools::strtoupper(Language::getIsoById($this->context->language->id));
-
         $input_fields = new stdClass();
         $input_fields->allow_note = false;
         $input_fields->no_shipping = 1;
@@ -165,7 +164,6 @@ class ApiPaypalPlus
             );
 
             $result = Tools::jsonDecode($this->sendByCURL(URL_PPP_WEBPROFILE, Tools::jsonEncode($data), $header));
-
             if (isset($result->id)) {
                 return $result->id;
             } else {
