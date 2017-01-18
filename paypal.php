@@ -1161,7 +1161,14 @@ class PayPal extends PaymentModule
             );
         } elseif ($method == PPP ) {
             if(Module::isEnabled('eu_legal') || Module::isEnabled('advancedeucompliance'))
-            {
+            {   
+                $this->context->smarty->assign(
+                    array(
+                        'eu_legal_active' => Module::isEnabled('eu_legal'),
+                        'advancedeucompliance_active' => Module::isEnabled('advancedeucompliance'),
+                    )
+                );
+
                 return array(
                     'cta_text' => $this->l('Paypal, Lastschrift, Kreditkarte, Rechnung'),
                     'logo' => $logo,
