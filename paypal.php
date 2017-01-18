@@ -46,7 +46,7 @@ define('ECS', 4); //Paypal Option +
 define('PPP', 5); //Paypal Plus
 define('PVZ', 6); //Braintree ONLY
 
-define('PROD_PROXY_HOST', 'http://pp-ps-auth.com/');
+define('PROD_PROXY_HOST', 'https://pp-ps-auth.com/');
 define('SANDBOX_PROXY_HOST', 'http://sandbox.pp-ps-auth.com/');
 
 /* Tracking */
@@ -1629,9 +1629,6 @@ class PayPal extends PaymentModule
 
     public function getPaymentMethods()
     {
-        // * TO DELETE *
-        //return array(WPS, HSS, ECS, PVZ);
-
         if (Configuration::get('PAYPAL_UPDATED_COUNTRIES_OK')) {
             return AuthenticatePaymentMethods::authenticatePaymentMethodByLang(Tools::strtoupper($this->context->language->iso_code));
         } else {

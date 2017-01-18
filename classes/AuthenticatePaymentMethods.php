@@ -41,7 +41,7 @@ class AuthenticatePaymentMethods
             'CZ'=>array(WPS, ECS),
             'DE'=>array(WPS, ECS, PPP),
             'ES'=>array(WPS, HSS, ECS),
-            'FR'=>array(WPS, HSS, ECS),
+            'FR'=>array(WPS, HSS, ECS, PVZ),
             'IT'=>array(WPS, HSS, ECS),
             'VA'=>array(WPS, HSS, ECS),
             'NL'=>array(WPS, ECS),
