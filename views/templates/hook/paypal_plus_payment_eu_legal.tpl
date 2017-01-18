@@ -23,8 +23,10 @@
 *  International Registered Trademark & Property of PrestaShop SA
 *}
 
-
 {*Displaying a button or the iframe*}
+{if $advancedeucompliance_active}
+    <form onsubmit="doPatch(ppp); return false;"></form>
+{/if}
 <div id="ppplusDiv" style="display:block; width:100%; ">
 <div id="ppplus" style="display:block; width:100%;"></div>
 </div>
@@ -46,11 +48,7 @@
             ppp.deselectPaymentMethod();
         }
     });
-    $('#paypal_payment form').on('submit',function(event){
-        event.preventDefault();
-        doPatch(ppp);
-        return false;
-    });
+
     function doPatch(ppp) {
 
         $('#ppplus iframe').slideUp();
@@ -64,5 +62,23 @@
 
         });
     }
+
+    // ADD for module eu_legal
+    $('#paypal_payment form').on('submit',function(event){
+        event.preventDefault();
+        doPatch(ppp);
+        return false;
+    });
+
+    // Display Paypal payment options :
+    $(document).on('click', '.payment_module', function(e) {
+        var ppp_el = $(this).parent().find('#ppplusDiv');
+        if (ppp_el.length) {               // Clicked element has a #ppplusDiv child.
+            ppp_el.parent().stop().show(); // Display paypal options.
+        } else {                           // Clicked element doesn't contain #ppplusDiv child,
+            $(document).find('#ppplusDiv').parent().stop().hide(); // thus we can hide paypal options.
+        }
+    });
+
 </script>
 {/literal}
