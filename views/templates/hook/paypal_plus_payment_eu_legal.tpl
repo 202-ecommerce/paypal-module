@@ -46,11 +46,7 @@
             ppp.deselectPaymentMethod();
         }
     });
-    $('#paypal_payment form').on('submit',function(event){
-        event.preventDefault();
-        doPatch(ppp);
-        return false;
-    });
+
     function doPatch(ppp) {
 
         $('#ppplus iframe').slideUp();
@@ -64,5 +60,20 @@
 
         });
     }
+
+    // ADD for module eu_legal
+    $('#paypal_payment form').on('submit',function(event){
+        event.preventDefault();
+        doPatch(ppp);
+        return false;
+    });
+
+
+    // ADD for module advancedeucompliance
+    $(".payment_module").on('click',function(){
+        $('#ppplus').parents('.col-xs-6').each(function(){
+            console.log(this.find('#ppplusDiv'));
+        });
+    });
 </script>
 {/literal}

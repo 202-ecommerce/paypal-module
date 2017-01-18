@@ -929,10 +929,6 @@ class PayPal extends PaymentModule
             return false;
         }
 
-        //If no expiration date for the Braintree token or no refresh token for Braintree
-        if( !Configuration::get('PAYPAL_BRAINTREE_EXPIRES_AT') || !Configuration::get('PAYPAL_BRAINTREE_REFRESH_TOKEN') ) {
-            return false;
-        }
 
         //If merchant has not upgraded and payment method is out of country's specs
         if (!Configuration::get('PAYPAL_UPDATED_COUNTRIES_OK') && !in_array((int) Configuration::get('PAYPAL_PAYMENT_METHOD'), $this->getPaymentMethods())) {
@@ -1113,7 +1109,6 @@ class PayPal extends PaymentModule
                     'img_loader' => _PS_IMG_.'loader.gif',
                 )
             );
-
             return $return_braintree.$this->fetchTemplate('paypal_plus_payment.tpl');
         }
     }
@@ -1161,7 +1156,7 @@ class PayPal extends PaymentModule
                 'form' => $this->fetchTemplate('express_checkout_payment_eu.tpl'),
             );
         } elseif ($method == PPP ) {
-            if(Module::isEnabled('eu_legal'))
+            if(Module::isEnabled('eu_legal') || Module::isEnabled('advancedeucompliance'))
             {
                 return array(
                     'cta_text' => $this->l('Paypal, Lastschrift, Kreditkarte, Rechnung'),
@@ -1625,9 +1620,6 @@ class PayPal extends PaymentModule
 
     public function getPaymentMethods()
     {
-        // /!\ à enlever /!\
-        return array(WPS, HSS, ECS, PVZ);
-        
         if (Configuration::get('PAYPAL_UPDATED_COUNTRIES_OK')) {
             return AuthenticatePaymentMethods::authenticatePaymentMethodByLang(Tools::strtoupper($this->context->language->iso_code));
         } else {
