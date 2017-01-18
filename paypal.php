@@ -46,8 +46,8 @@ define('ECS', 4); //Paypal Option +
 define('PPP', 5); //Paypal Plus
 define('PVZ', 6); //Braintree ONLY
 
-define('PROD_PROXY_HOST', 'http://pp.pp-ps-auth.com/');
-define('SANDBOX_PROXY_HOST', 'http://pp-sandbox.pp-ps-auth.com/');
+define('PROD_PROXY_HOST', 'http://pp-ps-auth.com/');
+define('SANDBOX_PROXY_HOST', 'http://sandbox.pp-ps-auth.com/');
 
 /* Tracking */
 define('TRACKING_INTEGRAL_EVOLUTION', 'FR_PRESTASHOP_H3S');
@@ -640,11 +640,15 @@ class PayPal extends PaymentModule
         $braintree_style = '';
 
         if( Tools::getValue('braintree_configured') ) {
+            $output = $this->displayConfirmation( $this->l('Your Braintree account is now configured. If you have problems, you can join Braintree support at xxxx') );
+
             $braintree_message = $this->l('Your Braintree account is now configured. If you have problems, you can join Braintree support at xxxx');
             $braintree_style = 'color:#008000;';
         }
         
         if( Tools::getValue('error') ) {
+            $output = $this->displayError( $this->l('Braintree is not configured. If you have problems, you can join Braintree support at xxxx') );
+
             $braintree_message = $this->l('Braintree is not configured. If you have problems, you can join Braintree support at xxxx');
             $braintree_style = 'color:#dc143c;';
         }
@@ -1625,9 +1629,9 @@ class PayPal extends PaymentModule
 
     public function getPaymentMethods()
     {
-        // /!\ à enlever /!\
-        return array(WPS, HSS, ECS, PVZ);
-        
+        // * TO DELETE *
+        //return array(WPS, HSS, ECS, PVZ);
+
         if (Configuration::get('PAYPAL_UPDATED_COUNTRIES_OK')) {
             return AuthenticatePaymentMethods::authenticatePaymentMethodByLang(Tools::strtoupper($this->context->language->iso_code));
         } else {

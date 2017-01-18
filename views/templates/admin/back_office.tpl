@@ -457,8 +457,8 @@
 					<h4>{l s='Are you sure you want to activate the test mode ?' mod='paypal'}</h4>
 
 					<div id="buttons">
-						<button class="fancy_confirm" name="fancy_confirm" value="0">{l s='No' mod='paypal'}</button>
-						<button class="fancy_confirm" name="fancy_confirm" value="1">{l s='Yes' mod='paypal'}</button>
+						<button class="sandbox_confirm" value="1">{l s='Yes' mod='paypal'}</button>
+						<button class="sandbox_confirm" value="0">{l s='No' mod='paypal'}</button>
 					</div>
 				</div>
 
