@@ -76,7 +76,7 @@ class PayPalBraintreeSubmitModuleFrontController extends ModuleFrontController
             case 'alreadyTry':
 
                 $braintree_transaction = $braintree->checkStatus($this->context->cart->id);
-                if ($braintree_transaction instanceof Braintree_Transaction) {
+                if ($braintree_transaction instanceof Braintree_Transaction && ($braintree_transaction->status == 'submitted_for_settlement' || $braintree_transaction->status == 'authorized')) {
                     $transactionDetail = $this->getDetailsTransaction($braintree_transaction->id,$braintree_transaction->status);
                     $paypal->validateOrder($this->context->cart->id, Configuration::get('PS_OS_PAYMENT'), $braintree_transaction->amount, $paypal->displayName, $paypal->l('Payment accepted.'),$transactionDetail);
                     $order_id = Order::getOrderByCartId($this->context->cart->id);

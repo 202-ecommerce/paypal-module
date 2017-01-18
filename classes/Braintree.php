@@ -112,7 +112,7 @@ class PrestaBraintree{
             
             $result = $this->gateway->transaction()->sale($data);
             
-            if(($result instanceof Braintree_Result_Successful) && $result->success)
+            if(($result instanceof Braintree_Result_Successful) && $result->success && ($result->transaction->status == 'submitted_for_settlement' || $result->transaction->status == 'authorized'))
             {
                 return $result->transaction;
             }
