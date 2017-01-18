@@ -329,18 +329,19 @@ $(document).ready(function () {
                 var div = $('<div id="paypal-test-mode-confirmation">');
                 var inner = $('#paypal-test-mode-confirmation').clone().html();
                 $.fancybox({'hideOnOverlayClick': true, 'content': div.append(inner)});
+
+                $('button.sandbox_confirm').on('click', function () {
+                    jQuery.fancybox.close();
+                    if ($(this).val() == '1') {
+                        $('input[name="sandbox_mode"]').filter('[value="1"]').attr('checked', true);
+                    } else {
+                        $('input[name="sandbox_mode"]').filter('[value="0"]').attr('checked', true);
+                    }
+                });
+
                 return false;
             }
             return true;
-        });
-
-        $('button.fancy_confirm').on('click', function () {
-            jQuery.fancybox.close();
-            if ($(this).val() == '1') {
-                $('input[name="sandbox_mode"]').filter('[value="1"]').attr('checked', true);
-            } else {
-                $('input[name="sandbox_mode"]').filter('[value="0"]').attr('checked', true);
-            }
         });
 
         if ($('#paypal-save-success').length > 0)
