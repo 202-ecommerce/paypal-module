@@ -146,7 +146,7 @@ class PrestaBraintree{
                 )
             );
 
-            $transaction = $this->gateway->transaction->find($collection->_ids[0]);
+            $transaction = $this->gateway->transaction()->find($collection->_ids[0]);
 
         }catch(Exception $e){
             PrestaShopLogger::addLog($e->getCode().'=>'.$e->getMessage());
