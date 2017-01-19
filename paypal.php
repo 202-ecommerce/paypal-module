@@ -640,11 +640,8 @@ class PayPal extends PaymentModule
         $braintree_message = '';
         $braintree_style = '';
 
-        if( Tools::getValue('braintree_configured') ) {
+        if( Tools::getIsset('accessToken') && Tools::getIsset('expiresAt') && Tools::getIsset('refreshToken' )) {
             $output = $this->displayConfirmation( $this->l('Your Braintree account is now configured. If you have problems, you can join Braintree support at xxxx') );
-
-            $braintree_message = $this->l('Your Braintree account is now configured. If you have problems, you can join Braintree support at xxxx');
-            $braintree_style = 'color:#008000;';
         }
         
         if( Tools::getValue('error') ) {
@@ -1883,11 +1880,6 @@ class PayPal extends PaymentModule
             Configuration::updateValue('PAYPAL_BRAINTREE_REFRESH_TOKEN', Tools::getValue('refreshToken'));
             Configuration::updateValue('PAYPAL_BRAINTREE_MERCHANT_ID', Tools::getValue('merchantId'));
 
-            $admin_dir = explode('/',_PS_ADMIN_DIR_);
-
-            $redirect = _PS_BASE_URL_.__PS_BASE_URI__. $admin_dir[ ( count($admin_dir) ) - 1] .'/index.php?controller=AdminModules&tab_module=payments_gateways&configure='.$this->name.'&module_name='.$this->name.'&token='.Tools::getAdminTokenLite('AdminModules');
-
-            Tools::redirect($redirect);
         }
 
         return $this->loadLangDefault();
