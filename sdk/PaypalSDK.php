@@ -52,7 +52,12 @@ class PaypalSDK
 
     }
 
-    private function makeCallIntermediateServer($partner_info)
+    public function getAccessToken()
+    {
+        return $this->makeCallIntermediateServer(array('getToken' => true));
+    }
+
+    private function makeCallIntermediateServer($body)
     {
 
         $curl = curl_init();
@@ -61,13 +66,13 @@ class PaypalSDK
         curl_setopt($curl, CURLOPT_POST, 1);
         curl_setopt($curl, CURLOPT_URL, $this->urlIntermediateServer);
        // curl_setopt($curl, CURLOPT_URL, $this->urlIntermediateServer.'?method='.$method);
-        curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($partner_info));
+        curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($body));
         curl_setopt($curl, CURLOPT_HTTPHEADER, array(
             "Accept: application/json",
             "Authorization: Basic ".base64_encode("202:mattdelg")
         ));
         $response = curl_exec($curl);
-
+       // print_r($response);die;
         return $response;
 
     }
@@ -82,24 +87,46 @@ class PaypalSDK
         return json_decode($response);
     }
 
+    public function getStatusResources()
+    {
+        //TODO delete if not use !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        $this->action = 'GET';
+        $this->endpoint = 'v1/customer/partners/AReLzfjunEgE3vvOxUgjPQZZXe2L9tcxI0NVIUzOF8BAmB8G4I0qsEUwptPtVF1Ioyu1TpAMQtG_nAeG/merchant-integrations?tracking_id=sometracking';
+        $response = $this->makeCall(null, $this->endpoint, $this->action);
+
+        return json_decode($response);
+    }
+
+    public function getUserStatus()
+    {
+        //TODO delete if not use !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        $this->action = 'GET';
+        $this->endpoint = 'v1/customer/partners/AReLzfjunEgE3vvOxUgjPQZZXe2L9tcxI0NVIUzOF8BAmB8G4I0qsEUwptPtVF1Ioyu1TpAMQtG_nAeG/merchant-integrations/7A8PVP8FJ7W58';
+        $response = $this->makeCall(null, $this->endpoint, $this->action);
+
+        return json_decode($response);
+    }
+
     public function grantToken($body)
     {
+        //TODO delete if not use !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         $this->action = 'POST';
         $this->endpoint = 'v1/identity/openidconnect/tokenservice'; // also possible to refresh token with this endpoint to recieve new access token
         $body = array(
-            "grant_type" => "authorization_code", //refresh_token
-            "code" => "Authorization-Code", // refresh token code and no url required
-            "redirect_uri" => "http://iuliia-17.work.202-ecommerce.com/admin524drqi1g/index.php?controller=AdminModules&configure=paypal&token=f39f05142ce7edf40e2b990f7aaad5a7"
+            "grant_type" => "refresh_token", //refresh_token
+            "code" => "A101.e1F30HLWSEE3BqwBVQtxYL4bC6IlOzt_6iMc1oNXTYJNZ-sfBqQ40bRe09NW7ies.rrckTCcQgwDKvISFqm05mStj2HG", // refresh token code and no url required
+            "redirect_uri" => "http://iuliia-1704.work.202-ecommerce.com/bb/index.php?controller=AdminModules&token=536865d1c87a6ca824ddf00bac193b09&configure=paypal&tab_module=payments_gateways&module_name=paypal"
             );
-        $this->makeCall($this->getBody($body),  $this->endpoint, $this->action, "application/x-www-form-urlencoded", "EOJ2S-Z6OoN_le_KS1d75wsZ6y0SFdVsY9183IvxFyZp:EClusMEUk8e9ihI7ZdVLF5cZ6y0SFdVsY9183IvxFyZp");
+        $response = $this->makeCall($this->getBody($body),  $this->endpoint, $this->action, "application/x-www-form-urlencoded", "AReLzfjunEgE3vvOxUgjPQZZXe2L9tcxI0NVIUzOF8BAmB8G4I0qsEUwptPtVF1Ioyu1TpAMQtG_nAeG:EAhYgH_trpF1FGeXQzia4UWAPasM6zVVCY6gCFT9m7RsDbe7nCV2LXs2Ewn9YW32nEIqh1bR0zNfrZOS");
 
         return $this->response;
     }
 
     public function getCredentials()
     {
+        //TODO delete if not use !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         $this->action = 'GET';
-        $this->endpoint = '/v1/identity/applications/@classic/owner/LQWH2R7C7XS7C/credentials';
+        $this->endpoint = '/v1/identity/applications/@classic/owner/7A8PVP8FJ7W58/credentials';
         $this->makeCall(null, $this->endpoint, $this->action);
 
         return $this->response;
@@ -224,7 +251,6 @@ class PaypalSDK
 
     protected function makeCall($body = null, $url = null, $action = "POST", $cnt_type = "application/json", $user = null)
     {
-
         $curl = curl_init();
         if ($action == "GET") {
             $body = (is_array($body)) ? http_build_query($body) : $body;
@@ -259,12 +285,12 @@ class PaypalSDK
             curl_setopt($curl, CURLOPT_HTTPHEADER, array(
                 "Content-type: ".$cnt_type,
                 'Content-Length: ' . strlen($body),
-                "Authorization: Bearer A101.AeuzH29HiJvVSwpkeAxZGL8FPkAI-bX26QIh_Q2evXKX-fzJ6WUSrtKUuRWtnyoN.6WMol7MnSAqYrC8ylFTJXND_RnS",
+                "Authorization: Bearer A101.e1F30HLWSEE3BqwBVQtxYL4bC6IlOzt_6iMc1oNXTYJNZ-sfBqQ40bRe09NW7ies.rrckTCcQgwDKvISFqm05mStj2HG",
             ));
         }
 
         $response = curl_exec($curl);
-        //var_dump(curl_errno($curl));die;
+
         if (curl_errno($curl)) {
             die('error occured during curl exec. Additioanl info: ' . curl_errno($curl).':'. curl_error($curl));
         }

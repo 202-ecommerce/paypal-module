@@ -59,7 +59,7 @@ class PaypalTest {
             curl_setopt($curl, CURLOPT_HTTPHEADER, array(
                 "Content-type: ".$cnt_type,
                 'Content-Length: ' . strlen($body),
-                "Authorization: Bearer ".$token,
+                "Authorization: Bearer A101.e1F30HLWSEE3BqwBVQtxYL4bC6IlOzt_6iMc1oNXTYJNZ-sfBqQ40bRe09NW7ies.rrckTCcQgwDKvISFqm05mStj2HG",
             ));
         }
 
@@ -78,16 +78,21 @@ class PaypalTest {
 $paypaltest = new PaypalTest(1);
 $response = $paypaltest->createAccessToken("grant_type=client_credentials");
 $response_decode = json_decode($response);
-$acces_token = $response_decode->access_token;
+$access_token = $response_decode->access_token;
+/*if ($_POST['getToken']) {
+    echo json_encode($access_token);
+    return true;
+}*/
 
-$referrals = $paypaltest->createPartnerReferrals(json_encode($_POST), $acces_token);
+$referrals = $paypaltest->createPartnerReferrals(json_encode($_POST), $access_token);
 
+if ($referrals->name) {
+    $referrals->error = "Error API: ".$referrals->name." : ".$referrals->message;
+}
 $link = $referrals->links[1]->href;
 $response = array(
     'success'=> isset($referrals->error) ? false : true,
     'data'=> array(
-        'accessToken'=> $acces_token,
-        //'expireAt'=> $result->credentials->expiresAt->format( DateTime::ISO8601 ),
         'link'=> $link,
     ),
     'error'=> isset($referrals->error) ? $referrals->error : null,

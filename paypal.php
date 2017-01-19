@@ -432,46 +432,77 @@ class PayPal extends PaymentModule
     {
 
         $return_url = $this->context->link->getAdminLink('AdminModules', true).'&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name;
-        $partner_info = array(
-            'customer_data' => array(
-                'customer_type' => 'MERCHANT',
-                'person_details' => array(
-                    'email_address' => Configuration::get('PS_SHOP_EMAIL'),
-                ),
-                'business_details' => array(
-                    'business_address' => array(
-                        'line1' => Configuration::get('PS_SHOP_ADDR1'),
-                        'city' => Configuration::get('PS_SHOP_CITY'),
-                        'country_code' => Tools::strtoupper($this->context->country->iso_code),
-                        'postal_code' => Configuration::get('PS_SHOP_CODE'),
-                    ),
-                    'website_urls' => array(Tools::getShopDomain(true)),
-                ),
-                'preferred_language_code' => 'en_US',
-                'primary_currency_code' => $this->context->currency->iso_code,
-            ),
-            'products' => array('EXPRESS_CHECKOUT'),
-        );
+        if (Configuration::get('PS_SSL_ENABLED')) {
+            $shop_url = Tools::getShopDomainSsl(true);
+        } else {
+            $shop_url = Tools::getShopDomain(true);
+        }
+
+        $partner_info = new stdClass();
+
+        $customer_data = new stdClass();
+
+        $person_details = new stdClass();
+        $person_details->email_address = Configuration::get('PS_SHOP_EMAIL');
+
+        $business_details = new stdClass();
+
+        $business_address = new stdClass();
+        $business_address->line1 = Configuration::get('PS_SHOP_ADDR1');
+        $business_address->city = Configuration::get('PS_SHOP_CITY');
+        $business_address->country_code = Tools::strtoupper($this->context->country->iso_code);
+        $business_address->postal_code = Configuration::get('PS_SHOP_CODE');
+
+        $business_details->business_address = $business_address;
+        $business_details->website_urls = array($shop_url);
+
+        $customer_data->customer_type = 'MERCHANT';
+        $customer_data->person_details = $person_details;
+        $customer_data->business_details = $business_details;
+        $customer_data->preferred_language_code = $this->context->language->iso_code.'_'.Tools::strtoupper($this->context->language->iso_code);
+        $customer_data->primary_currency_code = $this->context->currency->iso_code;
+
+        $tracking = new stdClass();
+        $tracking->type = 'TRACKING_ID';
+        $tracking->value = 'sometracking';
+        $partner_specific_identifiers[] = $tracking;
+        $customer_data->partner_specific_identifiers = $partner_specific_identifiers;
+
         $web_experience_preference = new stdClass();
         $web_experience_preference->return_url = ($return_url.'&activate_method='.$method);
         $web_experience_preference->partner_logo_url = Tools::getShopDomain(true).'/img/logo.png';
 
-        $partner_info['web_experience_preference'] = $web_experience_preference;
-        /* $partner_info['requested_capabilities'][] = array(
-            'capability' => 'API_INTEGRATION',
-            'api_integration_preference' => array(
-                'rest_api_integration' => array(
-                    'integration_method' => 'PAYPAL',
-                    'integration_type' => 'THIRD_PARTY',
-                ),
-                'rest_third_party_details' => array(
-                    'partner_client_id' => 'AReLzfjunEgE3vvOxUgjPQZZXe2L9tcxI0NVIUzOF8BAmB8G4I0qsEUwptPtVF1Ioyu1TpAMQtG_nAeG',
-                    'feature_list' => array('PAYMENT', 'REFUND'),
-                ),
-            ),
-        );*/
+        //go to fatal error
+        $consents = new stdClass();
+        $consents->type = "SHARE_DATA_CONSENT";
+        $consents->granted = true;
+        $collected_consents[] = $consents;
+
+        $api_integration_preference = new stdClass();
+        $rest_api_integration = new stdClass();
+        $rest_api_integration->integration_method = 'PAYPAL';
+        $rest_api_integration->integration_type = 'THIRD_PARTY';
+        $rest_third_party_details = new stdClass();
+        $rest_third_party_details->partner_client_id = "AReLzfjunEgE3vvOxUgjPQZZXe2L9tcxI0NVIUzOF8BAmB8G4I0qsEUwptPtVF1Ioyu1TpAMQtG_nAeG";
+        $rest_third_party_details->feature_list = array('PAYMENT', 'REFUND', 'FUTURE_PAYMENT', 'DIRECT_PAYMENT');
+        $api_integration_preference->rest_api_integration = $rest_api_integration;
+        $api_integration_preference->rest_third_party_details = $rest_third_party_details;
+
+        $capability = new stdClass();
+        $capability->capability = 'API_INTEGRATION';
+        $capability->api_integration_preference = $api_integration_preference;
+        $requested_capabilities[] = $capability;
+
+
+        $partner_info->customer_data = $customer_data;
+        $partner_info->requested_capabilities = $requested_capabilities;
+        $partner_info->web_experience_preference = $web_experience_preference;
+       // $partner_info->collected_consents = $collected_consents;
+        $partner_info->products = array($method);
+
         $sdk = new PaypalSDK(Configuration::get('PAYPAL_SANDBOX'));
         $response = json_decode($sdk->getUrlOnboarding($partner_info));
+
         return $response;
 
     }
