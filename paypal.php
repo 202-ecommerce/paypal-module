@@ -636,6 +636,7 @@ class PayPal extends PaymentModule
         }
         $this->_postProcess();
 
+        $output = '';
         $braintree_message = '';
         $braintree_style = '';
 
@@ -733,7 +734,7 @@ class PayPal extends PaymentModule
 
         $this->getTranslations();
 
-        $output = $this->fetchTemplate('/views/templates/admin/back_office.tpl');
+        $output .= $this->fetchTemplate('/views/templates/admin/back_office.tpl');
 
         if ($this->active == false) {
             return $output.$this->hookBackOfficeHeader();

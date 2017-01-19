@@ -1,6 +1,5 @@
 {if $Braintree_Configured}
-{l s='Your Braintree account is configured. You can join the Braintree support at xxxx' mod='paypal'}<br />
-
+<span style="color:#008000;">{l s='Your Braintree account is configured. You can join the Braintree support at xxxx' mod='paypal'}</span>
 {else}
 <div id="button_braintree">
 </div>
