@@ -147,6 +147,9 @@ class MethodEC extends AbstractMethodPaypal
              );
              $order = new Order(Tools::getValue('id_order'));
              $order->setCurrentState(_PS_OS_PAYMENT_);
+             return true;
+         } else {
+             return $response;
          }
 
      }
@@ -189,6 +192,9 @@ class MethodEC extends AbstractMethodPaypal
          if (isset($response->id)) {
              $order = new Order(Tools::getValue('id_order'));
              $order->setCurrentState(_PS_OS_REFUND_);
+             return true;
+         } else {
+             return $response;
          }
      }
 }

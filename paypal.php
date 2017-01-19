@@ -423,7 +423,11 @@ class PayPal extends PaymentModule
         } elseif (Configuration::get('PAYPAL_SANDBOX') == 0) {
             $this->message .= $this->displayConfirmation($this->l('Your PayPal account is properly connected, you can now receive payments'));
         }
-
+        $sdk = new PaypalSDK(Configuration::get('PAYPAL_SANDBOX'));
+        //TEST :
+       /* $ref = $sdk->getPartnerReferrals("YTIyNmNkNjktZDE3MS00Mjk2LWFlZjktMTM1Mzg2ZjFjYTY2VnhvRm5WaFRhSnR4bzYwSU9jZkx4T0VvRElNdVR2WTZXekoyQzR5STgvRT0=");
+        $user = $sdk->getUserStatus();
+        print_r($user);die;*/
         return $this->message.$this->display(__FILE__, 'views/templates/admin/configuration.tpl').$form;
 
     }
@@ -464,7 +468,7 @@ class PayPal extends PaymentModule
 
         $tracking = new stdClass();
         $tracking->type = 'TRACKING_ID';
-        $tracking->value = 'sometracking';
+        $tracking->value = 'MERCH_REF01';
         $partner_specific_identifiers[] = $tracking;
         $customer_data->partner_specific_identifiers = $partner_specific_identifiers;
 
@@ -484,7 +488,8 @@ class PayPal extends PaymentModule
         $rest_api_integration->integration_type = 'THIRD_PARTY';
         $rest_third_party_details = new stdClass();
         $rest_third_party_details->partner_client_id = "AReLzfjunEgE3vvOxUgjPQZZXe2L9tcxI0NVIUzOF8BAmB8G4I0qsEUwptPtVF1Ioyu1TpAMQtG_nAeG";
-        $rest_third_party_details->feature_list = array('PAYMENT', 'REFUND', 'FUTURE_PAYMENT', 'DIRECT_PAYMENT');
+        $rest_third_party_details->feature_list = array('PAYMENT', 'REFUND', 'FUTURE_PAYMENT');
+        $api_integration_preference->partner_id = "FJBDL9L3Y8RHY";
         $api_integration_preference->rest_api_integration = $rest_api_integration;
         $api_integration_preference->rest_third_party_details = $rest_third_party_details;
 
@@ -497,11 +502,13 @@ class PayPal extends PaymentModule
         $partner_info->customer_data = $customer_data;
         $partner_info->requested_capabilities = $requested_capabilities;
         $partner_info->web_experience_preference = $web_experience_preference;
-       // $partner_info->collected_consents = $collected_consents;
+      //  $partner_info->collected_consents = $collected_consents; // FATAL
         $partner_info->products = array($method);
 
         $sdk = new PaypalSDK(Configuration::get('PAYPAL_SANDBOX'));
         $response = json_decode($sdk->getUrlOnboarding($partner_info));
+
+       // print_r($response);die;
 
         return $response;
 
@@ -642,19 +649,34 @@ class PayPal extends PaymentModule
 
     public function hookdisplayAdminOrder($params)
     {
+
+        $paypal_msg = '';
         if (Tools::getValue('capturePaypal')) {
             $method_ec = AbstractMethodPaypal::load('EC');
-            $method_ec->confirmCapture();
+            $capture_response = $method_ec->confirmCapture();
+            if (isset($capture_response->name)) {
+                $paypal_msg .= $this->displayWarning("We have problem during capture operation. Please try again later.");
+            }
         }
         if (Tools::getValue('refundPaypal')) {
             $method_ec = AbstractMethodPaypal::load('EC');
-            $method_ec->refund();
+            $refund_response = $method_ec->refund();
+            if (isset($refund_response->name)) {
+                $paypal_msg .= $this->displayWarning("We have problem during refund operation. Please try again later.");
+            }
         }
         $id_order = $params['id_order'];
+        $order = new Order((int)$id_order);
+        $current_state = $order->getCurrentState();
         $order_link = Context::getContext()->link->getAdminLink('AdminOrders')."&id_order=".$id_order."&vieworder";
         $this->context->smarty->assign(array(
             'link_suivi' => $order_link,
         ));
+        if ($current_state == Configuration::get('PS_OS_REFUND')) {
+            $this->context->smarty->assign(array(
+                'paypal_refunded' => true,
+            ));
+        }
 
         $sql = new DbQuery();
         $sql->select('*');
@@ -687,7 +709,7 @@ class PayPal extends PaymentModule
                 'refund_link' => http_build_query($refund),
             ));
         }
-        return $this->display(__FILE__, 'views/templates/hook/paypal_commande.tpl');
+        return $paypal_msg.$this->display(__FILE__, 'views/templates/hook/paypal_commande.tpl');
     }
 
 }

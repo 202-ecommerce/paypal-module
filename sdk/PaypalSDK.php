@@ -72,7 +72,7 @@ class PaypalSDK
             "Authorization: Basic ".base64_encode("202:mattdelg")
         ));
         $response = curl_exec($curl);
-       // print_r($response);die;
+//print_r($response);die();
         return $response;
 
     }
@@ -91,7 +91,7 @@ class PaypalSDK
     {
         //TODO delete if not use !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         $this->action = 'GET';
-        $this->endpoint = 'v1/customer/partners/AReLzfjunEgE3vvOxUgjPQZZXe2L9tcxI0NVIUzOF8BAmB8G4I0qsEUwptPtVF1Ioyu1TpAMQtG_nAeG/merchant-integrations?tracking_id=sometracking';
+        $this->endpoint = 'v1/customer/partners/FJBDL9L3Y8RHY/merchant-integrations?tracking_id=MERCH_REF01';
         $response = $this->makeCall(null, $this->endpoint, $this->action);
 
         return json_decode($response);
@@ -101,7 +101,7 @@ class PaypalSDK
     {
         //TODO delete if not use !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         $this->action = 'GET';
-        $this->endpoint = 'v1/customer/partners/AReLzfjunEgE3vvOxUgjPQZZXe2L9tcxI0NVIUzOF8BAmB8G4I0qsEUwptPtVF1Ioyu1TpAMQtG_nAeG/merchant-integrations/7A8PVP8FJ7W58';
+        $this->endpoint = 'v1/customer/partners/FJBDL9L3Y8RHY/merchant-integrations/HM5T4HLJMQG6Q';
         $response = $this->makeCall(null, $this->endpoint, $this->action);
 
         return json_decode($response);
@@ -285,7 +285,7 @@ class PaypalSDK
             curl_setopt($curl, CURLOPT_HTTPHEADER, array(
                 "Content-type: ".$cnt_type,
                 'Content-Length: ' . strlen($body),
-                "Authorization: Bearer A101.e1F30HLWSEE3BqwBVQtxYL4bC6IlOzt_6iMc1oNXTYJNZ-sfBqQ40bRe09NW7ies.rrckTCcQgwDKvISFqm05mStj2HG",
+                "Authorization: Bearer A101.8v3dlDK4N9OYtnSpQgGRRZyx0CI2JEV5eT-KCCljD80ydZ0J2BhO92X2NlCvPAkA.LCRr9AtKidubsi8V2bVDuSRTc0q",
             ));
         }
 
