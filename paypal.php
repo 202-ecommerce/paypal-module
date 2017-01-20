@@ -641,7 +641,7 @@ class PayPal extends PaymentModule
         $braintree_style = '';
 
         if( Tools::getIsset('accessToken') && Tools::getIsset('expiresAt') && Tools::getIsset('refreshToken' )) {
-            $output = $this->displayConfirmation( $this->l('Your Braintree account is now configured. If you have problems, you can join Braintree support at xxxx') );
+            $output = $this->displayConfirmation( (Configuration::get('PAYPAL_SANDBOX')?$this->l('Your Braintree account is now configured in sandbox mode. If you have problems, you can join Braintree support at xxxx'):$this->l('Your Braintree account is now configured in live mode. If you have problems, you can join Braintree support at xxxx') ));
         }
         
         if( Tools::getValue('error') ) {
@@ -720,6 +720,7 @@ class PayPal extends PaymentModule
             'Business_Name' => Configuration::get('PS_SHOP_NAME'),
             'Business_Country' => PayPal::countryIso2to3( Context::getContext()->country->iso_code ),
             'Proxy_Host' => (Configuration::get('PAYPAL_SANDBOX')?SANDBOX_PROXY_HOST:PROD_PROXY_HOST),
+            'Alternate_Proxy_Host' => (Configuration::get('PAYPAL_SANDBOX')?PROD_PROXY_HOST:SANDBOX_PROXY_HOST),
             'Braintree_Redirect_Url' => $braintree_redirect_url,
             'Braintree_Configured' => $braintree_configured,
             'Braintree_Message' => $braintree_message,
@@ -1814,6 +1815,9 @@ class PayPal extends PaymentModule
                 Configuration::updateValue('PAYPAL_BUSINESS_ACCOUNT', trim(Tools::getValue('api_business_account')));
                 Configuration::updateValue('PAYPAL_EXPRESS_CHECKOUT_SHORTCUT', (int) Tools::getValue('express_checkout_shortcut'));
                 Configuration::updateValue('PAYPAL_IN_CONTEXT_CHECKOUT_M_ID', Tools::getValue('in_context_checkout_merchant_id'));
+
+                $sandbox = (int)Configuration::get('PAYPAL_SANDBOX');
+
                 Configuration::updateValue('PAYPAL_SANDBOX', (int) Tools::getValue('sandbox_mode'));
                 Configuration::updateValue('PAYPAL_CAPTURE', (int) Tools::getValue('payment_capture'));
                 /* USE PAYPAL LOGIN */
@@ -1822,11 +1826,21 @@ class PayPal extends PaymentModule
                 Configuration::updateValue('PAYPAL_LOGIN_SECRET', Tools::getValue('paypal_login_client_secret'));
                 Configuration::updateValue('PAYPAL_LOGIN_TPL', (int) Tools::getValue('paypal_login_client_template'));
 
-                Configuration::updateValue('PAYPAL_BRAINTREE_ENABLED',Tools::getValue('braintree_enabled'));
+                if($sandbox != (int) Tools::getValue('sandbox_mode')){
+                    Configuration::updateValue('PAYPAL_BRAINTREE_ENABLED', null);
+                    Configuration::updateValue('PAYPAL_PAYMENT_METHOD', null);
+
+                    Configuration::updateValue('PAYPAL_BRAINTREE_ACCESS_TOKEN', null);
+                    Configuration::updateValue('PAYPAL_BRAINTREE_EXPIRES_AT', null);
+                    Configuration::updateValue('PAYPAL_BRAINTREE_REFRESH_TOKEN', null);
+                    Configuration::updateValue('PAYPAL_BRAINTREE_MERCHANT_ID', null);
+                }
+
+                //*TO DELETE* Configuration::updateValue('PAYPAL_BRAINTREE_ENABLED',Tools::getValue('braintree_enabled'));
                 //*TO DELETE* Configuration::updateValue('PAYPAL_BRAINTREE_PUBLIC_KEY', Tools::getValue('braintree_public_key'));
                 //*TO DELETE* Configuration::updateValue('PAYPAL_BRAINTREE_PRIVATE_KEY', Tools::getValue('braintree_private_key'));
-                Configuration::updateValue('PAYPAL_BRAINTREE_MERCHANT_ID', Tools::getValue('braintree_merchant_id'));
-                Configuration::updateValue('PAYPAL_USE_3D_SECURE',Tools::getValue('check3Dsecure'));
+                // TO DELETE* Configuration::updateValue('PAYPAL_BRAINTREE_MERCHANT_ID', Tools::getValue('braintree_merchant_id'));
+                // TO DELETE* Configuration::updateValue('PAYPAL_USE_3D_SECURE',Tools::getValue('check3Dsecure'));
                 
                 /* USE PAYPAL PLUS */
                 if ((int) Tools::getValue('paypal_payment_method') == 5) {
