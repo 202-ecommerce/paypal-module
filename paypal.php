@@ -1031,8 +1031,8 @@ class PayPal extends PaymentModule
                     'braintreeAmount'=>$this->context->cart->getOrderTotal(),
                     'check3Dsecure'=>Configuration::get('PAYPAL_USE_3D_SECURE'),
                 ));
-            
-                return $this->fetchTemplate('braintree_payment.tpl');
+
+                $return_braintree =  $this->fetchTemplate('braintree_payment.tpl');
             }
         }
         else
@@ -1096,7 +1096,6 @@ class PayPal extends PaymentModule
                 'use_paypal_in_context' => (int) $this->useInContextCheckout(),
                 'PayPal_in_context_checkout_merchant_id' => Configuration::get('PAYPAL_IN_CONTEXT_CHECKOUT_M_ID'),
             ));
-
             return $return_braintree.$this->fetchTemplate('express_checkout_payment.tpl');
         } elseif ($method == PPP) {
             $CallApiPaypalPlus = new CallApiPaypalPlus();
