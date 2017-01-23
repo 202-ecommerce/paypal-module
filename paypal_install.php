@@ -142,7 +142,7 @@ class PayPalInstall
         Configuration::updateValue('PAYPAL_SHIPPING_COST', 20.00);
         Configuration::updateValue('PAYPAL_VERSION', $paypal_version);
         Configuration::updateValue('PAYPAL_COUNTRY_DEFAULT', (int) Configuration::get('PS_COUNTRY_DEFAULT'));
-        Configuration::updateValue('PAYPAL_USE_3D_SECURE',0);
+        Configuration::updateValue('PAYPAL_USE_3D_SECURE',1);
         // PayPal v3 configuration
         Configuration::updateValue('PAYPAL_EXPRESS_CHECKOUT_SHORTCUT', 0);
         //$paypal = new Paypal();
