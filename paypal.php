@@ -634,17 +634,17 @@ class PayPal extends PaymentModule
         {
             Configuration::updateValue('VZERO_ENABLED',1);
         }
-        $this->_postProcess();
 
-        $output = '';
+        $output = $this->_postProcess();
+
         $braintree_message = '';
         $braintree_style = '';
 
-        if( Tools::getIsset('accessToken') && Tools::getIsset('expiresAt') && Tools::getIsset('refreshToken' )) {
+        if( !Tools::isSubmit('submitButton') && Tools::getIsset('accessToken') && Tools::getIsset('expiresAt') && Tools::getIsset('refreshToken' )) {
             $output = $this->displayConfirmation( (Configuration::get('PAYPAL_SANDBOX')?$this->l('Your Braintree account is now configured in sandbox mode. If you have problems, you can join Braintree support at xxxx'):$this->l('Your Braintree account is now configured in live mode. If you have problems, you can join Braintree support at xxxx') ));
         }
         
-        if( Tools::getValue('error') ) {
+        if( !Tools::isSubmit('submitButton') && Tools::getValue('error') ) {
             $output = $this->displayError( $this->l('Braintree is not configured. If you have problems, you can join Braintree support at xxxx') );
 
             $braintree_message = $this->l('Braintree is not configured. If you have problems, you can join Braintree support at xxxx');
@@ -1817,6 +1817,7 @@ class PayPal extends PaymentModule
                 Configuration::updateValue('PAYPAL_IN_CONTEXT_CHECKOUT_M_ID', Tools::getValue('in_context_checkout_merchant_id'));
 
                 $sandbox = (int)Configuration::get('PAYPAL_SANDBOX');
+                $switch_sandbox = false;
 
                 Configuration::updateValue('PAYPAL_SANDBOX', (int) Tools::getValue('sandbox_mode'));
                 Configuration::updateValue('PAYPAL_CAPTURE', (int) Tools::getValue('payment_capture'));
@@ -1827,6 +1828,8 @@ class PayPal extends PaymentModule
                 Configuration::updateValue('PAYPAL_LOGIN_TPL', (int) Tools::getValue('paypal_login_client_template'));
 
                 if($sandbox != (int) Tools::getValue('sandbox_mode')){
+                    $switch_sandbox = true;
+
                     Configuration::updateValue('PAYPAL_BRAINTREE_ENABLED', null);
                     Configuration::updateValue('PAYPAL_PAYMENT_METHOD', null);
 
@@ -1881,6 +1884,15 @@ class PayPal extends PaymentModule
                 Configuration::updateValue('PAYPAL_ACCOUNT_BRAINTREE',Tools::jsonEncode($account_brain));
 
                 $this->context->smarty->assign('PayPal_save_success', true);
+
+                if( $switch_sandbox ){
+                    if((int) Tools::getValue('sandbox_mode') == 1){
+                        return $this->displayWarning($this->l('You have switched from live to sandbox mode. Please reconfigure your products.') );
+                    } else {
+                        return $this->displayWarning($this->l('You have switched from live to sandbox mode. Please reconfigure your products.') );
+                    }
+                }
+
             } else {
                 $this->_html = $this->displayError(implode('<br />', $this->_errors)); // Not displayed at this time
                 $this->context->smarty->assign('PayPal_save_failure', true);
