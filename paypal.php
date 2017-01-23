@@ -1827,11 +1827,10 @@ class PayPal extends PaymentModule
                 Configuration::updateValue('PAYPAL_LOGIN_SECRET', Tools::getValue('paypal_login_client_secret'));
                 Configuration::updateValue('PAYPAL_LOGIN_TPL', (int) Tools::getValue('paypal_login_client_template'));
 
+                Configuration::updateValue('PAYPAL_BRAINTREE_ENABLED', (int) Tools::getValue('braintree_enabled'));
+
                 if($sandbox != (int) Tools::getValue('sandbox_mode')){
                     $switch_sandbox = true;
-
-                    Configuration::updateValue('PAYPAL_BRAINTREE_ENABLED', null);
-                    Configuration::updateValue('PAYPAL_PAYMENT_METHOD', null);
 
                     Configuration::updateValue('PAYPAL_BRAINTREE_ACCESS_TOKEN', null);
                     Configuration::updateValue('PAYPAL_BRAINTREE_EXPIRES_AT', null);
@@ -1898,8 +1897,7 @@ class PayPal extends PaymentModule
                 $this->context->smarty->assign('PayPal_save_failure', true);
             }
         } else if (  Tools::getValue('accessToken') ) {
-            Configuration::updateValue('PAYPAL_BRAINTREE_ENABLED', PVZ);
-            Configuration::updateValue('PAYPAL_PAYMENT_METHOD', PVZ);
+            Configuration::updateValue('PAYPAL_BRAINTREE_ENABLED', 1);
             
             Configuration::updateValue('PAYPAL_BRAINTREE_ACCESS_TOKEN', Tools::getValue('accessToken'));
             Configuration::updateValue('PAYPAL_BRAINTREE_EXPIRES_AT', Tools::getValue('expiresAt'));

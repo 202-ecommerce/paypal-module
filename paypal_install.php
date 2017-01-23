@@ -150,6 +150,7 @@ class PayPalInstall
         //Configuration::updateValue('PAYPAL_VERSION_TLS_CHECKED', $ssl_verif->getVersion());
 
         Configuration::updateValue('VZERO_ENABLED',0);
+        Configuration::updateValue('PAYPAL_BRAINTREE_ENABLED',0);
     }
 
     /**
