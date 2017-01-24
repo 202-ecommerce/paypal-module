@@ -30,6 +30,7 @@ include_once _PS_MODULE_DIR_.'paypal/api/sdk/braintree/lib/Braintree.php';
 class PrestaBraintree{
 
     public $gateway;
+    public $error;
 
     /**
      * initialize config of braintree
@@ -39,6 +40,7 @@ class PrestaBraintree{
         $this->_checkToken();
 
         $this->gateway = new Braintree_Gateway(['accessToken' => Configuration::get('PAYPAL_BRAINTREE_ACCESS_TOKEN') ]);
+        $this->error = '';
     }
 
     /**
@@ -76,7 +78,7 @@ class PrestaBraintree{
         try{
             $data = [
                 'amount'                => $cart->getOrderTotal(),
-                'paymentMethodNonce'    => $token_payment,
+                'paymentMethodNonce'    => $token_payment,//'fake-processor-declined-visa-nonce',
                 'merchantAccountId'     => $id_account_braintree,
                 'orderId'               => $cart->id,
                 'channel'               => 'PrestaShop_Cart_Braintree',
@@ -111,13 +113,17 @@ class PrestaBraintree{
             ];
             
             $result = $this->gateway->transaction()->sale($data);
-            
-            if(($result instanceof Braintree_Result_Successful) && $result->success && ($result->transaction->status == 'submitted_for_settlement' || $result->transaction->status == 'authorized'))
+            if(($result instanceof Braintree_Result_Successful) && $result->success && $this->isValidStatus($result->transaction->status))
             {
                 return $result->transaction;
             }
+            else
+            {
+                $this->error = 'error sale';
+            }
 
         }catch(Exception $e){
+            $this->error = $e->getCode().' : '.$e->getMessage();
             return false;
         }
 
@@ -147,9 +153,8 @@ class PrestaBraintree{
             );
 
             $transaction = $this->gateway->transaction()->find($collection->_ids[0]);
-
         }catch(Exception $e){
-            PrestaShopLogger::addLog($e->getCode().'=>'.$e->getMessage());
+            $this->error = $e->getCode().' : '.$e->getMessage();
             return false;
         }
         return $transaction;
@@ -256,6 +261,11 @@ class PrestaBraintree{
             PrestaShopLogger::addLog($e->getCode().'=>'.$e->getMessage());
             return false;
         }
+    }
+
+    public function isValidStatus($status)
+    {
+        return in_array($status,array('submitted_for_settlement','authorized','settled'));
     }
 
     /**

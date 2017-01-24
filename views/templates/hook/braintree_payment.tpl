@@ -29,7 +29,8 @@
 	<div class="col-xs-12 col-md-6">
 		<div class="braintree-row-payment">
 			<p class="payment_module">
-               <label class="paypal_title_pay_card">{l s='Pay with your card' mod='paypal'}</label><div class="paypal_clear"></div>
+			{if $error_msg != ''}<p class="braintree_error">{$error_msg}<p>{/if}
+                <label class="paypal_title_pay_card">{l s='Pay with your card' mod='paypal'}</label><div class="paypal_clear"></div>
                 <img src="{$base_dir_ssl|escape:'htmlall':'UTF-8'}modules/paypal/views/img/logos/braintree_cards.png" alt="">
 				<form action="{$braintreeSubmitUrl}" id="braintree-form" method="post">
 					<div id="block-card-number" class="block_field">

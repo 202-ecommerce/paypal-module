@@ -1026,6 +1026,7 @@ class PayPal extends PaymentModule
                 $return_braintree = '';
             } else {
                 $this->context->smarty->assign(array(
+                    'error_msg'=> Tools::getValue('bt_error_msg'),
                     'braintreeToken'=>$clientToken,
                     'braintreeSubmitUrl'=>$this->context->link->getModuleLink('paypal','braintreesubmit'),
                     'braintreeAmount'=>$this->context->cart->getOrderTotal(),

@@ -59,7 +59,7 @@ class PayPalBraintreeSubmitModuleFrontController extends ModuleFrontController
         if(empty($this->context->cart->id))
         {
             $paypal->reset_context();
-            $this->redirectFailedPayment();
+            $this->redirectFailedPayment($this->l('failed load cart'));
         }
 
 
@@ -67,30 +67,26 @@ class PayPalBraintreeSubmitModuleFrontController extends ModuleFrontController
         if(Configuration::get('PAYPAL_USE_3D_SECURE') && !Tools::getValue('liabilityShifted') && Tools::getValue('liabilityShiftPossible'))
         {
             $paypal->reset_context();
-            $this->redirectFailedPayment();
+            $this->redirectFailedPayment($this->l('Check 3D secure Failed'));
         }
         
 
         $cart_status = $braintree->cartStatus($this->context->cart->id);
+        
         switch($cart_status) {
+            case 'alreadyUse':
+                $order_id = Order::getOrderByCartId($this->context->cart->id);
+                $this->redirectConfirmation($paypal->id,$this->context->cart->id,$order_id);
+                break;
             case 'alreadyTry':
-
                 $braintree_transaction = $braintree->checkStatus($this->context->cart->id);
-                if ($braintree_transaction instanceof Braintree_Transaction && ($braintree_transaction->status == 'submitted_for_settlement' || $braintree_transaction->status == 'authorized')) {
+                if ($braintree_transaction instanceof Braintree_Transaction && $braintree->isValidStatus($braintree_transaction->status)) {
                     $transactionDetail = $this->getDetailsTransaction($braintree_transaction->id,$braintree_transaction->status);
                     $paypal->validateOrder($this->context->cart->id, Configuration::get('PS_OS_PAYMENT'), $braintree_transaction->amount, $paypal->displayName, $paypal->l('Payment accepted.'),$transactionDetail);
                     $order_id = Order::getOrderByCartId($this->context->cart->id);
                     $this->redirectConfirmation($paypal->id,$this->context->cart->id,$order_id);
-                } else {
-                    $paypal->reset_context();
-                    $this->redirectFailedPayment();
+                    break;
                 }
-                break;
-            case 'alreadyUse':
-                $order_id = Order::getOrderByCartId($this->context->cart->id);
-                $this->redirectConfirmation($paypal->id,$this->context->cart->id,$order_id);
-                die;
-                break;
             default:
                 $id_braintree_presta = $braintree->saveTransaction(array('id_cart' => $this->context->cart->id, 'nonce_payment_token' => Tools::getValue('payment_method_nonce'), 'client_token' => Tools::getValue('client_token'), 'datas' => Tools::getValue('deviceData')));
                 
@@ -99,7 +95,7 @@ class PayPalBraintreeSubmitModuleFrontController extends ModuleFrontController
                 if(!$transaction)
                 {
                     $paypal->reset_context();
-                    $this->redirectFailedPayment();
+                    $this->redirectFailedPayment($braintree->error);
                 }
                 $transactionDetail = $this->getDetailsTransaction($transaction->id,$transaction->status);
                 $paypal->validateOrder($this->context->cart->id, (Configuration::get('PAYPAL_CAPTURE')?Configuration::get('PS_OS_PAYPAL'):Configuration::get('PS_OS_PAYMENT')), $transaction->amount, $paypal->displayName, $paypal->l('Payment accepted.'),$transactionDetail);
@@ -111,9 +107,9 @@ class PayPalBraintreeSubmitModuleFrontController extends ModuleFrontController
         }
     }
 
-    public function redirectFailedPayment()
+    public function redirectFailedPayment($error = '')
     {
-        Tools::redirect($this->context->link->getPageLink('order.php'));
+        Tools::redirect('index.php?controller=order&step=3&bt_error_msg='.urlencode($error));
     }
 
     public function redirectConfirmation($id_paypal,$id_cart,$id_order)
@@ -133,5 +129,22 @@ class PayPalBraintreeSubmitModuleFrontController extends ModuleFrontController
             'payment_status' => $status,
             'payment_date' => date('Y-m-d H:i:s'),
         );
+    }
+
+
+    private function getErrorMessageByCode($code)
+    {
+        $module = new PayPal();
+        switch ($code) {
+            case 'processor_declined':
+            case 'failed':
+            case 'authorization_expired':
+            case 'gateway_rejected':
+                $message = $module->l('Your transaction has rejected by server');
+                break;
+            default:
+                $message = $module->l('Your transaction isn\'t valid : ').$code;
+        }
+        return $message;
     }
 }
