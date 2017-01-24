@@ -1829,7 +1829,7 @@ class PayPal extends PaymentModule
 
                 Configuration::updateValue('PAYPAL_BRAINTREE_ENABLED', (int) Tools::getValue('braintree_enabled'));
 
-                if($sandbox != (int) Tools::getValue('sandbox_mode')){
+                if($sandbox && $sandbox != (int) Tools::getValue('sandbox_mode')){
                     $switch_sandbox = true;
 
                     Configuration::updateValue('PAYPAL_BRAINTREE_ACCESS_TOKEN', null);
