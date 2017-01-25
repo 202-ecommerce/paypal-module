@@ -33,12 +33,10 @@ $(document).ready(function () {
         if($('#braintree_enabled:checked').val())
         {
             $('#paypal_braintree').show();
-            $('#paypal_3D_secure').show();
         }
         else
         {
             $('#paypal_braintree').hide();
-            $('#paypal_3D_secure').hide();
         }
     }
 
