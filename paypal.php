@@ -255,7 +255,6 @@ class PayPal extends PaymentModule
         {
             return true;
         }
-
         return false;
     }
 
@@ -1291,6 +1290,7 @@ class PayPal extends PaymentModule
             $this->_doTotalRefund($params['id_order']);
         }
 
+
         $admin_templates = array();
         if ($this->isPayPalAPIAvailable()) {
             if ($this->_needValidation((int) $params['id_order'])) {
@@ -1321,7 +1321,7 @@ class PayPal extends PaymentModule
             $this->context->smarty->assign(
                 array(
                     'authorization' => (int) Configuration::get('PAYPAL_OS_AUTHORIZATION'),
-                    'base_url' => Tools::getHttpHost().__PS_BASE_URI__,
+                    'base_url' => Tools::getHttpHost(true).__PS_BASE_URI__,
                     'module_name' => $this->name,
                     'order_state' => $order_state,
                     'params' => $params,
@@ -1743,7 +1743,7 @@ class PayPal extends PaymentModule
             FROM `'._DB_PREFIX_.'paypal_order`
             WHERE `id_order` = '.(int) $id_order.' AND `capture` = 1');
 
-        return $result && ($result['payment_method'] != HSS && $result['payment_status'] == 'Pending_capture' || $result['payment_method'] == PVZ && $result['payment_status'] == 'authorized');
+        return $result && ($result['payment_method'] != HSS && $result['payment_status'] == 'Pending_capture' || ($result['payment_method'] == PVZ || Configuration::get('PAYPAL_BRAINTREE_ENABLED')) && $result['payment_status'] == 'authorized');
     }
 
     private function _preProcess()
@@ -2094,7 +2094,11 @@ class PayPal extends PaymentModule
             $result_transaction = $braintree->submitForSettlement($transaction_braintree,$amount);
             if(!$result_transaction)
             {
-                return false;
+                if($braintree->error == 'Authorization_expired')
+                {
+                    die(Tools::displayError($this->l('The authorization of the banking transaction has expired. For more information, please refer to the expiration cases.')));
+                }
+                
             }
 
             $captureBraintree = new PaypalCapture();

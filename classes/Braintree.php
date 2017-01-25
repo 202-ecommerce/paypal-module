@@ -238,10 +238,11 @@ class PrestaBraintree{
                     {
                         return true;
                     }
-                    elseif ($error->code == Braintree_Error_Codes::TRANSACTION_CANNOT_SUBMIT_FOR_SETTLEMENT)
-                    {
-                        
-                    }
+                }
+                if($result->transaction->status == 'Authorization_expired')
+                {
+
+                    $this->error = $result->transaction->status;
                 }
             }
         }catch(Exception $e){
