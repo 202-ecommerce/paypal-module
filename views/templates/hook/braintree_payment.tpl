@@ -111,10 +111,12 @@
 									creditCard: obj.nonce
 								},
 								function (error, response) {
+
 									if (!error) {
 										$('#payment_method_nonce').val(response.nonce);
 										$('#liabilityShifted').val(response.verificationDetails.liabilityShifted);
 										$('#liabilityShiftPossible').val(response.verificationDetails.liabilityShiftPossible);
+										$('#braintree-form').submit();
 									}
 									else
 									{
@@ -127,7 +129,7 @@
 											}
 										]);
 									}
-									$('#braintree-form').submit();
+
 								});
 					}
 					else {

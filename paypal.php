@@ -1888,7 +1888,7 @@ class PayPal extends PaymentModule
                     if((int) Tools::getValue('sandbox_mode') == 1){
                         return $this->displayWarning($this->l('You have switched from live to sandbox mode. Please reconfigure your products.') );
                     } else {
-                        return $this->displayWarning($this->l('You have switched from live to sandbox mode. Please reconfigure your products.') );
+                        return $this->displayWarning($this->l('You have switched from sandbox to live mode. Please reconfigure your products.') );
                     }
                 }
 

@@ -61,18 +61,15 @@ class PayPalBraintreeSubmitModuleFrontController extends ModuleFrontController
             $paypal->reset_context();
             $this->redirectFailedPayment($this->l('failed load cart'));
         }
-
-
-
-        if(Configuration::get('PAYPAL_USE_3D_SECURE') && !Tools::getValue('liabilityShifted') && Tools::getValue('liabilityShiftPossible'))
+    
+        if(Configuration::get('PAYPAL_USE_3D_SECURE') && Tools::getValue('liabilityShifted') == 'false' && Tools::getValue('liabilityShiftPossible') == 'false')
         {
             $paypal->reset_context();
-            $this->redirectFailedPayment($this->l('Check 3D secure Failed'));
+            $this->redirectFailedPayment($this->getErrorMessageByCode('gateway_rejected'));
         }
         
 
         $cart_status = $braintree->cartStatus($this->context->cart->id);
-        
         switch($cart_status) {
             case 'alreadyUse':
                 $order_id = Order::getOrderByCartId($this->context->cart->id);
@@ -95,7 +92,7 @@ class PayPalBraintreeSubmitModuleFrontController extends ModuleFrontController
                 if(!$transaction)
                 {
                     $paypal->reset_context();
-                    $this->redirectFailedPayment($braintree->error);
+                    $this->redirectFailedPayment($this->getErrorMessageByCode($braintree->error));
                 }
                 $transactionDetail = $this->getDetailsTransaction($transaction->id,$transaction->status);
                 $paypal->validateOrder($this->context->cart->id, (Configuration::get('PAYPAL_CAPTURE')?Configuration::get('PS_OS_PAYPAL'):Configuration::get('PS_OS_PAYMENT')), $transaction->amount, $paypal->displayName, $paypal->l('Payment accepted.'),$transactionDetail);
@@ -137,10 +134,16 @@ class PayPalBraintreeSubmitModuleFrontController extends ModuleFrontController
         $module = new PayPal();
         switch ($code) {
             case 'processor_declined':
+                $message = $module->l('The card used has probably been reported by your bank as lost, stolen or suspected of fraud.');
+                break;
             case 'failed':
+                $message = $module->l('An error occurred while sending the transaction.');
+                break;
             case 'authorization_expired':
+                $message = $module->l('The authorization of your banking transaction has expired.');
+                break;
             case 'gateway_rejected':
-                $message = $module->l('Your transaction has rejected by server');
+                $message = $module->l('Your transaction was rejected for security reasons.');
                 break;
             default:
                 $message = $module->l('Your transaction isn\'t valid : ').$code;

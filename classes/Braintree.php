@@ -78,7 +78,7 @@ class PrestaBraintree{
         try{
             $data = [
                 'amount'                => $cart->getOrderTotal(),
-                'paymentMethodNonce'    => $token_payment,//'fake-processor-declined-visa-nonce',
+                'paymentMethodNonce'    => $token_payment,//'fake-processor-declined-visa-nonce',//
                 'merchantAccountId'     => $id_account_braintree,
                 'orderId'               => $cart->id,
                 'channel'               => 'PrestaShop_Cart_Braintree',
@@ -113,13 +113,14 @@ class PrestaBraintree{
             ];
             
             $result = $this->gateway->transaction()->sale($data);
+
             if(($result instanceof Braintree_Result_Successful) && $result->success && $this->isValidStatus($result->transaction->status))
             {
                 return $result->transaction;
             }
             else
             {
-                $this->error = 'error sale';
+                $this->error = $result->transaction->status;
             }
 
         }catch(Exception $e){
@@ -208,7 +209,6 @@ class PrestaBraintree{
                     {
                         return true;
                     }
-
                 }
                 return false;
             }
@@ -237,6 +237,10 @@ class PrestaBraintree{
                     if($error->code == Braintree_Error_Codes::TRANSACTION_CANNOT_SUBMIT_FOR_SETTLEMENT)
                     {
                         return true;
+                    }
+                    elseif ($error->code == Braintree_Error_Codes::TRANSACTION_CANNOT_SUBMIT_FOR_SETTLEMENT)
+                    {
+                        
                     }
                 }
             }
