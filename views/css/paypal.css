@@ -236,3 +236,7 @@ label span.description{display:block;padding-left:16px}
     font-size:17px;
     color:#333;
 }
+
+#error_version_php {
+    margin-left : 23px;
+}
