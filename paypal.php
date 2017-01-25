@@ -641,13 +641,13 @@ class PayPal extends PaymentModule
         $braintree_style = '';
 
         if( !Tools::isSubmit('submitButton') && Tools::getIsset('accessToken') && Tools::getIsset('expiresAt') && Tools::getIsset('refreshToken' )) {
-            $output = $this->displayConfirmation( (Configuration::get('PAYPAL_SANDBOX')?$this->l('Your Braintree account is now configured in sandbox mode. If you have problems, you can join Braintree support at xxxx'):$this->l('Your Braintree account is now configured in live mode. If you have problems, you can join Braintree support at xxxx') ));
+            $output = $this->displayConfirmation( (Configuration::get('PAYPAL_SANDBOX')?$this->l('Your Braintree account is now configured in sandbox mode. If you have problems, you can join Braintree support on 08 05 54 27 14'):$this->l('Your Braintree account is now configured in live mode. If you have problems, you can join Braintree support on 08 05 54 27 14') ));
         }
         
         if( !Tools::isSubmit('submitButton') && Tools::getValue('error') ) {
-            $output = $this->displayError( $this->l('Braintree is not configured. If you have problems, you can join Braintree support at xxxx') );
+            $output = $this->displayError( $this->l('Braintree is not configured. If you have problems, you can join Braintree support on 08 05 54 27 14') );
 
-            $braintree_message = $this->l('Braintree is not configured. If you have problems, you can join Braintree support at xxxx');
+            $braintree_message = $this->l('Braintree is not configured. If you have problems, you can join Braintree support on 08 05 54 27 14');
             $braintree_style = 'color:#dc143c;';
         }
 
