@@ -29,7 +29,6 @@ class PaypalSDK
 
     private $action;
     private $endpoint;
-    private $response;
     private $token;
     private $urlAPI;
     private $urlIntermediateServer;
@@ -63,7 +62,7 @@ class PaypalSDK
         curl_setopt($curl, CURLOPT_POST, 1);
         curl_setopt($curl, CURLOPT_URL, $this->urlIntermediateServer.$method);
         curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
-        curl_setopt($curl, CURLOPT_HTTPHEADER, array("Accept: application/json",));
+        curl_setopt($curl, CURLOPT_HTTPHEADER, array("Accept: application/json"));
         $response = curl_exec($curl);
         return $response;
 
@@ -73,7 +72,7 @@ class PaypalSDK
     {
         $this->action = 'POST';
         $this->endpoint = 'v1/payments/payment';
-        $response = $this->makeCall($this->getBody($body), $this->endpoint, $this->action);
+        $response = $this->makeCall($this->getBody($body));
         return json_decode($response);
     }
 
@@ -81,7 +80,7 @@ class PaypalSDK
     {
         $this->action = 'POST';
         $this->endpoint = 'v1/payment-experience/web-profiles';
-        $response = $this->makeCall($this->getBody($body), $this->endpoint, $this->action);
+        $response = $this->makeCall($this->getBody($body));
         return json_decode($response);
     }
 
@@ -90,7 +89,7 @@ class PaypalSDK
         $this->action = 'POST';
         $this->endpoint = 'v1/payments/payment/'.$payment_id.'/execute';
         $body = array('payer_id' => $payer_id);
-        $response = $this->makeCall($this->getBody($body), $this->endpoint, $this->action);
+        $response = $this->makeCall($this->getBody($body));
 
         return json_decode($response);
     }
@@ -99,7 +98,7 @@ class PaypalSDK
     {
         $this->action = 'PATCH';
         $this->endpoint = 'v1/payments/payment/'.$payment_id;
-        $response = $this->makeCall($this->getBody($body), $this->endpoint, $this->action);
+        $response = $this->makeCall($this->getBody($body));
 
         return json_decode($response);
     }
@@ -108,27 +107,23 @@ class PaypalSDK
     {
         $this->action = 'POST';
         $this->endpoint = 'v1/payments/sale/'.$sale_id.'/refund';
-        $response = $this->makeCall($this->getBody($body), $this->endpoint, $this->action);
+        $response = $this->makeCall($this->getBody($body));
         return json_decode($response);
     }
 
     public function showRefund($sale_id)
     {
-        // TODO delete after test
-        $sale_id = "2MU78835H4515710F";
         $this->action = 'GET';
         $this->endpoint = 'v1/payments/refund/'.$sale_id;
-        $response = $this->makeCall(null, $this->endpoint, $this->action);
+        $response = $this->makeCall(null);
         return json_decode($response);
     }
 
     public function showAuthorization($authorization_id)
     {
-        // TODO delete after test
-        $authorization_id = "2DC87612EK520411B";
         $this->action = 'GET';
         $this->endpoint = 'v1/payments/authorization/'.$authorization_id;
-        $response = $this->makeCall(null, $this->endpoint, $this->action);
+        $response = $this->makeCall(null);
         return json_decode($response);
     }
 
@@ -136,27 +131,23 @@ class PaypalSDK
     {
         $this->action = 'POST';
         $this->endpoint = 'v1/payments/authorization/'.$authorization_id.'/capture';
-        $response = $this->makeCall($this->getBody($body), $this->endpoint, $this->action);
+        $response = $this->makeCall($this->getBody($body));
         return json_decode($response);
     }
 
     public function voidAuthorization($authorization_id)
     {
-        // TODO delete after test
-        $authorization_id = "2DC87612EK520411B";
         $this->action = 'POST';
         $this->endpoint = 'v1/payments/authorization/'.$authorization_id.'/void';
-        $response = $this->makeCall(null, $this->endpoint, $this->action);
+        $response = $this->makeCall(null);
         return json_decode($response);
     }
 
     public function showCapture($capture_id)
     {
-        // TODO delete after test
-        $capture_id = "8F148933LY9388354";
         $this->action = 'GET';
         $this->endpoint = 'v1/payments/capture/'.$capture_id;
-        $response = $this->makeCall(null, $this->endpoint, $this->action);
+        $response = $this->makeCall(null);
         return json_decode($response);
     }
 
@@ -164,7 +155,7 @@ class PaypalSDK
     {
         $this->action = 'POST';
         $this->endpoint = 'v1/payments/capture/'.$capture_id.'/refund';
-        $response = $this->makeCall($this->getBody($body), $this->endpoint, $this->action);
+        $response = $this->makeCall($this->getBody($body));
         return json_decode($response);
     }
 
@@ -186,26 +177,26 @@ class PaypalSDK
         return $return;
     }
 
-    protected function makeCall($body = null, $url = null, $action = "POST", $cnt_type = "application/json", $user = null)
+    protected function makeCall($body = null, $cnt_type = "application/json", $user = null)
     {
         $curl = curl_init();
-        if ($action == "GET") {
+        if ($this->action == "GET") {
             $body = (is_array($body)) ? http_build_query($body) : $body;
-            $url = $url.$body;
+            $this->endpoint = $this->endpoint.$body;
         }
 
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($curl, CURLOPT_URL, $this->urlAPI.$this->endpoint);
-        if ($action == "PUT" || $action == "DELETE" || $action == "PATCH") {
-            curl_setopt($curl, CURLOPT_CUSTOMREQUEST, $action);
+        if ($this->action == "PUT" || $this->action == "DELETE" || $this->action == "PATCH") {
+            curl_setopt($curl, CURLOPT_CUSTOMREQUEST, $this->action);
         }
-        if ($action == "POST") {
+        if ($this->action == "POST") {
             curl_setopt($curl, CURLOPT_POST, true);
         }
-        if ($action == "PUT") {
+        if ($this->action == "PUT") {
             curl_setopt($curl, CURLOPT_PUT, true);
         }
-        if ($action == "POST" || $action == "PUT" || $action == "DELETE") {
+        if ($this->action == "POST" || $this->action == "PUT" || $this->action == "DELETE") {
             curl_setopt($curl, CURLOPT_POSTFIELDS, $body);
         }
         if ($user) {
