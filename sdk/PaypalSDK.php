@@ -27,109 +27,46 @@
 class PaypalSDK
 {
 
-    protected $action;
-    protected $endpoint;
-    protected $response;
-    protected $urlAPI;
-    protected $urlIntermediateServer;
+    private $action;
+    private $endpoint;
+    private $response;
+    private $token;
+    private $urlAPI;
+    private $urlIntermediateServer;
 
-    public function __construct($sandbox)
+    public function __construct($token,$sandbox=0)
     {
+        $this->token = $token;
+        $this->action = 'POST';
         if ($sandbox) {
             $this->urlAPI = 'https://api.sandbox.paypal.com/';
-            $this->urlIntermediateServer = 'http://iuliia-1704.work.202-ecommerce.com/modules/paypal/test_server.php';
+            $this->urlIntermediateServer = 'http://SI.com/';
         } else {
             $this->urlAPI = 'https://api.paypal.com/';
-            $this->urlIntermediateServer = 'http://iuliia-1704.work.202-ecommerce.com/modules/paypal/test_server.php';
+            $this->urlIntermediateServer = 'http://SI.com/';
         }
 
     }
 
-
     public function getUrlOnboarding($partner_info)
     {
-        return $this->makeCallIntermediateServer($partner_info);
+        return $this->makeCallIntermediateServer('getUrl',$partner_info);
 
     }
 
-    public function getAccessToken()
-    {
-        return $this->makeCallIntermediateServer(array('getToken' => true));
-    }
-
-    private function makeCallIntermediateServer($body)
+    private function makeCallIntermediateServer($method,$data)
     {
 
         $curl = curl_init();
 
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($curl, CURLOPT_POST, 1);
-        curl_setopt($curl, CURLOPT_URL, $this->urlIntermediateServer);
-       // curl_setopt($curl, CURLOPT_URL, $this->urlIntermediateServer.'?method='.$method);
-        curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($body));
-        curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-            "Accept: application/json",
-            "Authorization: Basic ".base64_encode("202:mattdelg")
-        ));
+        curl_setopt($curl, CURLOPT_URL, $this->urlIntermediateServer.$method);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, array("Accept: application/json",));
         $response = curl_exec($curl);
-//print_r($response);die();
         return $response;
 
-    }
-
-    public function getPartnerReferrals($referral_id)
-    {
-        //TODO delete if not use !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        $this->action = 'GET';
-        $this->endpoint = 'v1/customer/partner-referrals/'.$referral_id;
-        $response = $this->makeCall(null, $this->endpoint, $this->action);
- 
-        return json_decode($response);
-    }
-
-    public function getStatusResources()
-    {
-        //TODO delete if not use !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        $this->action = 'GET';
-        $this->endpoint = 'v1/customer/partners/FJBDL9L3Y8RHY/merchant-integrations?tracking_id=MERCH_REF01';
-        $response = $this->makeCall(null, $this->endpoint, $this->action);
-
-        return json_decode($response);
-    }
-
-    public function getUserStatus()
-    {
-        //TODO delete if not use !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        $this->action = 'GET';
-        $this->endpoint = 'v1/customer/partners/FJBDL9L3Y8RHY/merchant-integrations/HM5T4HLJMQG6Q';
-        $response = $this->makeCall(null, $this->endpoint, $this->action);
-
-        return json_decode($response);
-    }
-
-    public function grantToken($body)
-    {
-        //TODO delete if not use !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        $this->action = 'POST';
-        $this->endpoint = 'v1/identity/openidconnect/tokenservice'; // also possible to refresh token with this endpoint to recieve new access token
-        $body = array(
-            "grant_type" => "refresh_token", //refresh_token
-            "code" => "A101.e1F30HLWSEE3BqwBVQtxYL4bC6IlOzt_6iMc1oNXTYJNZ-sfBqQ40bRe09NW7ies.rrckTCcQgwDKvISFqm05mStj2HG", // refresh token code and no url required
-            "redirect_uri" => "http://iuliia-1704.work.202-ecommerce.com/bb/index.php?controller=AdminModules&token=536865d1c87a6ca824ddf00bac193b09&configure=paypal&tab_module=payments_gateways&module_name=paypal"
-            );
-        $response = $this->makeCall($this->getBody($body),  $this->endpoint, $this->action, "application/x-www-form-urlencoded", "AReLzfjunEgE3vvOxUgjPQZZXe2L9tcxI0NVIUzOF8BAmB8G4I0qsEUwptPtVF1Ioyu1TpAMQtG_nAeG:EAhYgH_trpF1FGeXQzia4UWAPasM6zVVCY6gCFT9m7RsDbe7nCV2LXs2Ewn9YW32nEIqh1bR0zNfrZOS");
-
-        return $this->response;
-    }
-
-    public function getCredentials()
-    {
-        //TODO delete if not use !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        $this->action = 'GET';
-        $this->endpoint = '/v1/identity/applications/@classic/owner/7A8PVP8FJ7W58/credentials';
-        $this->makeCall(null, $this->endpoint, $this->action);
-
-        return $this->response;
     }
 
     public function createPayment($body)
@@ -258,11 +195,7 @@ class PaypalSDK
         }
 
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($curl, CURLOPT_URL, $this->urlAPI.$url);
-        curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 5);
-
-        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_setopt($curl, CURLOPT_URL, $this->urlAPI.$this->endpoint);
         if ($action == "PUT" || $action == "DELETE" || $action == "PATCH") {
             curl_setopt($curl, CURLOPT_CUSTOMREQUEST, $action);
         }
