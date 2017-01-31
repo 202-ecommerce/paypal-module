@@ -436,12 +436,18 @@ class PayPal extends PaymentModule
     {
 
         $return_url = $this->context->link->getAdminLink('AdminModules', true).'&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name;
-        if (Configuration::get('PS_SSL_ENABLED')) {
-            $shop_url = Tools::getShopDomainSsl(true);
-        } else {
-            $shop_url = Tools::getShopDomain(true);
-        }
 
+
+        $sdk = new PaypalSDK(Configuration::get('PAYPAL_SANDBOX'));
+        $response = $sdk->getUrlOnboarding(array(
+            'email'         => Configuration::get('PS_SHOP_EMAIL'),
+            'shop_url'      => $return_url,
+            'address'       => Configuration::get('PS_SHOP_ADDR1'),
+            'city'          => Configuration::get('PS_SHOP_CITY'),
+            'country_code'  => Tools::strtoupper($this->context->country->iso_code),
+            'postal_code'   => Configuration::get('PS_SHOP_CODE'),
+        ));
+        /*
         $partner_info = new stdClass();
 
         $customer_data = new stdClass();
@@ -504,11 +510,14 @@ class PayPal extends PaymentModule
         $partner_info->web_experience_preference = $web_experience_preference;
       //  $partner_info->collected_consents = $collected_consents; // FATAL
         $partner_info->products = array($method);
-
+echo '<pre>';
         $sdk = new PaypalSDK(Configuration::get('PAYPAL_SANDBOX'));
-        $response = json_decode($sdk->getUrlOnboarding($partner_info));
+        var_dump($partner_info);
 
-       // print_r($response);die;
+        $response = $sdk->getUrlOnboarding($partner_info);
+
+        var_dump($response);die;
+        */
 
         return $response;
 

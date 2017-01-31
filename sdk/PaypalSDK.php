@@ -39,29 +39,30 @@ class PaypalSDK
         $this->action = 'POST';
         if ($sandbox) {
             $this->urlAPI = 'https://api.sandbox.paypal.com/';
-            $this->urlIntermediateServer = 'http://SI.com/';
+            $this->urlIntermediateServer = 'http://202:mattdelg@paypal4.work.202-ecommerce.com/modules/paypal/test_server.php';
         } else {
             $this->urlAPI = 'https://api.paypal.com/';
-            $this->urlIntermediateServer = 'http://SI.com/';
+            $this->urlIntermediateServer = 'http://202:mattdelg@paypal4.work.202-ecommerce.com/modules/paypal/test_server.php';
         }
 
     }
 
     public function getUrlOnboarding($partner_info)
     {
+        $this->endpoint = 'getUrl';
         return $this->makeCallIntermediateServer('getUrl',$partner_info);
 
     }
 
-    private function makeCallIntermediateServer($method,$data)
+    private function makeCallIntermediateServer($data)
     {
 
         $curl = curl_init();
 
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($curl, CURLOPT_POST, 1);
-        curl_setopt($curl, CURLOPT_URL, $this->urlIntermediateServer.$method);
-        curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+        curl_setopt($curl, CURLOPT_URL, $this->urlIntermediateServer.$this->endpoint);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($data));
         curl_setopt($curl, CURLOPT_HTTPHEADER, array("Accept: application/json"));
         $response = curl_exec($curl);
         return $response;
