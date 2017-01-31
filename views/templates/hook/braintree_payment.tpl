@@ -58,8 +58,7 @@
 	</div>
 </div>
 
-
-{*literal}
+{literal}
 	<script src="https://js.braintreegateway.com/web/3.6.3/js/client.min.js"></script>
 	<script src="https://js.braintreegateway.com/web/3.6.3/js/hosted-fields.min.js"></script>
 	<script src="https://js.braintreegateway.com/web/3.6.3/js/data-collector.min.js"></script>
@@ -157,6 +156,7 @@
 							braintree.threeDSecure.create({
 								client: clientInstance
 							}, function (ThreeDSecureerror,threeDSecure) {
+
 								if(ThreeDSecureerror)
 								{
 									switch (ThreeDSecureerror.code) {
@@ -186,131 +186,63 @@
 												type: 'inline',
 												autoScale: true,
 												minHeight: 30,
-												content: '<p class="braintree-iframe">'+iframe.contentDocument+'</p>'
+												content: '<p class="braintree-iframe">'+iframe.outerHTML+'</p>'
 											}
 										]);
 									},
 									removeFrame: function () {
-										// Remove UI that you added in addFrame.
-										document.body.removeChild(my3DSContainer);
-									}
+
+                                    }
 								}, function (err, payload) {
 									if (err) {
-										console.error(err);
-										return;
+                                        var popup_message = '';
+                                        switch (err.code) {
+                                            case 'CLIENT_REQUEST_ERROR':
+                                                popup_message = '{/literal}{l s='There was a problem with your request.' mod='paypal'}{literal}';
+                                                break;
+                                            default:
+                                                popup_message = '{/literal}{l s='3D Secure Failed' mod='paypal'}{literal}';
+                                        }
+                                        $.fancybox.open([
+                                            {
+                                                type: 'inline',
+                                                autoScale: true,
+                                                minHeight: 30,
+                                                content: '<p class="braintree-error">'+popup_message+'</p>'
+                                            }
+                                        ]);
+										return false;
 									}
+                                    if(payload.liabilityShifted)
+                                    {
+                                        document.querySelector('input[name="liabilityShifted"]').value = payload.liabilityShifted;
+                                    }
+                                    else
+                                    {
+                                        document.querySelector('input[name="liabilityShifted"]').value = false;
+                                    }
 
-									if (payload.liabilityShifted) {
-										// Liablity has shifted
-										submitNonceToServer(payload.nonce);
-									} else if (payload.liabilityShiftPossible) {
-										// Liablity may still be shifted
-										// Decide if you want to submit the nonce
-									} else {
-										// Liablity has not shifted and will not shift
-										// Decide if you want to submit the nonce
-									}
+                                    if(payload.liabilityShiftPossible)
+                                    {
+                                        document.querySelector('input[name="liabilityShiftPossible"]').value = payload.liabilityShiftPossible;
+                                    }
+                                    else
+                                    {
+                                        document.querySelector('input[name="liabilityShiftPossible"]').value = false;
+                                    }
+                                    document.querySelector('input[name="payment_method_nonce"]').value = payload.nonce;
+                                    form.submit()
+
 								});
 							});
 
 
 						{/literal}{/if}{literal}
 
-						// Put `payload.nonce` into the `payment-method-nonce` input, and then
-						// submit the form. Alternatively, you could send the nonce to your server
-						// with AJAX.
-						//document.querySelector('input[name="payment-method-nonce"]').value = payload.nonce;
-						//form.submit();
 					});
 				},true);
 			});
 		});
 	</script>
 
-{/literal*}
-
-{literal}
-	<script id="file_braintree" src="https://js.braintreegateway.com/js/braintree-2.30.0.min.js"></script>
-	<script async type="text/javascript">
-			braintree.setup("{/literal}{$braintreeToken}{literal}", "custom", {
-				id: "braintree-form",
-				hostedFields: {
-					number: {
-						selector: "#card-number",
-						placeholder: '{/literal}{l s='Card number' mod='paypal'}{literal}'
-					},
-					cvv: {
-						selector: "#cvv",
-						placeholder: '{/literal}{l s='CVC' mod='paypal'}{literal}'
-					},
-					expirationDate: {
-						selector: "#expiration-date",
-						placeholder: '{/literal}{l s='MM/YY' mod='paypal'}{literal}'
-					},
-					styles: {
-						'input': {
-							'color': '#999999',
-							'font-size': '14px',
-							'font-family': 'PayPal Forward, sans-serif'
-						}
-					}
-				},
-				dataCollector: {
-					kount: {environment: {/literal}{if $sandbox_mode}'sandbox'{else}'production'{/if}{literal}}
-				},
-				onReady : function(braintreeInstance) {
-					//On remplit un champ hidden deviceData du fomulaire avec braintreeInstance.deviceData
-					$('#deviceData').val(braintreeInstance.deviceData);
-				},
-				onError : function(error) {
-					$.fancybox.open([
-						{
-							type: 'inline',
-							autoScale: true,
-							minHeight: 30,
-							content: '<p class="braintree-error">' + error.message + '</p>'
-						}
-					]);
-				},
-				{/literal}{if $check3Dsecure}{literal}
-				onPaymentMethodReceived: function (obj) {
-					if (obj.type == 'CreditCard') {
-
-						var client = new braintree.api.Client({clientToken: "{/literal}{$braintreeToken}{literal}"});
-						client.verify3DS({
-									amount: {/literal}{$braintreeAmount}{literal},
-									creditCard: obj.nonce
-								},
-								function (error, response) {
-									if (!error) {
-										$('#payment_method_nonce').val(response.nonce);
-										$('#liabilityShifted').val(response.verificationDetails.liabilityShifted);
-										$('#liabilityShiftPossible').val(response.verificationDetails.liabilityShiftPossible);
-										$('#braintree-form').submit();
-									}
-									else
-									{
-										$.fancybox.open([
-											{
-												type: 'inline',
-												autoScale: true,
-												minHeight: 30,
-												content: '<p class="braintree-error">' + error.message + '</p>'
-											}
-										]);
-									}
-
-								});
-					}
-					else {
-						$('#braintree-form').submit();
-					}
-				}
-				{/literal}{/if}{literal}
-			});
-
-			var client = new braintree.api.Client({
-				clientToken: "{/literal}{$braintreeToken}{literal}"
-			});
-	</script>
 {/literal}

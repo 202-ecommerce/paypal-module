@@ -727,6 +727,7 @@ class PayPal extends PaymentModule
             'Braintree_Access_Token' => Configuration::get('PAYPAL_BRAINTREE_ACCESS_TOKEN'),
             'Braintree_Refresh_Token' => Configuration::get('PAYPAL_BRAINTREE_REFRESH_TOKEN'),
             'Braintree_Expires_At' => strtotime( Configuration::get('PAYPAL_BRAINTREE_EXPIRES_AT') ),
+            'ps_ssl_active' => Configuration::get('PS_SSL_ENABLED'),
         ));
 
         $this->getTranslations();
@@ -1027,7 +1028,7 @@ class PayPal extends PaymentModule
                 $this->context->smarty->assign(array(
                     'error_msg'=> Tools::getValue('bt_error_msg'),
                     'braintreeToken'=>$clientToken,
-                    'braintreeSubmitUrl'=>$this->context->link->getModuleLink('paypal','braintreesubmit'),
+                    'braintreeSubmitUrl'=>$this->context->link->getModuleLink('paypal','braintreesubmit',array(),true),
                     'braintreeAmount'=>$this->context->cart->getOrderTotal(),
                     'check3Dsecure'=>Configuration::get('PAYPAL_USE_3D_SECURE'),
                 ));
