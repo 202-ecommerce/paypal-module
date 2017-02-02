@@ -62,7 +62,8 @@ class PayPalBraintreeSubmitModuleFrontController extends ModuleFrontController
             $paypal->reset_context();
             $this->redirectFailedPayment($module->l('failed load cart'));
         }
-        if(Configuration::get('PAYPAL_USE_3D_SECURE') && Tools::getValue('liabilityShifted') == 'false' && Tools::getValue('liabilityShiftPossible') == 'false')
+
+        if(Configuration::get('PAYPAL_USE_3D_SECURE') && in_array(Tools::getValue('card_type'),array('Visa','MasterCard') )&& Tools::getValue('liabilityShifted') == 'false' && Tools::getValue('liabilityShiftPossible') == 'false')
         {
             $paypal->reset_context();
             $this->redirectFailedPayment($this->getErrorMessageByCode('gateway_rejected'));
@@ -79,7 +80,7 @@ class PayPalBraintreeSubmitModuleFrontController extends ModuleFrontController
                 $braintree_transaction = $braintree->checkStatus($this->context->cart->id);
                 if ($braintree_transaction instanceof Braintree_Transaction && $braintree->isValidStatus($braintree_transaction->status)) {
                     $transactionDetail = $this->getDetailsTransaction($braintree_transaction->id,$braintree_transaction->status);
-                    $paypal->validateOrder($this->context->cart->id, (Configuration::get('PAYPAL_CAPTURE')?Configuration::get('PS_OS_PAYPAL'):Configuration::get('PS_OS_PAYMENT')), $braintree_transaction->amount, 'Braintree', $paypal->l('Payment accepted.'),$transactionDetail,$this->context->cart->id_currency,false,$this->context->customer->secure_key);
+                    $paypal->validateOrder($this->context->cart->id, (Configuration::get('PAYPAL_CAPTURE')?Configuration::get('PAYPAL_BRAINTREE_OS_AWAITING'):Configuration::get('PS_OS_PAYMENT')), $braintree_transaction->amount, 'Braintree', $paypal->l('Payment accepted.'),$transactionDetail,$this->context->cart->id_currency,false,$this->context->customer->secure_key);
                     $order_id = Order::getOrderByCartId($this->context->cart->id);
                     $this->redirectConfirmation($paypal->id,$this->context->cart->id,$order_id);
                     break;
@@ -95,7 +96,7 @@ class PayPalBraintreeSubmitModuleFrontController extends ModuleFrontController
                     $this->redirectFailedPayment($this->getErrorMessageByCode($braintree->error));
                 }
                 $transactionDetail = $this->getDetailsTransaction($transaction->id,$transaction->status);
-                $paypal->validateOrder($this->context->cart->id, (Configuration::get('PAYPAL_CAPTURE')?Configuration::get('PS_OS_PAYPAL'):Configuration::get('PS_OS_PAYMENT')), $transaction->amount, 'Braintree', $paypal->l('Payment accepted.'),$transactionDetail,$this->context->cart->id_currency,false,$this->context->customer->secure_key);
+                $paypal->validateOrder($this->context->cart->id, (Configuration::get('PAYPAL_CAPTURE')?Configuration::get('PAYPAL_BRAINTREE_OS_AWAITING'):Configuration::get('PS_OS_PAYMENT')), $transaction->amount, 'Braintree', $paypal->l('Payment accepted.'),$transactionDetail,$this->context->cart->id_currency,false,$this->context->customer->secure_key);
                 $paypal->reset_context();
                 $order_id = Order::getOrderByCartId($this->context->cart->id);
                 $braintree->updateTransaction($id_braintree_presta,$transaction->id,$order_id);

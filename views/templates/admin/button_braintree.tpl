@@ -3,7 +3,7 @@
 {if $PayPal_sandbox_mode}
 	{l s='Your Braintree account is configured in sandbox mode. You can join the Braintree support on 08 05 54 27 14' mod='paypal'}
 {else}
-	{l s='Your Braintree account is configured in live mode. You can join the Braintree support on 08 05 54 27 14' mod='paypal'}
+	{l s='Your Braintree account is configured in live mode. You can sell on Euro only. You can join the Braintree support on 08 05 54 27 14' mod='paypal'}
 {/if}
 </span>
 {else}

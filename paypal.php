@@ -47,7 +47,7 @@ define('PPP', 5); //Paypal Plus
 define('PVZ', 6); //Braintree ONLY
 
 define('PROD_PROXY_HOST', 'https://pp-ps-auth.com/');
-define('SANDBOX_PROXY_HOST', 'http://sandbox.pp-ps-auth.com/');
+define('SANDBOX_PROXY_HOST', 'https://sandbox.pp-ps-auth.com/');
 
 /* Tracking */
 define('TRACKING_INTEGRAL_EVOLUTION', 'FR_PRESTASHOP_H3S');
@@ -640,7 +640,7 @@ class PayPal extends PaymentModule
         $braintree_style = '';
 
         if( !Tools::isSubmit('submitButton') && Tools::getIsset('accessToken') && Tools::getIsset('expiresAt') && Tools::getIsset('refreshToken' )) {
-            $output = $this->displayConfirmation( (Configuration::get('PAYPAL_SANDBOX')?$this->l('Your Braintree account is now configured in sandbox mode. If you have problems, you can join Braintree support on 08 05 54 27 14'):$this->l('Your Braintree account is now configured in live mode. If you have problems, you can join Braintree support on 08 05 54 27 14') ));
+            $output = $this->displayConfirmation( (Configuration::get('PAYPAL_SANDBOX')?$this->l('Your Braintree account is now configured in sandbox mode. You can sell on Euro only. If you have problems, you can join Braintree support on 08 05 54 27 14'):$this->l('Your Braintree account is now configured in live mode. If you have problems, you can join Braintree support on 08 05 54 27 14') ));
         }
         
         if( !Tools::isSubmit('submitButton') && Tools::getValue('error') ) {
@@ -1010,7 +1010,7 @@ class PayPal extends PaymentModule
             ? $iso_lang[$this->context->language->iso_code] : 'en_US',
         ));
 
-        if (($method == PVZ || Configuration::get('PAYPAL_BRAINTREE_ENABLED')) && version_compare(PHP_VERSION, '5.4.0', '>')) {
+        if (($method == PVZ || Configuration::get('PAYPAL_BRAINTREE_ENABLED')) && version_compare(PHP_VERSION, '5.4.0', '>') && $this->context->currency->iso_code == 'EUR') {
             $id_account_braintree = $this->set_good_context();
 
             include_once _PS_MODULE_DIR_.'paypal/classes/Braintree.php';
@@ -2124,9 +2124,9 @@ class PayPal extends PaymentModule
                 $order_history->id_order = (int)$id_order;
 
                 if (version_compare(_PS_VERSION_, '1.5', '<')) {
-                    $order_history->changeIdOrderState(Configuration::get('PS_OS_WS_PAYMENT'), (int)$id_order);
+                    $order_history->changeIdOrderState(Configuration::get('PAYPAL_BRAINTREE_OS_AUTHORIZATION'), (int)$id_order);
                 } else {
-                    $order_history->changeIdOrderState(Configuration::get('PS_OS_WS_PAYMENT'), $order);
+                    $order_history->changeIdOrderState(Configuration::get('PAYPAL_BRAINTREE_OS_AUTHORIZATION'), $order);
                 }
 
                 $order_history->addWithemail();

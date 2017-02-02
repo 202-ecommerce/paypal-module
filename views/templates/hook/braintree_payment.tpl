@@ -50,6 +50,7 @@
 					<input type="hidden" name="liabilityShifted" id="liabilityShifted"/>
 					<input type="hidden" name="liabilityShiftPossible" id="liabilityShiftPossible"/>
 					<input type="hidden" name="payment_method_nonce" id="payment_method_nonce"/>
+					<input type="hidden" name="card_type" id="braintree_card_type"/>
                 <div class="paypal_clear"></div>
 				<input type="submit" value="{l s='Pay' mod='paypal'}"  id="braintree_submit" disabled="disabled"/>
 				</form>
@@ -59,10 +60,10 @@
 </div>
 
 {literal}
-	<script src="https://js.braintreegateway.com/web/3.6.3/js/client.min.js"></script>
-	<script src="https://js.braintreegateway.com/web/3.6.3/js/hosted-fields.min.js"></script>
-	<script src="https://js.braintreegateway.com/web/3.6.3/js/data-collector.min.js"></script>
-	<script src="https://js.braintreegateway.com/web/3.6.3/js/three-d-secure.min.js"></script>
+	<script src="https://js.braintreegateway.com/web/3.7.0/js/client.min.js"></script>
+	<script src="https://js.braintreegateway.com/web/3.7.0/js/hosted-fields.min.js"></script>
+	<script src="https://js.braintreegateway.com/web/3.7.0/js/data-collector.min.js"></script>
+	<script src="https://js.braintreegateway.com/web/3.7.0/js/three-d-secure.min.js"></script>
 	<script>
 		var authorization = '{/literal}{$braintreeToken}{literal}';
 		var submit = document.querySelector('#braintree_submit');
@@ -176,7 +177,6 @@
 									]);
 									return false;
 								}
-								var my3DSContainer;
 								threeDSecure.verifyCard({
 									nonce: payload.nonce,
 									amount: {/literal}{$braintreeAmount}{literal},
@@ -193,7 +193,7 @@
 									removeFrame: function () {
 
                                     }
-								}, function (err, payload) {
+								}, function (err, three_d_secure_response) {
 									if (err) {
                                         var popup_message = '';
                                         switch (err.code) {
@@ -213,24 +213,25 @@
                                         ]);
 										return false;
 									}
-                                    if(payload.liabilityShifted)
+                                    if(three_d_secure_response.liabilityShifted)
                                     {
-                                        document.querySelector('input[name="liabilityShifted"]').value = payload.liabilityShifted;
+                                        document.querySelector('input[name="liabilityShifted"]').value = three_d_secure_response.liabilityShifted;
                                     }
                                     else
                                     {
                                         document.querySelector('input[name="liabilityShifted"]').value = false;
                                     }
 
-                                    if(payload.liabilityShiftPossible)
+                                    if(three_d_secure_response.liabilityShiftPossible)
                                     {
-                                        document.querySelector('input[name="liabilityShiftPossible"]').value = payload.liabilityShiftPossible;
+                                        document.querySelector('input[name="liabilityShiftPossible"]').value = three_d_secure_response.liabilityShiftPossible;
                                     }
                                     else
                                     {
                                         document.querySelector('input[name="liabilityShiftPossible"]').value = false;
                                     }
-                                    document.querySelector('input[name="payment_method_nonce"]').value = payload.nonce;
+									document.querySelector('input[name="payment_method_nonce"]').value = three_d_secure_response.nonce;
+									document.querySelector('input[name="card_type"]').value = payload.details.cardType;
                                     form.submit()
 
 								});
