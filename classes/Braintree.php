@@ -297,7 +297,7 @@ class PrestaBraintree{
 
                 curl_close($ch);
 
-                $json = json_decode($resp);
+                $json = Tools::jsonDecode($resp);
 
                 Configuration::updateValue('PAYPAL_BRAINTREE_ACCESS_TOKEN', $json->data->accessToken);
                 Configuration::updateValue('PAYPAL_BRAINTREE_REFRESH_TOKEN', $json->data->refreshToken);
