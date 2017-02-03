@@ -58,9 +58,8 @@ class PayPalBraintreeSubmitModuleFrontController extends ModuleFrontController
 
         if(empty($this->context->cart->id))
         {
-            $module = new PayPal();
             $paypal->reset_context();
-            $this->redirectFailedPayment($module->l('failed load cart'));
+            $this->redirectFailedPayment($paypal->l('failed load cart'));
         }
 
         if(Configuration::get('PAYPAL_USE_3D_SECURE') && in_array(Tools::getValue('card_type'),array('Visa','MasterCard') )&& Tools::getValue('liabilityShifted') == 'false' && Tools::getValue('liabilityShiftPossible') == 'false')
@@ -107,7 +106,15 @@ class PayPalBraintreeSubmitModuleFrontController extends ModuleFrontController
 
     public function redirectFailedPayment($error = '')
     {
-        Tools::redirect('index.php?controller=order&step=3&bt_error_msg='.urlencode($error));
+        if(Configuration::get('PS_ORDER_PROCESS_TYPE'))
+        {
+            Tools::redirect('index.php?controller=order-opc&isPaymentStep=true&bt_error_msg='.urlencode($error));
+        }
+        else
+        {
+            Tools::redirect('index.php?controller=order&step=3&bt_error_msg='.urlencode($error));
+        }
+
     }
 
     public function redirectConfirmation($id_paypal,$id_cart,$id_order)

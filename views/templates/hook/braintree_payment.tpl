@@ -59,11 +59,14 @@
 	</div>
 </div>
 
-{literal}
+
+ 	{if !$opc}
 	<script src="https://js.braintreegateway.com/web/3.7.0/js/client.min.js"></script>
 	<script src="https://js.braintreegateway.com/web/3.7.0/js/hosted-fields.min.js"></script>
 	<script src="https://js.braintreegateway.com/web/3.7.0/js/data-collector.min.js"></script>
 	<script src="https://js.braintreegateway.com/web/3.7.0/js/three-d-secure.min.js"></script>
+ 	{/if}
+{literal}
 	<script>
 		var authorization = '{/literal}{$braintreeToken}{literal}';
 		var submit = document.querySelector('#braintree_submit');
@@ -154,18 +157,54 @@
 							return false;
 						}
 						{/literal}{if $check3Dsecure}{literal}
-							braintree.threeDSecure.create({
-								client: clientInstance
-							}, function (ThreeDSecureerror,threeDSecure) {
+						braintree.threeDSecure.create({
+							client: clientInstance
+						}, function (ThreeDSecureerror,threeDSecure) {
 
-								if(ThreeDSecureerror)
-								{
-									switch (ThreeDSecureerror.code) {
-										case 'THREEDS_HTTPS_REQUIRED':
-											popup_message = '{/literal}{l s='3D Secure requires HTTPS.' mod='paypal'}{literal}';
+							if(ThreeDSecureerror)
+							{
+								switch (ThreeDSecureerror.code) {
+									case 'THREEDS_HTTPS_REQUIRED':
+										popup_message = '{/literal}{l s='3D Secure requires HTTPS.' mod='paypal'}{literal}';
+										break;
+									default:
+										popup_message = '{/literal}{l s='Load 3D Secure Failed' mod='paypal'}{literal}';
+								}
+								$.fancybox.open([
+									{
+										type: 'inline',
+										autoScale: true,
+										minHeight: 30,
+										content: '<p class="braintree-error">'+popup_message+'</p>'
+									}
+								]);
+								return false;
+							}
+							threeDSecure.verifyCard({
+								nonce: payload.nonce,
+								amount: {/literal}{$braintreeAmount}{literal},
+								addFrame: function (err, iframe) {
+									$.fancybox.open([
+										{
+											type: 'inline',
+											autoScale: true,
+											minHeight: 30,
+											content: '<p class="braintree-iframe">'+iframe.outerHTML+'</p>'
+										}
+									]);
+								},
+								removeFrame: function () {
+
+								}
+							}, function (err, three_d_secure_response) {
+								if (err) {
+									var popup_message = '';
+									switch (err.code) {
+										case 'CLIENT_REQUEST_ERROR':
+											popup_message = '{/literal}{l s='There was a problem with your request.' mod='paypal'}{literal}';
 											break;
 										default:
-											popup_message = '{/literal}{l s='Load 3D Secure Failed' mod='paypal'}{literal}';
+											popup_message = '{/literal}{l s='3D Secure Failed' mod='paypal'}{literal}';
 									}
 									$.fancybox.open([
 										{
@@ -177,65 +216,29 @@
 									]);
 									return false;
 								}
-								threeDSecure.verifyCard({
-									nonce: payload.nonce,
-									amount: {/literal}{$braintreeAmount}{literal},
-									addFrame: function (err, iframe) {
-										$.fancybox.open([
-											{
-												type: 'inline',
-												autoScale: true,
-												minHeight: 30,
-												content: '<p class="braintree-iframe">'+iframe.outerHTML+'</p>'
-											}
-										]);
-									},
-									removeFrame: function () {
+								if(three_d_secure_response.liabilityShifted)
+								{
+									document.querySelector('input[name="liabilityShifted"]').value = three_d_secure_response.liabilityShifted;
+								}
+								else
+								{
+									document.querySelector('input[name="liabilityShifted"]').value = false;
+								}
 
-                                    }
-								}, function (err, three_d_secure_response) {
-									if (err) {
-                                        var popup_message = '';
-                                        switch (err.code) {
-                                            case 'CLIENT_REQUEST_ERROR':
-                                                popup_message = '{/literal}{l s='There was a problem with your request.' mod='paypal'}{literal}';
-                                                break;
-                                            default:
-                                                popup_message = '{/literal}{l s='3D Secure Failed' mod='paypal'}{literal}';
-                                        }
-                                        $.fancybox.open([
-                                            {
-                                                type: 'inline',
-                                                autoScale: true,
-                                                minHeight: 30,
-                                                content: '<p class="braintree-error">'+popup_message+'</p>'
-                                            }
-                                        ]);
-										return false;
-									}
-                                    if(three_d_secure_response.liabilityShifted)
-                                    {
-                                        document.querySelector('input[name="liabilityShifted"]').value = three_d_secure_response.liabilityShifted;
-                                    }
-                                    else
-                                    {
-                                        document.querySelector('input[name="liabilityShifted"]').value = false;
-                                    }
+								if(three_d_secure_response.liabilityShiftPossible)
+								{
+									document.querySelector('input[name="liabilityShiftPossible"]').value = three_d_secure_response.liabilityShiftPossible;
+								}
+								else
+								{
+									document.querySelector('input[name="liabilityShiftPossible"]').value = false;
+								}
+								document.querySelector('input[name="payment_method_nonce"]').value = three_d_secure_response.nonce;
+								document.querySelector('input[name="card_type"]').value = payload.details.cardType;
+								form.submit()
 
-                                    if(three_d_secure_response.liabilityShiftPossible)
-                                    {
-                                        document.querySelector('input[name="liabilityShiftPossible"]').value = three_d_secure_response.liabilityShiftPossible;
-                                    }
-                                    else
-                                    {
-                                        document.querySelector('input[name="liabilityShiftPossible"]').value = false;
-                                    }
-									document.querySelector('input[name="payment_method_nonce"]').value = three_d_secure_response.nonce;
-									document.querySelector('input[name="card_type"]').value = payload.details.cardType;
-                                    form.submit()
-
-								});
 							});
+						});
 
 
 						{/literal}{/if}{literal}
