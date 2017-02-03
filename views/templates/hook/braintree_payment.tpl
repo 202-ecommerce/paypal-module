@@ -132,19 +132,19 @@
 							var popup_message = '';
 							switch (tokenizeErr.code) {
 								case 'HOSTED_FIELDS_FIELDS_EMPTY':
-									popup_message = '{/literal}{l s='All fields are empty! Please fill out the form.' mod='paypal'}{literal}';
+									popup_message = "{/literal}{l s='All fields are empty! Please fill out the form.' mod='paypal'}{literal}";
 									break;
 								case 'HOSTED_FIELDS_FIELDS_INVALID':
-									popup_message = '{/literal}{l s='Some fields are invalid :' mod='paypal'}{literal} '+tokenizeErr.details.invalidFieldKeys;
+									popup_message = "{/literal}{l s='Some fields are invalid :' mod='paypal'}{literal} "+tokenizeErr.details.invalidFieldKeys;
 									break;
 								case 'HOSTED_FIELDS_FAILED_TOKENIZATION':
-									popup_message = '{/literal}{l s='Tokenization failed server side. Is the card valid?' mod='paypal'}{literal}';
+									popup_message = "{/literal}{l s='Tokenization failed server side. Is the card valid?' mod='paypal'}{literal}";
 									break;
 								case 'HOSTED_FIELDS_TOKENIZATION_NETWORK_ERROR':
-									popup_message = '{/literal}{l s='Network error occurred when tokenizing.' mod='paypal'}{literal}';
+									popup_message = "{/literal}{l s='Network error occurred when tokenizing.' mod='paypal'}{literal}";
 									break;
 								default:
-									popup_message = '{/literal}{l s='Tokenize failed' mod='paypal'}{literal}';
+									popup_message = "{/literal}{l s='Tokenize failed' mod='paypal'}{literal}";
 							}
 							$.fancybox.open([
 								{
@@ -165,10 +165,10 @@
 							{
 								switch (ThreeDSecureerror.code) {
 									case 'THREEDS_HTTPS_REQUIRED':
-										popup_message = '{/literal}{l s='3D Secure requires HTTPS.' mod='paypal'}{literal}';
+										popup_message = "{/literal}{l s='3D Secure requires HTTPS.' mod='paypal'}{literal}";
 										break;
 									default:
-										popup_message = '{/literal}{l s='Load 3D Secure Failed' mod='paypal'}{literal}';
+										popup_message = "{/literal}{l s='Load 3D Secure Failed' mod='paypal'}{literal}";
 								}
 								$.fancybox.open([
 									{
@@ -201,10 +201,10 @@
 									var popup_message = '';
 									switch (err.code) {
 										case 'CLIENT_REQUEST_ERROR':
-											popup_message = '{/literal}{l s='There was a problem with your request.' mod='paypal'}{literal}';
+											popup_message = "{/literal}{l s='There was a problem with your request.' mod='paypal'}{literal}";
 											break;
 										default:
-											popup_message = '{/literal}{l s='3D Secure Failed' mod='paypal'}{literal}';
+											popup_message = "{/literal}{l s='3D Secure Failed' mod='paypal'}{literal}";
 									}
 									$.fancybox.open([
 										{

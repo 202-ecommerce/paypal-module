@@ -113,7 +113,7 @@ class PayPal extends PaymentModule
 
         if($country->iso_code == 'FR')
         {
-            $this->description = $this->l('Benefit from PayPal\'s complete payments platform and grow your business online, on mobile and internationally and discover a new payment experience with Braintree.');
+            $this->description = $this->l('Benefit from PayPal\'s complete payments platform and grow your business online, on mobile and internationally and discover a new payment experience with Braintree.Accept credit cards, debit cards and PayPal payments.');
 
         }
         else
