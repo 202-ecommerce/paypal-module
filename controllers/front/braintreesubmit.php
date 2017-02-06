@@ -49,9 +49,6 @@ class PayPalBraintreeSubmitModuleFrontController extends ModuleFrontController
 
     public function postProcess()
     {
-        global $useSSL;
-        $useSSL = true;
-
 
         $paypal = new PayPal();
         $braintree = new PrestaBraintree();
