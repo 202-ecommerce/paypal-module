@@ -35,6 +35,7 @@ class PayPalBraintreeSubmitModuleFrontController extends ModuleFrontController
     public function __construct()
     {
         parent::__construct();
+        $this->ssl = true;
 
         if (class_exists('Context')) {
             $this->context = Context::getContext();

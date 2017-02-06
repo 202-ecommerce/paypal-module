@@ -2628,7 +2628,7 @@ class PayPal extends PaymentModule
     {
 
         $order_detail = PaypalPlusPui::getByIdOrder($params['object']->id_order);
-        $information = json_decode($order_detail['pui_informations'],true);
+        $information = Tools::jsonDecode($order_detail['pui_informations'],true);
         $tab = '<table style="border: solid 1pt black; padding:0 10pt">
     <tr><td></td><td></td></tr>
     <tr><td><b>'.$this->l('Bank name').'</b></td><td>'.$information['recipient_banking_instruction']['bank_name'].'</td></tr>
