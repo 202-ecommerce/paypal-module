@@ -38,9 +38,9 @@
 <script>
 	$(document).ready(function(){
 		$.get('{$Proxy_Host}prestashop/getUrlConnect', {
-			user_country: '{$User_Country}',
-			user_email:'{$User_Mail}',
-			business_name: '{$Business_Name}',
+			user_country: '{$User_Country|escape:'htmlall':'UTF-8'}',
+			user_email:'{$User_Mail|escape:'htmlall':'UTF-8'}',
+			business_name: '{$Business_Name|escape:'htmlall':'UTF-8'}',
 			redirect_url: '{$Braintree_Redirect_Url}'
 		}).done(function(data){
 			//console.log(data);
