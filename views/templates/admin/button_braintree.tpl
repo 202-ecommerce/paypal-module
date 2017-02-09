@@ -37,7 +37,7 @@
 <script src="https://assets.braintreegateway.com/v1/braintree-oauth-connect.js"></script>
 <script>
 	$(document).ready(function(){
-		$.get('{$Proxy_Host}prestashop/getUrlConnect', {
+		$.get('{$Proxy_Host|escape:'htmlall':'UTF-8'}prestashop/getUrlConnect', {
 			user_country: '{$User_Country|escape:'htmlall':'UTF-8'}',
 			user_email:'{$User_Mail|escape:'htmlall':'UTF-8'}',
 			business_name: '{$Business_Name|escape:'htmlall':'UTF-8'}',

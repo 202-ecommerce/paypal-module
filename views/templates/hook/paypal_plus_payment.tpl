@@ -92,7 +92,7 @@
                     if($("#cgv-legal").is(":checked")){
 
                 $('#ppplus iframe').slideUp();
-                $('#ppplus').html('<img style="display:block;margin:15px auto;" src="{/literal}{$img_loader}{literal}"/>');
+                $('#ppplus').html('<img style="display:block;margin:15px auto;" src="{/literal}{$img_loader|escape:'htmlall':'UTF-8'}{literal}"/>');
                 doPatch(ppp);
 
                     }else{
@@ -106,7 +106,7 @@
                     if($("#cgv").is(":checked")){
 
                         $('#ppplus iframe').slideUp();
-                        $('#ppplus').html('<img style="display:block;margin:15px auto;" src="{/literal}{$img_loader}{literal}"/>');
+                        $('#ppplus').html('<img style="display:block;margin:15px auto;" src="{/literal}{$img_loader|escape:'htmlall':'UTF-8'}{literal}"/>');
                         doPatch(ppp);
 
                     }else{
@@ -116,7 +116,7 @@
 
                 }else{
                     $('#ppplus iframe').slideUp();
-                    $('#ppplus').html('<img style="display:block;margin:15px auto;" src="{/literal}{$img_loader}{literal}"/>');
+                    $('#ppplus').html('<img style="display:block;margin:15px auto;" src="{/literal}{$img_loader|escape:'htmlall':'UTF-8'}{literal}"/>');
                     doPatch(ppp);
                 }
 

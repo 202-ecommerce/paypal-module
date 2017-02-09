@@ -196,7 +196,7 @@
                             <span class="description"></span>
                             <!-- <p class="toolbox"></p> -->
                         </label>
-                        <span id="braintree_message" style="{$Braintree_Style}">{$Braintree_Message}</span>
+                        <span id="braintree_message" style="{$Braintree_Style}">{$Braintree_Message|escape:'htmlall':'UTF-8'}</span>
                         <div id="paypal_braintree">
 							{include './button_braintree.tpl'}
 						</div>
