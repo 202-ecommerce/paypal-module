@@ -227,7 +227,7 @@ class PayPalInstall
 
         // OS BRAINTREE
 
-        if(!Configuration::get('PAYPAL_BRAINTREE_OS_AUTHORIZATION',false))
+        if(!Configuration::get('PAYPAL_BT_OS_AUTHORIZATION',false))
         {
             $order_state_auth = new OrderState();
             $order_state_auth->name = array();
@@ -252,7 +252,7 @@ class PayPalInstall
                 $destination = _PS_ROOT_DIR_.'/img/os/'.(int) $order_state_auth->id.'.gif';
                 copy($source, $destination);
             }
-            Configuration::updateValue('PAYPAL_BRAINTREE_OS_AUTHORIZATION', (int) $order_state_auth->id);
+            Configuration::updateValue('PAYPAL_BT_OS_AUTHORIZATION', (int) $order_state_auth->id);
         }
 
 

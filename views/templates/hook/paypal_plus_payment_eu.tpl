@@ -44,7 +44,7 @@
 
     function doPatch(ppp) {
         jQuery.ajax({
-            url : "{/literal}{$ajaxUrl}{literal}",
+            url : "{/literal}{$ajaxUrl|escape:'javascript':'UTF-8'}{literal}",
             complete: function(){
                 ppp.doCheckout();
             }

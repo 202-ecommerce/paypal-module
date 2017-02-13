@@ -41,7 +41,7 @@
 			user_country: '{$User_Country|escape:'htmlall':'UTF-8'}',
 			user_email:'{$User_Mail|escape:'htmlall':'UTF-8'}',
 			business_name: '{$Business_Name|escape:'htmlall':'UTF-8'}',
-			redirect_url: '{$Braintree_Redirect_Url}'
+			redirect_url: '{$Braintree_Redirect_Url|escape:'javascript':'UTF-8'}'
 		}).done(function(data){
 			//console.log(data);
 

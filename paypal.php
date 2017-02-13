@@ -2140,9 +2140,9 @@ class PayPal extends PaymentModule
                 $order_history->id_order = (int)$id_order;
 
                 if (version_compare(_PS_VERSION_, '1.5', '<')) {
-                    $order_history->changeIdOrderState(Configuration::get('PAYPAL_BRAINTREE_OS_AUTHORIZATION'), (int)$id_order);
+                    $order_history->changeIdOrderState(Configuration::get('PAYPAL_BT_OS_AUTHORIZATION'), (int)$id_order);
                 } else {
-                    $order_history->changeIdOrderState(Configuration::get('PAYPAL_BRAINTREE_OS_AUTHORIZATION'), $order);
+                    $order_history->changeIdOrderState(Configuration::get('PAYPAL_BT_OS_AUTHORIZATION'), $order);
                 }
 
                 $order_history->addWithemail();

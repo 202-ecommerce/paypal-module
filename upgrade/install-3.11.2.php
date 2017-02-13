@@ -65,14 +65,14 @@ function upgrade_module_3_11_2($object, $install = false)
         $order_state_wait->hidden = false;
         $order_state_wait->delivery = false;
         $order_state_wait->logable = true;
-        $order_state_wait->invoice = true;
+        $order_state_wait->invoice = false;
 
         if ($order_state_auth->add()) {
             $source = _PS_MODULE_DIR_.'paypal/views/img/logos/os_braintree.png';
             $destination = _PS_ROOT_DIR_.'/img/os/'.(int) $order_state_auth->id.'.gif';
             copy($source, $destination);
         }
-        Configuration::updateValue('PAYPAL_BRAINTREE_OS_AUTHORIZATION', (int) $order_state_auth->id);
+        Configuration::updateValue('PAYPAL_BT_OS_AUTHORIZATION', (int) $order_state_auth->id);
 
         if ($order_state_wait->add()) {
 
