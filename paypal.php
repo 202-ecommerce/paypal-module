@@ -82,7 +82,7 @@ class PayPal extends PaymentModule
             || !Configuration::updateValue('PAYPAL_API_PSWD', '')
             || !Configuration::updateValue('PAYPAL_API_SIGNATURE', '')
             || !Configuration::updateValue('PAYPAL_SANDBOX', 0)
-            || !Configuration::updateValue('PAYPAL_API_INTENT', 0)
+            || !Configuration::updateValue('PAYPAL_API_INTENT', 'sale')
             || !Configuration::updateValue('PAYPAL_API_ADVANTAGES', 0)
             || !Configuration::updateValue('PAYPAL_API_CARD', 0)
         ) {
@@ -257,7 +257,7 @@ class PayPal extends PaymentModule
         return true;
     }
 
-    public function getURL()
+    public function getUrl()
     {
         if (Configuration::get('PAYPAL_SANDBOX')) {
             return 'https://www.sandbox.paypal.com/';
@@ -270,24 +270,30 @@ class PayPal extends PaymentModule
     {
         $this->_postProcess();
         $return_url = $this->context->link->getAdminLink('AdminModules', true).'&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name;
+        /*
         $PartnerboardingURL = "";
         if ((Configuration::get('PAYPAL_SANDBOX') && !Configuration::get('PAYPAL_LIVE_ACCESS'))
         || (!Configuration::get('PAYPAL_SANDBOX') && !Configuration::get('PAYPAL_SANDBOX_ACCESS'))) {
-            $partner_info = $this->getPartnerInfo(Configuration::get('PAYPAL_METHOD'));
+            $partner_info = $this->getUrlOnboarding(Configuration::get('PAYPAL_METHOD'));
             if (!$partner_info->error) {
                 $PartnerboardingURL = $partner_info->data->link;
             }
         }
+        */
 
          $this->context->smarty->assign(array(
              'path' => $this->_path,
-             'PartnerboardingURL' => $PartnerboardingURL,
+//             'PartnerboardingURL' => $PartnerboardingURL,
              'country' => Country::getNameById($this->context->language->id, $this->context->country->id),
              'localization' => $this->context->link->getAdminLink('AdminLocalization', true),
              'active_products' => $this->express_checkout,
              'return_url' => $return_url,
              'access_token_sandbox' => Configuration::get('PAYPAL_SANDBOX_ACCESS'),
              'access_token_live' => Configuration::get('PAYPAL_LIVE_ACCESS'),
+             'PAYPAL_SANDBOX_CLIENTID' => Configuration::get('PAYPAL_SANDBOX_CLIENTID'),
+             'PAYPAL_SANDBOX_SECRET' => Configuration::get('PAYPAL_SANDBOX_SECRET'),
+             'PAYPAL_LIVE_CLIENTID' => Configuration::get('PAYPAL_LIVE_CLIENTID'),
+             'PAYPAL_LIVE_SECRET' => Configuration::get('PAYPAL_LIVE_SECRET'),
          ));
          $this->context->controller->addCSS($this->_path.'views/css/paypal-bo.css', 'all');
          $fields_form[0]['form'] = array(
@@ -423,7 +429,11 @@ class PayPal extends PaymentModule
         } elseif (Configuration::get('PAYPAL_SANDBOX') == 0) {
             $this->message .= $this->displayConfirmation($this->l('Your PayPal account is properly connected, you can now receive payments'));
         }
-        $sdk = new PaypalSDK(Configuration::get('PAYPAL_SANDBOX'));
+
+        $sdk = new PaypalSDK(
+            Configuration::get('PAYPAL_SANDBOX')?Configuration::get('PAYPAL_SANDBOX_CLIENTID'):Configuration::get('PAYPAL_LIVE_CLIENTID'),
+            Configuration::get('PAYPAL_SANDBOX')?Configuration::get('PAYPAL_SANDBOX_SECRET'):Configuration::get('PAYPAL_LIVE_SECRET'),
+            Configuration::get('PAYPAL_SANDBOX'));
         //TEST :
        /* $ref = $sdk->getPartnerReferrals("YTIyNmNkNjktZDE3MS00Mjk2LWFlZjktMTM1Mzg2ZjFjYTY2VnhvRm5WaFRhSnR4bzYwSU9jZkx4T0VvRElNdVR2WTZXekoyQzR5STgvRT0=");
         $user = $sdk->getUserStatus();
@@ -432,95 +442,33 @@ class PayPal extends PaymentModule
 
     }
 
-    public function getPartnerInfo($method)
+
+    // voir provisionning
+    public function getUrlOnboarding($method)
     {
 
         $return_url = $this->context->link->getAdminLink('AdminModules', true).'&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name;
+        $currency = new Currency(Configuration::get('PS_CURRENCY_DEFAULT'));
 
-
-        $sdk = new PaypalSDK(Configuration::get('PAYPAL_SANDBOX'));
-        $response = $sdk->getUrlOnboarding(array(
+        $data = array(
             'email'         => Configuration::get('PS_SHOP_EMAIL'),
             'shop_url'      => $return_url,
-            'address'       => Configuration::get('PS_SHOP_ADDR1'),
+            'address1'      => Configuration::get('PS_SHOP_ADDR1'),
+            'address2'      => Configuration::get('PS_SHOP_ADDR2'),
             'city'          => Configuration::get('PS_SHOP_CITY'),
             'country_code'  => Tools::strtoupper($this->context->country->iso_code),
             'postal_code'   => Configuration::get('PS_SHOP_CODE'),
-        ));
-        /*
-        $partner_info = new stdClass();
-
-        $customer_data = new stdClass();
-
-        $person_details = new stdClass();
-        $person_details->email_address = Configuration::get('PS_SHOP_EMAIL');
-
-        $business_details = new stdClass();
-
-        $business_address = new stdClass();
-        $business_address->line1 = Configuration::get('PS_SHOP_ADDR1');
-        $business_address->city = Configuration::get('PS_SHOP_CITY');
-        $business_address->country_code = Tools::strtoupper($this->context->country->iso_code);
-        $business_address->postal_code = Configuration::get('PS_SHOP_CODE');
-
-        $business_details->business_address = $business_address;
-        $business_details->website_urls = array($shop_url);
-
-        $customer_data->customer_type = 'MERCHANT';
-        $customer_data->person_details = $person_details;
-        $customer_data->business_details = $business_details;
-        $customer_data->preferred_language_code = $this->context->language->iso_code.'_'.Tools::strtoupper($this->context->language->iso_code);
-        $customer_data->primary_currency_code = $this->context->currency->iso_code;
-
-        $tracking = new stdClass();
-        $tracking->type = 'TRACKING_ID';
-        $tracking->value = 'MERCH_REF01';
-        $partner_specific_identifiers[] = $tracking;
-        $customer_data->partner_specific_identifiers = $partner_specific_identifiers;
-
-        $web_experience_preference = new stdClass();
-        $web_experience_preference->return_url = ($return_url.'&activate_method='.$method);
-        $web_experience_preference->partner_logo_url = Tools::getShopDomain(true).'/img/logo.png';
-
-        //go to fatal error
-        $consents = new stdClass();
-        $consents->type = "SHARE_DATA_CONSENT";
-        $consents->granted = true;
-        $collected_consents[] = $consents;
-
-        $api_integration_preference = new stdClass();
-        $rest_api_integration = new stdClass();
-        $rest_api_integration->integration_method = 'PAYPAL';
-        $rest_api_integration->integration_type = 'THIRD_PARTY';
-        $rest_third_party_details = new stdClass();
-        $rest_third_party_details->partner_client_id = "AReLzfjunEgE3vvOxUgjPQZZXe2L9tcxI0NVIUzOF8BAmB8G4I0qsEUwptPtVF1Ioyu1TpAMQtG_nAeG";
-        $rest_third_party_details->feature_list = array('PAYMENT', 'REFUND', 'FUTURE_PAYMENT');
-        $api_integration_preference->partner_id = "FJBDL9L3Y8RHY";
-        $api_integration_preference->rest_api_integration = $rest_api_integration;
-        $api_integration_preference->rest_third_party_details = $rest_third_party_details;
-
-        $capability = new stdClass();
-        $capability->capability = 'API_INTEGRATION';
-        $capability->api_integration_preference = $api_integration_preference;
-        $requested_capabilities[] = $capability;
+            'language'      => str_replace('-','_' , $this->context->language->locale),
+            'currency'      => $currency->iso_code,
+        );
 
 
-        $partner_info->customer_data = $customer_data;
-        $partner_info->requested_capabilities = $requested_capabilities;
-        $partner_info->web_experience_preference = $web_experience_preference;
-      //  $partner_info->collected_consents = $collected_consents; // FATAL
-        $partner_info->products = array($method);
-echo '<pre>';
-        $sdk = new PaypalSDK(Configuration::get('PAYPAL_SANDBOX'));
-        var_dump($partner_info);
-
-        $response = $sdk->getUrlOnboarding($partner_info);
-
-        var_dump($response);die;
-        */
-
+        $sdk = new PaypalSDK(
+            Configuration::get('PAYPAL_SANDBOX')?Configuration::get('PAYPAL_SANDBOX_CLIENTID'):Configuration::get('PAYPAL_LIVE_CLIENTID'),
+            Configuration::get('PAYPAL_SANDBOX')?Configuration::get('PAYPAL_SANDBOX_SECRET'):Configuration::get('PAYPAL_LIVE_SECRET'),
+            Configuration::get('PAYPAL_SANDBOX'));
+        $response = $sdk->getUrlOnboarding($data);
         return $response;
-
     }
 
     private function _postProcess()
@@ -555,7 +503,10 @@ echo '<pre>';
                     'bank_txn_pending_url' => Context::getContext()->link->getModuleLink($this->name, 'ec_validation', array(), true),
                 ),
             );
-            $sdk = new PaypalSDK(Configuration::get('PAYPAL_SANDBOX'));
+            $sdk = new PaypalSDK(
+                Configuration::get('PAYPAL_SANDBOX')?Configuration::get('PAYPAL_SANDBOX_CLIENTID'):Configuration::get('PAYPAL_LIVE_CLIENTID'),
+                Configuration::get('PAYPAL_SANDBOX')?Configuration::get('PAYPAL_SANDBOX_SECRET'):Configuration::get('PAYPAL_LIVE_SECRET'),
+                Configuration::get('PAYPAL_SANDBOX'));
             $web_experience = $sdk->createWebExperience($profile);
 
             if (isset($web_experience->id)) {
@@ -563,14 +514,32 @@ echo '<pre>';
             }
         }
 
+        /*
         if (Tools::getValue('method')) {
-            $partner_info = $this->getPartnerInfo($_GET['method']);
+            $response = $this->getUrlOnboarding($_GET['method']);
             if ($partner_info->error) {
-                $this->message .= $this->displayWarning($partner_info->error);
+                $this->message .= $this->displayWarning($response->error);
             } else {
-                Tools::redirect($partner_info->data->link);
+                Tools::redirect($response->data->url);
             }
         }
+        */
+        if(Tools::isSubmit('save_credentials'))
+        {
+            $sandbox = Tools::getValue('sandbox');
+            $live = Tools::getValue('live');
+
+            Configuration::updateValue('PAYPAL_SANDBOX_CLIENTID', $sandbox['client_id']);
+            Configuration::updateValue('PAYPAL_SANDBOX_SECRET', $sandbox['secret']);
+
+            Configuration::updateValue('PAYPAL_LIVE_CLIENTID', $live['client_id']);
+            Configuration::updateValue('PAYPAL_LIVE_SECRET', $live['secret']);
+
+            Configuration::updateValue('PAYPAL_API_INTENT', Tools::getValue('with_card'));
+            Configuration::updateValue('PAYPAL_EXPRESS_CHECKOUT', 1);
+            Configuration::updateValue('PAYPAL_METHOD', Tools::getValue('method'));
+        }
+
         if (Tools::getValue('activate_method')) {
             Configuration::updateValue('PAYPAL_EXPRESS_CHECKOUT', 1);
             Configuration::updateValue('PAYPAL_METHOD', Tools::getValue('activate_method'));

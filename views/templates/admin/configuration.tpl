@@ -77,10 +77,10 @@
                     <p>
                         {l s='Accept payments via our PayPal Express Checkout product. You will receive our more than 192 million active PayPal accounts worldwide.' mod='paypal'}
                     </p>
-                    <p><a herf="#">{l s='See more' mod='paypal'}</a></p>
+                    <p><a href="#">{l s='See more' mod='paypal'}</a></p>
                     <div class="bottom">
                     <img src="{$path|escape:'html':'UTF-8'}/views/img/paypal_btm.png" class="product-img">
-                    <a class="btn btn-default pull-right" href="{$return_url|escape:'html':'UTF-8'}&method=EXPRESS_CHECKOUT">{l s='Activate' mod='paypal'}</a>
+                    <a class="btn btn-default pull-right" href="#{*$return_url|escape:'html':'UTF-8'}&method=EXPRESS_CHECKOUT*}"  onclick="display_popup('EXPRESS_CHECKOUT',0)">{l s='Activate' mod='paypal'}</a>
                     </div>
                 </div>
             </div>
@@ -91,15 +91,15 @@
                     <p>
                         {l s='Accept payments via our PayPal Express Checkout product. Not only do you accept PayPal with these 192 million active accounts but also you accept many bank cards throughout the world.' mod='paypal'}
                     </p>
-                    <p><a herf="#">{l s='See more' mod='paypal'}</a></p>
+                    <p><a href="#">{l s='See more' mod='paypal'}</a></p>
                     <div class="bottom">
-                    <img src="{$path|escape:'html':'UTF-8'}/views/img/paypal_btm.png" class="product-img">
+                        <img src="{$path|escape:'html':'UTF-8'}/views/img/paypal_btm.png" class="product-img">
                         <img src="{$path|escape:'html':'UTF-8'}/views/img/mastercard.png" class="product-img">
                         <img src="{$path|escape:'html':'UTF-8'}/views/img/visa.png" class="product-img">
                         <img src="{$path|escape:'html':'UTF-8'}/views/img/discover.png" class="product-img">
                         <img src="{$path|escape:'html':'UTF-8'}/views/img/american_express.png" class="product-img">
                         <img src="{$path|escape:'html':'UTF-8'}/views/img/maestro.png" class="product-img">
-                        <a class="btn btn-default pull-right" href="{$return_url|escape:'html':'UTF-8'}&method=EXPRESS_CHECKOUT">{l s='Activate' mod='paypal'}</a>
+                        <a class="btn btn-default pull-right" href="#{*$return_url|escape:'html':'UTF-8'}&method=EXPRESS_CHECKOUT*}" onclick="display_popup('EXPRESS_CHECKOUT',1)">{l s='Activate' mod='paypal'}</a>
                     </div>
                 </div>
             </div>
@@ -127,16 +127,73 @@
 
 </div>
 </div>
+<div style="display: none;">
+    <div id="content-fancybox-configuration">
+        <form action="{$return_url}" method="post" id="credential-configuration">
+            <p>{l s='In order to accept PayPal payments, please fill your API REST credentials.' mod='paypal'}</p>
+            <ul>
+                <li>{l s='Access https://developer.paypal.com/developer/applications/' mod='paypal'}</li>
+                <li>{l s='Create a « REST API apps »' mod='paypal'}</li>
+                <li>{l s='Click « Show » en dessous de « Secret: »' mod='paypal'}</li>
+                <li>{l s='Copy/paste your « Client ID » and « Secret » below for each environment' mod='paypal'}</li>
+            </ul>
+            <hr/>
+            <input type="hidden" id="method" name="method"/>
+            <input type="hidden" id="with_card" name="with_card"/>
+            <h5>{l s='Sandbox' mod='paypal'}</h5>
+            <p>
+                <label for="sandbox_client_id">{l s='Client ID' mod='paypal'}</label>
+                <input type="text" id="sandbox_client_id" name="sandbox[client_id]" value="{$PAYPAL_SANDBOX_CLIENTID}"/>
+            </p>
+            <p>
+                <label for="sandbox_secret">{l s='Secret' mod='paypal'}</label>
+                <input type="text" id="sandbox_secret" name="sandbox[secret]" value="{$PAYPAL_SANDBOX_SECRET}"/>
+            </p>
+            <hr/>
+            <h5>{l s='Live' mod='paypal'}</h5>
+            <p>
+                <label for="live_client_id">{l s='Client ID' mod='paypal'}</label>
+                <input type="text" id="live_client_id" name="live[client_id]" value="{$PAYPAL_LIVE_CLIENTID}"/>
+            </p>
+            <p>
+                <label for="live_secret">{l s='Secret' mod='paypal'}</label>
+                <input type="text" id="live_secret" name="live[secret]" value="{$PAYPAL_LIVE_SECRET}"/>
+            </p>
+            <p>
+                <button onclick="$.fancybox.close();return false;">{l s='Cancel' mod='paypal'}</button>
+                <button name="save_credentials">{l s='Confirm API Credentials' mod='paypal'}</button>
+            </p>
+        </form>
+    </div>
+
+</div>
 
 <script type="text/javascript">
+    function display_popup(method,with_card)
+    {
+        $('#method').val(method);
+        $('#with_card').val(with_card);
+        $.fancybox.open([
+            {
+                type: 'inline',
+                autoScale: true,
+                minHeight: 30,
+                content: $('#content-fancybox-configuration').html(),
+            }
+        ]);
+    }
+
     $(document).ready(function(){
+
+
+
         $('#change_product').click(function(event) {
             event.preventDefault();
             $('a[href=#paypal_conf]').click();
         });
         
         $('#configuration_form').insertAfter($('.parametres'));
-        var activate_link = "{$PartnerboardingURL|escape:'html':'UTF-8'}";
+        //var activate_link = "{*$PartnerboardingURL|escape:'html':'UTF-8'*}";
 
 
         $('#configuration_form input[name=paypal_sandbox]').change(function(event) {

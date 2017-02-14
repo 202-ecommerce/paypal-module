@@ -33,7 +33,10 @@ class MethodEC extends AbstractMethodPaypal
 
      public function init()
      {
-         $sdk = new PaypalSDK(Configuration::get('PAYPAL_SANDBOX'));
+         $sdk = new PaypalSDK(
+             Configuration::get('PAYPAL_SANDBOX')?Configuration::get('PAYPAL_SANDBOX_CLIENTID'):Configuration::get('PAYPAL_LIVE_CLIENTID'),
+             Configuration::get('PAYPAL_SANDBOX')?Configuration::get('PAYPAL_SANDBOX_SECRET'):Configuration::get('PAYPAL_LIVE_SECRET'),
+             Configuration::get('PAYPAL_SANDBOX'));
          $cart = Context::getContext()->cart;
          $currency = Context::getContext()->currency;
          $total = (float)$cart->getOrderTotal(true, Cart::BOTH);
@@ -59,10 +62,10 @@ class MethodEC extends AbstractMethodPaypal
              $items = array(
                  'quantity' => $product['cart_quantity'],
                  'name' => $product['name'],
-                 'price' =>  round($product['price'], 2),
+                 'price' =>  str_replace(',','.' , round($product['price'], 2)),
                  'currency' => $currency->iso_code,
                  'description' => $product['description_short'],
-                 'tax' => $product['total_wt'] - $product['total'],
+                 'tax' => str_replace(',','.' , round($product['total_wt'] - $product['total'],2)),
              );
          }
          $params['transactions'][] = array(
@@ -70,9 +73,9 @@ class MethodEC extends AbstractMethodPaypal
                  'total' => $total,
                  'currency' => $currency->iso_code,
                  'details' => array(
-                     'subtotal' => $summary['total_products'],
-                     'tax' => $summary['total_tax'],
-                     'shipping' => $shipping_cost,
+                     'subtotal' => str_replace(',','.' , round($summary['total_products'],2)),
+                     'tax' => str_replace(',','.' , round($summary['total_tax'],2)),
+                     'shipping' => str_replace(',','.' , round($shipping_cost,2)),
                  ),
              ),
              'item_list' => array(
@@ -89,7 +92,7 @@ class MethodEC extends AbstractMethodPaypal
          if (isset($payment->links)) {
              foreach ($payment->links as $redirect_urls) {
                  if ($redirect_urls->method == "REDIRECT") {
-                     $return = Tools::redirect($redirect_urls->href);
+                     $return = $redirect_urls->href;
                  }
              }
          }
@@ -101,7 +104,10 @@ class MethodEC extends AbstractMethodPaypal
      public function validation()
      {
 
-         $sdk = new PaypalSDK(Configuration::get('PAYPAL_SANDBOX'));
+         $sdk = new PaypalSDK(
+         Configuration::get('PAYPAL_SANDBOX')?Configuration::get('PAYPAL_SANDBOX_CLIENTID'):Configuration::get('PAYPAL_LIVE_CLIENTID'),
+         Configuration::get('PAYPAL_SANDBOX')?Configuration::get('PAYPAL_SANDBOX_SECRET'):Configuration::get('PAYPAL_LIVE_SECRET'),
+         Configuration::get('PAYPAL_SANDBOX'));
          $exec_payment = $sdk->executePayment(Tools::getValue('paymentId'), Tools::getValue('PayerID'));
 
          $cart = Context::getContext()->cart;
@@ -123,7 +129,10 @@ class MethodEC extends AbstractMethodPaypal
 
      public function confirmCapture()
      {
-         $sdk = new PaypalSDK(Configuration::get('PAYPAL_SANDBOX'));
+         $sdk = new PaypalSDK(
+             Configuration::get('PAYPAL_SANDBOX')?Configuration::get('PAYPAL_SANDBOX_CLIENTID'):Configuration::get('PAYPAL_LIVE_CLIENTID'),
+             Configuration::get('PAYPAL_SANDBOX')?Configuration::get('PAYPAL_SANDBOX_SECRET'):Configuration::get('PAYPAL_LIVE_SECRET'),
+             Configuration::get('PAYPAL_SANDBOX'));
          $paypal_order = new PaypalOrder(Tools::getValue('capturePaypal'));
          $body = array(
              'amount' => array(
@@ -161,7 +170,10 @@ class MethodEC extends AbstractMethodPaypal
 
      public function refund()
      {
-         $sdk = new PaypalSDK(Configuration::get('PAYPAL_SANDBOX'));
+         $sdk = new PaypalSDK(
+             Configuration::get('PAYPAL_SANDBOX')?Configuration::get('PAYPAL_SANDBOX_CLIENTID'):Configuration::get('PAYPAL_LIVE_CLIENTID'),
+             Configuration::get('PAYPAL_SANDBOX')?Configuration::get('PAYPAL_SANDBOX_SECRET'):Configuration::get('PAYPAL_LIVE_SECRET'),
+             Configuration::get('PAYPAL_SANDBOX'));
          $id_paypal_order = Tools::getValue('refundPaypal');
          $paypal_order = new PaypalOrder($id_paypal_order);
          $body = array(

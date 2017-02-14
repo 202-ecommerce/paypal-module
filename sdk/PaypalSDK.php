@@ -30,134 +30,147 @@ class PaypalSDK
     private $action;
     private $endpoint;
     private $token;
+    private $clientId;
+    private $secret;
     private $urlAPI;
-    private $urlIntermediateServer;
 
-    public function __construct($token,$sandbox=0)
+    public function __construct($clientId,$secret,$sandbox=0)
     {
-        $this->token = $token;
+        $this->clientId = $clientId;
+        $this->secret = $secret;
         $this->action = 'POST';
         if ($sandbox) {
             $this->urlAPI = 'https://api.sandbox.paypal.com/';
-            $this->urlIntermediateServer = 'http://202:mattdelg@paypal4.work.202-ecommerce.com/modules/paypal/test_server.php';
         } else {
             $this->urlAPI = 'https://api.paypal.com/';
-            $this->urlIntermediateServer = 'http://202:mattdelg@paypal4.work.202-ecommerce.com/modules/paypal/test_server.php';
         }
-
     }
 
-    public function getUrlOnboarding($partner_info)
+    public function createAccessToken($body = false)
     {
-        $this->endpoint = 'getUrl';
-        return $this->makeCallIntermediateServer('getUrl',$partner_info);
+        if(!$body)
+        {
+            $body = 'grant_type=client_credentials';
+        }
+        $this->action = 'POST';
+        $this->endpoint = 'v1/oauth2/token';
+        $response = $this->makeCall($body, "application/json", true);
 
-    }
-
-    private function makeCallIntermediateServer($data)
-    {
-
-        $curl = curl_init();
-
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($curl, CURLOPT_POST, 1);
-        curl_setopt($curl, CURLOPT_URL, $this->urlIntermediateServer.$this->endpoint);
-        curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($data));
-        curl_setopt($curl, CURLOPT_HTTPHEADER, array("Accept: application/json"));
-        $response = curl_exec($curl);
-        return $response;
-
+        $this->token = $response->access_token;
     }
 
     public function createPayment($body)
     {
+        $this->createAccessToken();
+
         $this->action = 'POST';
         $this->endpoint = 'v1/payments/payment';
         $response = $this->makeCall($this->getBody($body));
-        return json_decode($response);
+
+        return $response;
     }
 
     public function createWebExperience($body)
     {
+        $this->createAccessToken();
+
         $this->action = 'POST';
         $this->endpoint = 'v1/payment-experience/web-profiles';
         $response = $this->makeCall($this->getBody($body));
-        return json_decode($response);
+        return $response;
     }
 
     public function executePayment($payment_id, $payer_id)
     {
+        $this->createAccessToken();
+
         $this->action = 'POST';
         $this->endpoint = 'v1/payments/payment/'.$payment_id.'/execute';
         $body = array('payer_id' => $payer_id);
         $response = $this->makeCall($this->getBody($body));
 
-        return json_decode($response);
+        return $response;
     }
 
     public function updatePayment($payment_id, $body)
     {
+        $this->createAccessToken();
+
         $this->action = 'PATCH';
         $this->endpoint = 'v1/payments/payment/'.$payment_id;
         $response = $this->makeCall($this->getBody($body));
 
-        return json_decode($response);
+        return $response;
     }
 
     public function refundSale($body, $sale_id)
     {
+        $this->createAccessToken();
+
         $this->action = 'POST';
         $this->endpoint = 'v1/payments/sale/'.$sale_id.'/refund';
         $response = $this->makeCall($this->getBody($body));
-        return json_decode($response);
+        return $response;
     }
 
     public function showRefund($sale_id)
     {
+        $this->createAccessToken();
+
         $this->action = 'GET';
         $this->endpoint = 'v1/payments/refund/'.$sale_id;
         $response = $this->makeCall(null);
-        return json_decode($response);
+        return $response;
     }
 
     public function showAuthorization($authorization_id)
     {
+        $this->createAccessToken();
+
         $this->action = 'GET';
         $this->endpoint = 'v1/payments/authorization/'.$authorization_id;
         $response = $this->makeCall(null);
-        return json_decode($response);
+        return $response;
     }
 
     public function captureAuthorization($body, $authorization_id)
     {
+        $this->createAccessToken();
+
         $this->action = 'POST';
         $this->endpoint = 'v1/payments/authorization/'.$authorization_id.'/capture';
         $response = $this->makeCall($this->getBody($body));
-        return json_decode($response);
+        return $response;
     }
 
     public function voidAuthorization($authorization_id)
     {
+        $this->createAccessToken();
+
         $this->action = 'POST';
         $this->endpoint = 'v1/payments/authorization/'.$authorization_id.'/void';
         $response = $this->makeCall(null);
-        return json_decode($response);
+        return $response;
     }
 
     public function showCapture($capture_id)
     {
+        $this->createAccessToken();
+
         $this->action = 'GET';
         $this->endpoint = 'v1/payments/capture/'.$capture_id;
         $response = $this->makeCall(null);
-        return json_decode($response);
+        return $response;
     }
 
     public function refundCapture($body, $capture_id)
     {
+        $this->createAccessToken();
+
         $this->action = 'POST';
         $this->endpoint = 'v1/payments/capture/'.$capture_id.'/refund';
         $response = $this->makeCall($this->getBody($body));
-        return json_decode($response);
+        return $response;
     }
 
 
@@ -178,7 +191,7 @@ class PaypalSDK
         return $return;
     }
 
-    protected function makeCall($body = null, $cnt_type = "application/json", $user = null)
+    protected function makeCall($body = null, $cnt_type = "application/json", $need_user = false)
     {
         $curl = curl_init();
         if ($this->action == "GET") {
@@ -200,17 +213,20 @@ class PaypalSDK
         if ($this->action == "POST" || $this->action == "PUT" || $this->action == "DELETE") {
             curl_setopt($curl, CURLOPT_POSTFIELDS, $body);
         }
-        if ($user) {
+        if ($need_user) {
+            /*
             curl_setopt($curl, CURLOPT_HTTPHEADER, array(
                 "Accept: application/json",
                 "Accept-Language: en_US",
-                "Authorization: Basic ".base64_encode($user)
+                "Authorization: Basic ".base64_encode($this->clientId.':'.$this->secret)
             ));
+            //*/
+            curl_setopt($curl, CURLOPT_USERPWD, $this->clientId.':'.$this->secret);
         } else {
             curl_setopt($curl, CURLOPT_HTTPHEADER, array(
                 "Content-type: ".$cnt_type,
                 'Content-Length: ' . strlen($body),
-                "Authorization: Bearer A101.8v3dlDK4N9OYtnSpQgGRRZyx0CI2JEV5eT-KCCljD80ydZ0J2BhO92X2NlCvPAkA.LCRr9AtKidubsi8V2bVDuSRTc0q",
+                "Authorization: Bearer ".$this->token,
             ));
         }
 
@@ -219,7 +235,7 @@ class PaypalSDK
         if (curl_errno($curl)) {
             die('error occured during curl exec. Additioanl info: ' . curl_errno($curl).':'. curl_error($curl));
         }
-        return ($response);
+        return json_decode($response);
 
     }
 }
