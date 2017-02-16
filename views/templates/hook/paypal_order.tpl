@@ -22,8 +22,23 @@
 *  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
 *}
-
-<p>{l s='Benefit from many PayPal advantages like :' mod='paypal'}</p>
-<p><img src="{$path|escape:'html':'UTF-8'}views/img/protected.png" style="height: 43px; padding-right: 10px;">{l s='Your purchases are protected' mod='paypal'}*</p>
-<p><img src="{$path|escape:'html':'UTF-8'}views/img/refund.png" style=" height: 43px; padding-right: 10px;">{l s='Your return costs refunded' mod='paypal'}*</p>
-<p><i>{l s='* See conditions on the PayPal website' mod='paypal'}</i></p>
+{if !isset($paypal_refunded)}
+    <div class="tab-content panel" id="paymentPaypal">
+        <div class="panel-heading">
+            <i><img src="{$path_logo}"/></i>
+            {l s='Paypal' mod='paypal'}
+        </div>
+        <div class="tab-pane active">
+            {if isset($capture_link)}
+                <a href="{$order_link|escape:'html':'UTF-8'}{$capture_link|escape:'html':'UTF-8'}" class="btn btn-primary">
+                    {l s='Capture paypal' mod='paypal'}
+                </a>
+            {/if}
+            {if isset($refund_link)}
+                <a href="{$order_link|escape:'html':'UTF-8'}&{$refund_link|escape:'html':'UTF-8'}" class="btn btn-primary">
+                    {l s='Refund paypal' mod='paypal'}
+                </a>
+            {/if}
+        </div>
+    </div>
+{/if}

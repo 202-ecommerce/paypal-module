@@ -47,23 +47,23 @@
                  <img src="{$path|escape:'html':'UTF-8'}/views/img/paypal_btm.png" alt=""  />
             </div>
             <div class="info">
-                <p class="paypal-bold">{l s='Country of the dealer' mod='paypal'} {$country|escape:'html':'UTF-8'}</p>
+                <p class="paypal-bold">{l s='Merchant Country' mod='paypal'} {$country|escape:'html':'UTF-8'}</p>
                 <p><i>
-                    {l s='If not specified, the default country is selected. To modify : ' mod='paypal'}
+                    {l s='If not specified, Default Country from configuration is used. To modify : ' mod='paypal'}
                     <a target="_blank" href="{$localization|escape:'html':'UTF-8'}">{l s='International > Localization' mod='paypal'}</a>
                 </i></p>
                 <p class="paypal-bold">
-                    {l s='Grow your business with PayPal and get a turnkey solution for your online business, mobile and internationally.' mod='paypal'}
+                    {l s='Benefit from PayPal’s complete payments platform and grow your business online, on mobile and internationally' mod='paypal'}
                 </p>
             </div>
         </div>
 
         <div class="box half right">
             <ul class="tick">
-                <li><span class="paypal-bold">{l s='Get more buyers' mod='paypal'}</span><br />{l s='100 million-plus PayPal accounts worldwide' mod='paypal'}</li>
-                <li><span class="paypal-bold">{l s='Access international buyers' mod='paypal'}</span><br />{l s='190 countries, 25 currencies' mod='paypal'}</li>
-                <li><span class="paypal-bold">{l s='Reassure your buyers' mod='paypal'}</span><br />{l s='Buyers don\'t need to share their private data' mod='paypal'}</li>
-                <li><span class="paypal-bold">{l s='Accept all major payment method' mod='paypal'}</span></li>
+                <li><span class="paypal-bold">{l s='Target more customers' mod='paypal'}</span><br />{l s='More than 190 million PayPal active users worldwide' mod='paypal'}</li>
+                <li><span class="paypal-bold">{l s='Truly global' mod='paypal'}</span><br />{l s='Access a whole world of customers. PayPal is available in more than 200 markets and in 25 currencies' mod='paypal'}</li>
+                <li><span class="paypal-bold">{l s='Safer' mod='paypal'}</span><br />{l s='We can protect your business with our Seller Protection and advanced encryption and fraud prevention tools' mod='paypal'}</li>
+                <li><span class="paypal-bold">{l s='Accept local and international payments' mod='paypal'}</span></li>
             </ul>
         </div>
         <div style="clear:both;"></div>
@@ -73,25 +73,31 @@
             <div class="col-sm-6">
                 <div class="panel">
                     <img class="paypal-products" src="{$path|escape:'html':'UTF-8'}/views/img/paypal.png">
-                    <span>{l s='Paypal' mod='paypal'}</span>
                     <p>
-                        {l s='Accept payments via our PayPal Express Checkout product. You will receive our more than 192 million active PayPal accounts worldwide.' mod='paypal'}
+                        {l s='Accept PayPal payments, you can optimize your conversion rate.' mod='paypal'}
                     </p>
-                    <p><a href="#">{l s='See more' mod='paypal'}</a></p>
+                    <p>
+                        {l s='Fast checkout and fast payment. Make online payments simple. PayPal customers can buy from you quickly if they use One TouchTM' mod='paypal'}
+                    </p>
+                    <p>
+                        <a target="_blank" href="https://www.paypal.com/webapps/mpp/express-checkout">{l s='More Information' mod='paypal'}</a>
+                    </p>
                     <div class="bottom">
-                    <img src="{$path|escape:'html':'UTF-8'}/views/img/paypal_btm.png" class="product-img">
-                    <a class="btn btn-default pull-right" href="#{*$return_url|escape:'html':'UTF-8'}&method=EXPRESS_CHECKOUT*}"  onclick="display_popup('EXPRESS_CHECKOUT',0)">{l s='Activate' mod='paypal'}</a>
+                        <img src="{$path|escape:'html':'UTF-8'}/views/img/paypal_btm.png" class="product-img">
+                        <a class="btn btn-default pull-right" href="#{*$return_url|escape:'html':'UTF-8'}&method=EXPRESS_CHECKOUT*}"  onclick="display_popup('EXPRESS_CHECKOUT',0)">{l s='Activate' mod='paypal'}</a>
                     </div>
                 </div>
             </div>
             <div class="col-sm-6">
                 <div class="panel">
                     <img class="paypal-products" src="{$path|escape:'html':'UTF-8'}/views/img/paypal.png">
-                    <span>{l s='Paypal and card' mod='paypal'}</span>
                     <p>
-                        {l s='Accept payments via our PayPal Express Checkout product. Not only do you accept PayPal with these 192 million active accounts but also you accept many bank cards throughout the world.' mod='paypal'}
+                        {l s='Accept credit cards, debit cards and PayPal payments.' mod='paypal'}
                     </p>
-                    <p><a href="#">{l s='See more' mod='paypal'}</a></p>
+                    <p>
+                        {l s='Your customers can pay with a selection of local and international debit and credit cards. Make online payments simple. PayPal customers can buy from you quickly if they use One TouchTM' mod='paypal'}
+                    </p>
+                    <p><a href="https://www.paypal.com/webapps/mpp/standard">{l s='More Information' mod='paypal'}</a></p>
                     <div class="bottom">
                         <img src="{$path|escape:'html':'UTF-8'}/views/img/paypal_btm.png" class="product-img">
                         <img src="{$path|escape:'html':'UTF-8'}/views/img/mastercard.png" class="product-img">
@@ -110,15 +116,20 @@
         <div class="panel parametres">
             <div class="panel-body">
                 <div class="col-sm-8 help-left">
-                    <img src="{$path|escape:'html':'UTF-8'}/views/img/paypal.png">
-                    {l s='Paypal products' mod='paypal'} : <b>{$active_products|escape:'html':'UTF-8'}</b>
-                    <a id="change_product" href=""> | {l s='Edit' mod='paypal'}</a>
-                    <p>{l s='Accept payments via PayPal and optimize conversion. Accelerate payments from your PayPal customers with One Touch ™, they can pay for their purchases in the blink\'s eye.' mod='paypal'}</p>
-                    <a href="#"><b>{l s='Learn more about PayPal' mod='paypal'}</b></a>
-                    </p>
+                    {if $paypal_card}
+                        <img src="{$path|escape:'html':'UTF-8'}/views/img/paypal.png">
+                        {l s='Accept credit cards, debit cards and PayPal payments.' mod='paypal'} : <b>{$active_products|escape:'html':'UTF-8'}</b>
+                        <p>{l s='Your customers can pay with a selection of local and international debit and credit cards. Make online payments simple. PayPal customers can buy from you quickly if they use One TouchTM' mod='paypal'}</p>
+                        <a href="#"><b>{l s='Learn more about PayPal' mod='paypal'}</b></a>
+                    {else}
+                        <img src="{$path|escape:'html':'UTF-8'}/views/img/paypal.png">
+                        {l s='Accept PayPal payments, you can optimize your conversion rate.' mod='paypal'} : <b>{$active_products|escape:'html':'UTF-8'}</b>
+                        <p>{l s='Fast checkout and fast payment. Make online payments simple. PayPal customers can buy from you quickly if they use One TouchTM' mod='paypal'}</p>
+                        <a href="#"><b>{l s='Learn more about PayPal' mod='paypal'}</b></a>
+                    {/if}
                 </div>
                 <div class="col-sm-3 help-right">
-                    {l s='Need help' mod='paypal'} ?
+                    {l s='More Information' mod='paypal'} ?
                     <a href="#">{l s='Contact us' mod='paypal'}</a>
                 </div>
             </div>
@@ -134,7 +145,7 @@
             <hr/>
             <p>{l s='In order to accept PayPal payments, please fill your API REST credentials.' mod='paypal'}</p>
             <ul>
-                <li>{l s='Access'  mod='paypal'} <a target="_blank" href="https://developer.paypal.com/developer/applications/">{l s='https://developer.paypal.com/developer/applications/' mod='paypal'}</a></li>
+                <li>{l s='Access' mod='paypal'} <a target="_blank" href="https://developer.paypal.com/developer/applications/">{l s='https://developer.paypal.com/developer/applications/' mod='paypal'}</a></li>
                 <li>{l s='Create a « REST API apps »' mod='paypal'}</li>
                 <li>{l s='Click « Show » en dessous de « Secret: »' mod='paypal'}</li>
                 <li>{l s='Copy/paste your « Client ID » and « Secret » below for each environment' mod='paypal'}</li>

@@ -228,22 +228,22 @@ class PayPal extends PaymentModule
         */
          $this->context->smarty->assign(array(
              'path' => $this->_path,
-             'path_ajax_sandbox' => $this->context->link->getAdminLink('AdminModules',true,array(),array('configure'=>'paypal')),
+             //'path_ajax_sandbox' => $this->context->link->getAdminLink('AdminModules',true,array(),array('configure'=>'paypal')),
              'country' => Country::getNameById($this->context->language->id, $this->context->country->id),
              'localization' => $this->context->link->getAdminLink('AdminLocalization', true),
+             'preference' => $this->context->link->getAdminLink('AdminPreferences', true),
              'active_products' => $this->express_checkout,
              'return_url' => $return_url,
-             'access_token_sandbox' => Configuration::get('PAYPAL_SANDBOX_ACCESS'),
-             'access_token_live' => Configuration::get('PAYPAL_LIVE_ACCESS'),
              'PAYPAL_SANDBOX_CLIENTID' => Configuration::get('PAYPAL_SANDBOX_CLIENTID'),
              'PAYPAL_SANDBOX_SECRET' => Configuration::get('PAYPAL_SANDBOX_SECRET'),
              'PAYPAL_LIVE_CLIENTID' => Configuration::get('PAYPAL_LIVE_CLIENTID'),
              'PAYPAL_LIVE_SECRET' => Configuration::get('PAYPAL_LIVE_SECRET'),
+             'paypal_card' => Configuration::get('PAYPAL_API_CARD'),
          ));
          $this->context->controller->addCSS($this->_path.'views/css/paypal-bo.css', 'all');
          $fields_form[0]['form'] = array(
             'legend' => array(
-                'title' => $this->l('PARAMETERS of the module'),
+                'title' => $this->l('MODULE SETTINGS'),
                 'image' => $this->_path.'/views/img/paypal_icon.png',
             ),
             'input' => array(
@@ -270,16 +270,16 @@ class PayPal extends PaymentModule
         );
         $fields_form[1]['form'] = array(
             'legend' => array(
-                'title' => $this->l('PARAMETRES PAYPAL EXPRESS CHECKOUT'),
+                'title' => $this->l('PAYPAL EXPRESS CHECKOUT SETTINGS'),
                 'image' => $this->_path.'/views/img/paypal_icon.png',
             ),
             'input' => array(
                 array(
                     'type' => 'select',
-                    'label' => $this->l('Mode intent'),
+                    'label' => $this->l('Payment action'),
                     'name' => 'paypal_intent',
                     'desc' => $this->l(''),
-                    'hint' => $this->l('Sale: Performs the immediate debit of the customer during an order. Authorization / Capture: Authorization mode is a deferred payment method that requires manually capturing funds when you want to pass money. This mode is used if you want to make sure you have the merchandise before you cash the money for example. Attention, you have 29 days to capture the funds'),
+                    'hint' => $this->l('Sale: the money moves instantly from the buyer’s account to the seller’s account at the time of payment Authorization/capture: The authorized mode is a deferred mode of payment that requires the funds to be collected manually when you want to transfer the money. This mode is used if you want to ensure that you have the merchandise before depositing the money, for example. Be careful, you have 29 days to collect the funds.'),
                     'options' => array(
                         'query' => array(
                             array(
@@ -297,10 +297,10 @@ class PayPal extends PaymentModule
                 ),
                 array(
                     'type' => 'switch',
-                    'label' => $this->l('Activate payment by cart'),
+                    'label' => $this->l('Accept credit and debit card payment'),
                     'name' => 'paypal_card',
                     'is_bool' => true,
-                    'hint' => $this->l('Your customers can pay for their purchases with their national or international bank cards, whether they already have a PayPal account or not'),
+                    'hint' => $this->l('Your customers can pay with debit and credit cards as well as local payment systems whether or not they use PayPal'),
                     'values' => array(
                         array(
                             'id' => 'paypal_card_on',
@@ -316,11 +316,11 @@ class PayPal extends PaymentModule
                 ),
                 array(
                     'type' => 'switch',
-                    'label' => $this->l('Show Advantages Paypal for clients during payment'),
+                    'label' => $this->l('Show PayPal benefits to your customers'),
                     'name' => 'paypal_show_advantage',
                     'desc' => $this->l(''),
                     'is_bool' => true,
-                    'hint' => $this->l('Increase your conversion rate by presenting the benefits of PayPal to your customers when selecting the payment method'),
+                    'hint' => $this->l('You can increase your conversion rate by presenting PayPal benefits to your customers on payment methods selection page.'),
                     'values' => array(
                         array(
                             'id' => 'paypal_show_advantage_on',
@@ -375,8 +375,7 @@ class PayPal extends PaymentModule
         } elseif (Configuration::get('PAYPAL_SANDBOX') == 0) {
             $this->message .= $this->displayConfirmation($this->l('Your PayPal account is properly connected, you can now receive payments'));
         }
-
-        return $this->message.$this->display(__FILE__, 'views/templates/admin/configuration.tpl').$form;
+        return $this->message.$this->display(__FILE__, 'views/templates/admin/configuration.tpl').$form.$this->display(__FILE__, 'views/templates/admin/block_info.tpl');
 
     }
 
@@ -538,27 +537,43 @@ class PayPal extends PaymentModule
     public function hookdisplayAdminOrder($params)
     {
 
+        $id_order = $params['id_order'];
+        $order = new Order((int)$id_order);
         $paypal_msg = '';
         if (Tools::getValue('capturePaypal')) {
             $method_ec = AbstractMethodPaypal::load('EC');
             $capture_response = $method_ec->confirmCapture();
-            if (isset($capture_response->name)) {
-                $paypal_msg .= $this->displayWarning("We have problem during capture operation. Please try again later.");
+
+            if (isset($capture_response->state) && $capture_response->state == 'completed' && $order->current_state != Configuration::get('PS_OS_PAYMENT'))            {
+                $order->setCurrentState(Configuration::get('PS_OS_PAYMENT'));
+            }
+            elseif($capture_response->name == 'AUTHORIZATION_ALREADY_COMPLETED' && $order->current_state != Configuration::get('PS_OS_PAYMENT'))
+            {
+                $order->setCurrentState(Configuration::get('PS_OS_PAYMENT'));
+            }
+            else
+            {
+                $paypal_msg .= $this->displayWarning($this->l("We have problem during capture operation : ").$capture_response->message);
             }
         }
-        if (Tools::getValue('refundPaypal')) {
+        if (Tools::getValue('refundPaypal')){
             $method_ec = AbstractMethodPaypal::load('EC');
             $refund_response = $method_ec->refund();
-            if (isset($refund_response->name)) {
-                $paypal_msg .= $this->displayWarning("We have problem during refund operation. Please try again later.");
+
+            if (isset($refund_response->state) && $refund_response->state == 'completed') {
+                $order->setCurrentState(Configuration::get('PS_OS_REFUND'));
+            }
+            else
+            {
+                $paypal_msg .= $this->displayWarning($this->l("We have problem during refund operation : ").$refund_response->message);
             }
         }
-        $id_order = $params['id_order'];
-        $order = new Order((int)$id_order);
+
         $current_state = $order->getCurrentState();
         $order_link = Context::getContext()->link->getAdminLink('AdminOrders')."&id_order=".$id_order."&vieworder";
         $this->context->smarty->assign(array(
-            'link_suivi' => $order_link,
+            'path_logo' => Tools::getHttpHost(true).'/modules/paypal/views/img/paypal_icon.png',
+            'order_link' => $order_link,
         ));
         if ($current_state == Configuration::get('PS_OS_REFUND')) {
             $this->context->smarty->assign(array(
@@ -571,7 +586,6 @@ class PayPal extends PaymentModule
         $sql->from('paypal_order', 'po');
         $sql->where('po.id_order = '.(int)$id_order);
         $result = Db::getInstance()->getRow($sql);
-
         $refund = array('refundPaypal' => $result['id_paypal_order']);
 
 
@@ -585,7 +599,7 @@ class PayPal extends PaymentModule
             $refund['capture_id'] = $result['id_capture'];
             if ($result['result'] == "completed") {
                 $this->context->smarty->assign(array(
-                    'refund_link' => http_build_query($refund),
+                    'refund_link' => '&'.http_build_query($refund),
                 ));
             } else {
                 $this->context->smarty->assign(array(
@@ -597,7 +611,7 @@ class PayPal extends PaymentModule
                 'refund_link' => http_build_query($refund),
             ));
         }
-        return $paypal_msg.$this->display(__FILE__, 'views/templates/hook/paypal_commande.tpl');
+        return $paypal_msg.$this->display(__FILE__, 'views/templates/hook/paypal_order.tpl');
     }
 
 }

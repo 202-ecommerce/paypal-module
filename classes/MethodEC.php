@@ -82,7 +82,7 @@ class MethodEC extends AbstractMethodPaypal
             $params['experience_profile_id'] = Configuration::get('PAYPAL_EXPERIENCE_PROFILE');
         }
         foreach ($products as $product) {
-            $items = array(
+            $items[] = array(
                 'quantity' => $product['cart_quantity'],
                 'name' => $product['name'],
                 'price' =>  str_replace(',','.' , round($product['price'], 2)),
@@ -107,9 +107,7 @@ class MethodEC extends AbstractMethodPaypal
                 ),
             ),
             'item_list' => array(
-                'items' => array(
-                    $items
-                ),
+                'items' => $items,
                 "shipping_address" => array(
                     "recipient_name" => $address->firstname.' '.$address->lastname,
                     "line1" => $address->address1,
@@ -125,7 +123,6 @@ class MethodEC extends AbstractMethodPaypal
 
         $return = false;
         $payment = $sdk->createPayment($params);
-
         if (isset($payment->links)) {
             foreach ($payment->links as $redirect_urls) {
                 if ($redirect_urls->method == "REDIRECT") {
@@ -180,22 +177,19 @@ class MethodEC extends AbstractMethodPaypal
         );
 
         $response = $sdk->captureAuthorization($body, $paypal_order->id_transaction);
-        if (isset($response->id)) {
+        if (isset($response->state) && $response->state == 'completed' || isset($response->name) && $response->name == 'AUTHORIZATION_ALREADY_COMPLETED') {
             Db::getInstance()->update(
                 'paypal_capture',
                 array(
                     'id_capture' => $response->id,
                     'capture_amount' => $response->amount->total,
-                    'result' => $response->state,
+                    'result' => 'completed',
                 ),
-                'id_paypal_order = '.(int)Tools::getValue('capturePaypal')
+                'id_paypal_order = ' . (int)Tools::getValue('capturePaypal')
             );
-            $order = new Order(Tools::getValue('id_order'));
-            $order->setCurrentState(_PS_OS_PAYMENT_);
-            return true;
-        } else {
-            return $response;
         }
+        return $response;
+        
 
     }
 
@@ -237,12 +231,7 @@ class MethodEC extends AbstractMethodPaypal
                 $paypal_order->update();
             }
         }
-        if (isset($response->id)) {
-            $order = new Order(Tools::getValue('id_order'));
-            $order->setCurrentState(_PS_OS_REFUND_);
-            return true;
-        } else {
-            return $response;
-        }
+
+        return $response;
     }
 }
