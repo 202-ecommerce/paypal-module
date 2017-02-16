@@ -55,24 +55,32 @@ class PaypalSDK
         $this->action = 'POST';
         $this->endpoint = 'v1/oauth2/token';
         $response = $this->makeCall($body, "application/json", true);
-
+        if(!isset($response->access_token))
+        {
+            return false;
+        }
         $this->token = $response->access_token;
+        return true;
     }
 
     public function createPayment($body)
     {
-        $this->createAccessToken();
-
+        if(!$this->createAccessToken())
+        {
+            return false;
+        }
         $this->action = 'POST';
         $this->endpoint = 'v1/payments/payment';
         $response = $this->makeCall($this->getBody($body));
-
         return $response;
     }
 
     public function createWebExperience($body)
     {
-        $this->createAccessToken();
+        if(!$this->createAccessToken())
+        {
+            return false;
+        }
 
         $this->action = 'POST';
         $this->endpoint = 'v1/payment-experience/web-profiles';
@@ -82,7 +90,10 @@ class PaypalSDK
 
     public function executePayment($payment_id, $payer_id)
     {
-        $this->createAccessToken();
+        if(!$this->createAccessToken())
+        {
+            return false;
+        }
 
         $this->action = 'POST';
         $this->endpoint = 'v1/payments/payment/'.$payment_id.'/execute';
@@ -94,7 +105,10 @@ class PaypalSDK
 
     public function updatePayment($payment_id, $body)
     {
-        $this->createAccessToken();
+        if(!$this->createAccessToken())
+        {
+            return false;
+        }
 
         $this->action = 'PATCH';
         $this->endpoint = 'v1/payments/payment/'.$payment_id;
@@ -105,7 +119,10 @@ class PaypalSDK
 
     public function refundSale($body, $sale_id)
     {
-        $this->createAccessToken();
+        if(!$this->createAccessToken())
+        {
+            return false;
+        }
 
         $this->action = 'POST';
         $this->endpoint = 'v1/payments/sale/'.$sale_id.'/refund';
@@ -115,7 +132,10 @@ class PaypalSDK
 
     public function showRefund($sale_id)
     {
-        $this->createAccessToken();
+        if(!$this->createAccessToken())
+        {
+            return false;
+        }
 
         $this->action = 'GET';
         $this->endpoint = 'v1/payments/refund/'.$sale_id;
@@ -125,7 +145,10 @@ class PaypalSDK
 
     public function showAuthorization($authorization_id)
     {
-        $this->createAccessToken();
+        if(!$this->createAccessToken())
+        {
+            return false;
+        }
 
         $this->action = 'GET';
         $this->endpoint = 'v1/payments/authorization/'.$authorization_id;
@@ -135,7 +158,10 @@ class PaypalSDK
 
     public function captureAuthorization($body, $authorization_id)
     {
-        $this->createAccessToken();
+        if(!$this->createAccessToken())
+        {
+            return false;
+        }
 
         $this->action = 'POST';
         $this->endpoint = 'v1/payments/authorization/'.$authorization_id.'/capture';
@@ -145,7 +171,10 @@ class PaypalSDK
 
     public function voidAuthorization($authorization_id)
     {
-        $this->createAccessToken();
+        if(!$this->createAccessToken())
+        {
+            return false;
+        }
 
         $this->action = 'POST';
         $this->endpoint = 'v1/payments/authorization/'.$authorization_id.'/void';
@@ -155,7 +184,10 @@ class PaypalSDK
 
     public function showCapture($capture_id)
     {
-        $this->createAccessToken();
+        if(!$this->createAccessToken())
+        {
+            return false;
+        }
 
         $this->action = 'GET';
         $this->endpoint = 'v1/payments/capture/'.$capture_id;
@@ -165,7 +197,10 @@ class PaypalSDK
 
     public function refundCapture($body, $capture_id)
     {
-        $this->createAccessToken();
+        if(!$this->createAccessToken())
+        {
+            return false;
+        }
 
         $this->action = 'POST';
         $this->endpoint = 'v1/payments/capture/'.$capture_id.'/refund';

@@ -29,6 +29,10 @@ use PrestaShop\PrestaShop\Core\Payment\PaymentOption;
 if (!defined('_PS_VERSION_')) {
     exit;
 }
+include_once 'classes/AbstractMethodPaypal.php';
+include_once 'classes/PaypalCapture.php';
+include_once 'classes/PaypalOrder.php';
+
 
 class PayPal extends PaymentModule
 {
@@ -52,7 +56,6 @@ class PayPal extends PaymentModule
         $this->currencies_mode = 'radio';
 
         parent::__construct();
-        $this->includeFiles();
 
         $this->displayName = $this->l('PayPal');
         $this->description = $this->l('Accepts payments by credit cards (CB, Visa, MasterCard, Amex, Aurore, Cofinoga, 4 stars) with PayPal.');
@@ -92,54 +95,13 @@ class PayPal extends PaymentModule
         return true;
 
     }
-
-    private function includeFiles()
-    {
-        $path = $this->getLocalPath().'classes'.DIRECTORY_SEPARATOR;
-        foreach (scandir($path) as $class) {
-            if ($class != "index.php" && is_file($path.$class)) {
-                $class_name = Tools::substr($class, 0, -4);
-                if ($class_name != 'index' && !preg_match('#\.old#isD', $class) && !class_exists($class_name)) {
-                    require_once $path.$class_name.'.php';
-                }
-            }
-        }
-
-        $path .= '..'.DIRECTORY_SEPARATOR.'sdk'.DIRECTORY_SEPARATOR;
-
-        foreach (scandir($path) as $class) {
-            if ($class != "index.php" && is_file($path.$class)) {
-                $class_name = Tools::substr($class, 0, -4);
-                if ($class_name != 'index' && !preg_match('#\.old#isD', $class) && !class_exists($class_name)) {
-                    require_once $path.$class_name.'.php';
-                }
-            }
-        }
-    }
-
+    
     /**
      * Install DataBase table
      * @return boolean if install was successfull
      */
     private function installSQL()
     {
-
-        # Install All Object Model SQL via install function
-        $path = $this->getLocalPath().'classes'.DIRECTORY_SEPARATOR;
-        $classes = scandir($path);
-        foreach ($classes as $class) {
-            if ($class != 'index.php' && !preg_match('#\.old#isD', $class) && is_file($path.$class)) {
-                $class_name = Tools::substr($class, 0, -4);
-                // Check if class_name is an existing Class or not
-                if (class_exists($class_name)) {
-                    if (method_exists($class_name, 'install')) {
-                        if (!call_user_func(array($class_name, 'install'))) {
-                            return false;
-                        }
-                    }
-                }
-            }
-        }
 
         $sql = array();
 
@@ -156,17 +118,17 @@ class PayPal extends PaymentModule
               `payment_status` VARCHAR(255),
               `date_add` DATETIME,
               `date_upd` DATETIME
-        ) ENGINE = "._MYSQL_ENGINE_." ";
+        ) ENGINE = "._MYSQL_ENGINE_;
 
         $sql[] = "CREATE TABLE IF NOT EXISTS `" . _DB_PREFIX_ . "paypal_capture` (
               `id_paypal_capture` INT(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
               `id_capture` VARCHAR(55),
               `id_paypal_order` INT(11),
-              `capture_amount` FLOAT(11)),
+              `capture_amount` FLOAT(11),
               `result` VARCHAR(255),
               `date_add` DATETIME,
               `date_upd` DATETIME
-        ) ENGINE = " . _MYSQL_ENGINE_ . " ";
+        ) ENGINE = " . _MYSQL_ENGINE_ ;
 
         foreach ($sql as $q) {
             if (!DB::getInstance()->execute($q)) {
@@ -183,7 +145,7 @@ class PayPal extends PaymentModule
      */
     private function registrationHook()
     {
-        // Example :
+
         if (!$this->registerHook('paymentOptions')
             || !$this->registerHook('paymentReturn')
             || !$this->registerHook('displayOrderConfirmation')
@@ -216,7 +178,7 @@ class PayPal extends PaymentModule
         if (!parent::uninstall()) {
             return false;
         }
-
+        return true;
     }
 
     /**
@@ -225,22 +187,6 @@ class PayPal extends PaymentModule
      */
     private function uninstallSQL()
     {
-        # Uninstall All Object Model SQL via install function
-        $path = $this->getLocalPath().'classes'.DIRECTORY_SEPARATOR;
-        $classes = scandir($path);
-        foreach ($classes as $class) {
-            if ($class != 'index.php' && !preg_match('#\.old#isD', $class) && is_file($path.$class)) {
-                $class_name = Tools::substr($class, 0, -4);
-                // Check if class_name is an existing Class or not
-                if (class_exists($class_name)) {
-                    if (method_exists($class_name, 'uninstall')) {
-                        if (!call_user_func(array($class_name, 'uninstall'))) {
-                            return false;
-                        }
-                    }
-                }
-            }
-        }
 
         $sql = array();
 
@@ -280,10 +226,9 @@ class PayPal extends PaymentModule
             }
         }
         */
-
          $this->context->smarty->assign(array(
              'path' => $this->_path,
-//             'PartnerboardingURL' => $PartnerboardingURL,
+             'path_ajax_sandbox' => $this->context->link->getAdminLink('AdminModules',true,array(),array('configure'=>'paypal')),
              'country' => Country::getNameById($this->context->language->id, $this->context->country->id),
              'localization' => $this->context->link->getAdminLink('AdminLocalization', true),
              'active_products' => $this->express_checkout,
@@ -423,107 +368,36 @@ class PayPal extends PaymentModule
                 .'#paypal_params'
         );
         $form = $helper->generateForm($fields_form);
-
-        if (Configuration::get('PAYPAL_SANDBOX') == 1) {
+        if(count($this->_errors)) {
+            $this->message .= $this->displayError($this->_errors);
+        } elseif (Configuration::get('PAYPAL_SANDBOX') == 1) {
             $this->message .= $this->displayWarning($this->l('Your PayPal account is currently configured to accept payments on the Sandbox (test environment). Any transaction will be fictitious. Disable the option, to accept actual payments (production environment) and log in with your PayPal credentials'));
         } elseif (Configuration::get('PAYPAL_SANDBOX') == 0) {
             $this->message .= $this->displayConfirmation($this->l('Your PayPal account is properly connected, you can now receive payments'));
         }
 
-        $sdk = new PaypalSDK(
-            Configuration::get('PAYPAL_SANDBOX')?Configuration::get('PAYPAL_SANDBOX_CLIENTID'):Configuration::get('PAYPAL_LIVE_CLIENTID'),
-            Configuration::get('PAYPAL_SANDBOX')?Configuration::get('PAYPAL_SANDBOX_SECRET'):Configuration::get('PAYPAL_LIVE_SECRET'),
-            Configuration::get('PAYPAL_SANDBOX'));
-        //TEST :
-       /* $ref = $sdk->getPartnerReferrals("YTIyNmNkNjktZDE3MS00Mjk2LWFlZjktMTM1Mzg2ZjFjYTY2VnhvRm5WaFRhSnR4bzYwSU9jZkx4T0VvRElNdVR2WTZXekoyQzR5STgvRT0=");
-        $user = $sdk->getUserStatus();
-        print_r($user);die;*/
         return $this->message.$this->display(__FILE__, 'views/templates/admin/configuration.tpl').$form;
 
     }
 
-
-    // voir provisionning
-    public function getUrlOnboarding($method)
-    {
-
-        $return_url = $this->context->link->getAdminLink('AdminModules', true).'&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name;
-        $currency = new Currency(Configuration::get('PS_CURRENCY_DEFAULT'));
-
-        $data = array(
-            'email'         => Configuration::get('PS_SHOP_EMAIL'),
-            'shop_url'      => $return_url,
-            'address1'      => Configuration::get('PS_SHOP_ADDR1'),
-            'address2'      => Configuration::get('PS_SHOP_ADDR2'),
-            'city'          => Configuration::get('PS_SHOP_CITY'),
-            'country_code'  => Tools::strtoupper($this->context->country->iso_code),
-            'postal_code'   => Configuration::get('PS_SHOP_CODE'),
-            'language'      => str_replace('-','_' , $this->context->language->locale),
-            'currency'      => $currency->iso_code,
-        );
-
-
-        $sdk = new PaypalSDK(
-            Configuration::get('PAYPAL_SANDBOX')?Configuration::get('PAYPAL_SANDBOX_CLIENTID'):Configuration::get('PAYPAL_LIVE_CLIENTID'),
-            Configuration::get('PAYPAL_SANDBOX')?Configuration::get('PAYPAL_SANDBOX_SECRET'):Configuration::get('PAYPAL_LIVE_SECRET'),
-            Configuration::get('PAYPAL_SANDBOX'));
-        $response = $sdk->getUrlOnboarding($data);
-        return $response;
-    }
-
     private function _postProcess()
     {
-        /*if (Tools::getValue('merchantId')) {
-            Configuration::updateValue('PAYPAL_MERCHANT_ID', Tools::getValue('merchantId'));
-            $sdk = new PaypalSDK(Configuration::get('PAYPAL_SANDBOX'));
-            $access_token = $sdk->createAccessToken();
-            $credentials = $sdk->getCredentials($access_token);
-            Configuration::updateValue('PAYPAL_API_CREDENTIAL', $credentials->api_credential);
-            Configuration::updateValue('PAYPAL_API_USERNAME', $credentials->api_username);
-            Configuration::updateValue('PAYPAL_API_PSWD', $credentials->api_password);
-            Configuration::updateValue('PAYPAL_API_SIGNATURE', $credentials->api_signature);
-            $permissions = $credentials->granted_permissions; //active products of Paypal for this user
-        }*/
 
         if (Tools::isSubmit('paypal_config')) {
             Configuration::updateValue('PAYPAL_SANDBOX', Tools::getValue('paypal_sandbox'));
             Configuration::updateValue('PAYPAL_API_INTENT', Tools::getValue('paypal_intent'));
             Configuration::updateValue('PAYPAL_API_CARD', Tools::getValue('paypal_card'));
             Configuration::updateValue('PAYPAL_API_ADVANTAGES', Tools::getValue('paypal_show_advantage'));
-
-            if (Configuration::get('PAYPAL_API_CARD')) {
-                $landing_page_type = "billing";
-            } else {
-                $landing_page_type = "login";
-            }
-            $profile = array(
-                'name' => Configuration::get('PS_SHOP_NAME').microtime(true),
-                'flow_config' => array(
-                    'landing_page_type' => $landing_page_type,
-                    'bank_txn_pending_url' => Context::getContext()->link->getModuleLink($this->name, 'ec_validation', array(), true),
-                ),
-            );
-            $sdk = new PaypalSDK(
-                Configuration::get('PAYPAL_SANDBOX')?Configuration::get('PAYPAL_SANDBOX_CLIENTID'):Configuration::get('PAYPAL_LIVE_CLIENTID'),
-                Configuration::get('PAYPAL_SANDBOX')?Configuration::get('PAYPAL_SANDBOX_SECRET'):Configuration::get('PAYPAL_LIVE_SECRET'),
-                Configuration::get('PAYPAL_SANDBOX'));
-            $web_experience = $sdk->createWebExperience($profile);
-
-            if (isset($web_experience->id)) {
-                Configuration::updateValue('PAYPAL_EXPERIENCE_PROFILE', $web_experience->id);
-            }
         }
+/*
+        if (Tools::getValue('activate_method')) {
+            Configuration::updateValue('PAYPAL_EXPRESS_CHECKOUT', 1);
+            Configuration::updateValue('PAYPAL_METHOD', Tools::getValue('activate_method'));
 
-        /*
-        if (Tools::getValue('method')) {
-            $response = $this->getUrlOnboarding($_GET['method']);
-            if ($partner_info->error) {
-                $this->message .= $this->displayWarning($response->error);
-            } else {
-                Tools::redirect($response->data->url);
-            }
+            Configuration::updateValue('PAYPAL_SANDBOX_ACCESS', 1);
+            Configuration::updateValue('PAYPAL_LIVE_ACCESS', 1);
         }
-        */
+*/
         if(Tools::isSubmit('save_credentials'))
         {
             $sandbox = Tools::getValue('sandbox');
@@ -535,19 +409,46 @@ class PayPal extends PaymentModule
             Configuration::updateValue('PAYPAL_LIVE_CLIENTID', $live['client_id']);
             Configuration::updateValue('PAYPAL_LIVE_SECRET', $live['secret']);
 
-            Configuration::updateValue('PAYPAL_API_INTENT', Tools::getValue('with_card'));
+            Configuration::updateValue('PAYPAL_API_CARD', Tools::getValue('with_card'));
             Configuration::updateValue('PAYPAL_EXPRESS_CHECKOUT', 1);
             Configuration::updateValue('PAYPAL_METHOD', Tools::getValue('method'));
+
         }
 
-        if (Tools::getValue('activate_method')) {
-            Configuration::updateValue('PAYPAL_EXPRESS_CHECKOUT', 1);
-            Configuration::updateValue('PAYPAL_METHOD', Tools::getValue('activate_method'));
+        switch (Configuration::get('PAYPAL_METHOD')){
+            case 'EXPRESS_CHECKOUT':
+                $method = AbstractMethodPaypal::load('EC');
+                $id_experience_web = $method->setConfig(array(
+                    'name' => Configuration::get('PS_SHOP_NAME').microtime(true),
+                    'flow_config' => array(
+                        'landing_page_type' => 'login',
+                        'bank_txn_pending_url' => Context::getContext()->link->getModuleLink($this->name, 'ec_validation', array(), true),
+                    ),
+                ));
 
-            Configuration::updateValue('PAYPAL_SANDBOX_ACCESS', 1);
-            Configuration::updateValue('PAYPAL_LIVE_ACCESS', 1);
+                if ($id_experience_web) {
+                    Configuration::updateValue('PAYPAL_EXPERIENCE_PROFILE', $id_experience_web);
+                }else{
+                    $this->_errors[] = $this->l('An error occurred. Please, check your credentials.');
+                }
+
+                if (Configuration::get('PAYPAL_API_CARD')) {
+                    $id_experience_web = $method->setConfig(array(
+                        'name' => Configuration::get('PS_SHOP_NAME').microtime(true),
+                        'flow_config' => array(
+                            'landing_page_type' => 'billing',
+                            'bank_txn_pending_url' => Context::getContext()->link->getModuleLink($this->name, 'ec_validation', array(), true),
+                        ),
+                    ));
+
+                    if ($id_experience_web) {
+                        Configuration::updateValue('PAYPAL_EXPERIENCE_PROFILE_CARD', $id_experience_web);
+                    }else{
+                        $this->_errors[] = $this->l('An error occurred. Please, check your credentials.');
+                    }
+                }
+            break;
         }
-
     }
 
     public function hookPaymentOptions($params)
@@ -562,16 +463,25 @@ class PayPal extends PaymentModule
             'path' => $this->_path,
         ));
         $payment_options->setCallToActionText($action_text);
-        $payment_options->setAction($this->context->link->getModuleLink($this->name, 'ec_init', array(), true));
-        if (Configuration::get('PAYPAL_API_ADVANTAGES')) {
-            $payment_options->setAdditionalInformation($this->context->smarty->fetch('module:paypal/views/templates/front/payment_infos.tpl'));
-        }
+        $payment_options->setAction($this->context->link->getModuleLink($this->name, 'ec_init', array('credit_card'=>'0'), true));
+        $payment_options->setAdditionalInformation($this->context->smarty->fetch('module:paypal/views/templates/front/payment_infos.tpl'));
 
-        $payment_options = [
+        $payments_options = [
             $payment_options,
         ];
 
-        return $payment_options;
+        if(Configuration::get('PAYPAL_API_CARD'))
+        {
+            $payment_options = new PaymentOption();
+            $action_text = $this->l('Pay with debit or credit card');
+            $payment_options->setLogo(Media::getMediaPath(_PS_MODULE_DIR_.$this->name.'/views/img/logo_card.png'));
+            $payment_options->setCallToActionText($action_text);
+            $payment_options->setAction($this->context->link->getModuleLink($this->name, 'ec_init', array('credit_card'=>'1'), true));
+            $payment_options->setAdditionalInformation($this->context->smarty->fetch('module:paypal/views/templates/front/payment_infos_card.tpl'));
+            $payments_options[] = $payment_options;
+        }
+
+        return $payments_options;
 
     }
 

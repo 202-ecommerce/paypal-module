@@ -129,10 +129,12 @@
 </div>
 <div style="display: none;">
     <div id="content-fancybox-configuration">
-        <form action="{$return_url}" method="post" id="credential-configuration">
+        <form action="{$return_url}" method="post" id="credential-configuration" class="bootstrap">
+            <h4>{l s='API Credentials' mod='paypal'}</h4>
+            <hr/>
             <p>{l s='In order to accept PayPal payments, please fill your API REST credentials.' mod='paypal'}</p>
             <ul>
-                <li>{l s='Access https://developer.paypal.com/developer/applications/' mod='paypal'}</li>
+                <li>{l s='Access'  mod='paypal'} <a target="_blank" href="https://developer.paypal.com/developer/applications/">{l s='https://developer.paypal.com/developer/applications/' mod='paypal'}</a></li>
                 <li>{l s='Create a « REST API apps »' mod='paypal'}</li>
                 <li>{l s='Click « Show » en dessous de « Secret: »' mod='paypal'}</li>
                 <li>{l s='Copy/paste your « Client ID » and « Secret » below for each environment' mod='paypal'}</li>
@@ -147,7 +149,7 @@
             </p>
             <p>
                 <label for="sandbox_secret">{l s='Secret' mod='paypal'}</label>
-                <input type="text" id="sandbox_secret" name="sandbox[secret]" value="{$PAYPAL_SANDBOX_SECRET}"/>
+                <input type="password" id="sandbox_secret" name="sandbox[secret]" value="{$PAYPAL_SANDBOX_SECRET}"/>
             </p>
             <hr/>
             <h5>{l s='Live' mod='paypal'}</h5>
@@ -157,11 +159,11 @@
             </p>
             <p>
                 <label for="live_secret">{l s='Secret' mod='paypal'}</label>
-                <input type="text" id="live_secret" name="live[secret]" value="{$PAYPAL_LIVE_SECRET}"/>
+                <input type="password" id="live_secret" name="live[secret]" value="{$PAYPAL_LIVE_SECRET}"/>
             </p>
             <p>
-                <button onclick="$.fancybox.close();return false;">{l s='Cancel' mod='paypal'}</button>
-                <button name="save_credentials">{l s='Confirm API Credentials' mod='paypal'}</button>
+                <button class="btn btn-default"  onclick="$.fancybox.close();return false;">{l s='Cancel' mod='paypal'}</button>
+                <button class="btn btn-info" name="save_credentials">{l s='Confirm API Credentials' mod='paypal'}</button>
             </p>
         </form>
     </div>
@@ -195,88 +197,6 @@
         $('#configuration_form').insertAfter($('.parametres'));
         //var activate_link = "{*$PartnerboardingURL|escape:'html':'UTF-8'*}";
 
-
-        $('#configuration_form input[name=paypal_sandbox]').change(function(event) {
-            sandbox = $('#configuration_form input[name=paypal_sandbox]:checked').val();
-            var no_ajax;
-            $.ajax(
-            {
-                type : 'POST',
-                url : "{$path}"+"ajax/ajax.php?"+'sandbox='+sandbox,
-                dataType: 'json',
-            });
-            if(sandbox == 0) {
-                var access_token_sandbox = "{$access_token_sandbox|escape:'html':'UTF-8'}";
-                if (access_token_sandbox) {
-                    content = "<div id='ConfirmLive'><p><b>{l s='Disable sandbox mode' mod='paypal'}</b></p>"+
-                            "<p>{l s='You want to disable the sandbox mode.' mod='paypal'}</p>"+
-                            "<p style='margin-bottom: 30px;'>{l s='You are sure ?' mod='paypal'}</p>"+
-                            "<a class='btn fancybox_close' role='button'>{l s='Stay in sandbox' mod='paypal'}</a><a href='"+activate_link+"' class='btn btn-info without-redirection' role='button'>{l s='Passer en production' mod='paypal'}</a></div>";
-                } else {
-                    content = "<div id='ConfirmLive'><p><b>{l s='Disable sandbox mode' mod='paypal'}</b></p>"+
-                            "<p>{l s='You want to disable the sandbox mode.' mod='paypal'}</p>"+
-                            "<p style='margin-bottom: 30px;'>{l s='We redirect you to PayPal to configure the PayPal product in production.' mod='paypal'}</p>"+
-                            "<a class='btn fancybox_close' role='button'>{l s='Stay in sandbox' mod='paypal'}</a><a href='"+activate_link+"' class='btn btn-info' role='button'>{l s='Passer en production' mod='paypal'}</a></div>";
-                }
-                url = "sandbox=1";
-            } else {
-                var access_token_live = "{$access_token_live|escape:'html':'UTF-8'}";
-                if (access_token_live) {
-                    content = "<div id='ConfirmLive'><p><b>{l s='Disable production mode' mod='paypal'}</b></p>"+
-                            "<p>{l s='You want to disable the production mode.' mod='paypal'}</p>"+
-                            "<p style='margin-bottom: 30px;'>{l s='You are sure ?' mod='paypal'}</p>"+
-                            "<a class='btn fancybox_close' role='button'>{l s='Stay in production' mod='paypal'}</a><a href='"+activate_link+"' class='btn btn-info without-redirection' role='button'>{l s='Passer en sandbox' mod='paypal'}</a></div>";
-                } else {
-                    content = "<div id='ConfirmLive'><p><b>{l s='Disable production mode' mod='paypal'}</b></p>"+
-                            "<p>{l s='You want to disable the production mode.' mod='paypal'}</p>"+
-                            "<p style='margin-bottom: 30px;'>{l s='We redirect you to PayPal to configure the PayPal product in sandbox.' mod='paypal'}</p>"+
-                            "<a class='btn fancybox_close' role='button'>{l s='Stay in production' mod='paypal'}</a><a href='"+activate_link+"' class='btn btn-info' role='button'>{l s='Passer en sandbox' mod='paypal'}</a></div>";
-                }
-                url = "sandbox=0";
-            }
-            $.fancybox({
-                helpers : {
-                    title: {
-                        type: 'outside',
-                        position: 'top'
-                    }
-                },
-                afterClose: function() {
-                    if (no_ajax == false) {
-                        $.ajax(
-                                {
-                                    type : 'POST',
-                                    url : "{$path|escape:'html':'UTF-8'}"+"ajax/ajax.php?"+url,
-                                    dataType: 'json',
-                                });
-                        if(sandbox == 0) {
-                            $('#configuration_form #paypal_sandbox_on').attr('checked', true);
-                        } else {
-                            $('#configuration_form #paypal_sandbox_off').attr('checked', true);
-                        }
-                    }
-                },
-                'width':400,
-                'height':180,
-                'autoSize' : false,
-                wrapCSS    : 'fancybox-paypal',
-                'content': content,
-            });
-            $('.fancybox_close').on('click', function(e) {
-                no_ajax = false;
-                e.preventDefault();
-                e.stopPropagation();
-                $(this).parent().hide();
-                $.fancybox.close();
-            });
-            $('.without-redirection').on('click', function(e) {
-                no_ajax = true;
-                e.preventDefault();
-                e.stopPropagation();
-                $(this).parent().hide();
-                $.fancybox.close();
-            });
-        });
     });
 
 </script>

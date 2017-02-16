@@ -1,6 +1,5 @@
-<?php
-/*
-* 2007-2015 PrestaShop
+{*
+* 2007-2016 PrestaShop
 *
 * NOTICE OF LICENSE
 *
@@ -18,16 +17,12 @@
 * versions in the future. If you wish to customize PrestaShop for your
 * needs please refer to http://www.prestashop.com for more information.
 *
-*  @author PrestaShop SA <contact@prestashop.com>
-*  @copyright  2007-2015 PrestaShop SA
-*  @license    http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+*  @author    PrestaShop SA <contact@prestashop.com>
+*  @copyright 2007-2016 PrestaShop SA
+*  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
-*/
+*}
 
 
-require_once(dirname(__FILE__).'/../../../config/config.inc.php');
-require_once(dirname(__FILE__).'/../../../init.php');
-
-if (Tools::getValue('sandbox') !== null) {
-    Configuration::updateValue('PAYPAL_SANDBOX', Tools::getValue('sandbox'));
-}
+<p>{l s='You will be redirected to the PayPal website to process your card payment.' mod='paypal'}</p>
+<p>{l s='PayPal secures your payment and protect your financial information with strong encryption tools.' mod='paypal'}</p>
