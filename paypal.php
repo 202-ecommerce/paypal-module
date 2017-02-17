@@ -19,7 +19,7 @@
  * needs please refer to http://www.prestashop.com for more information.
  *
  *  @author    PrestaShop SA <contact@prestashop.com>
- *  @copyright 2007-2016 PrestaShop SA
+ *  @copyright 2007-2017 PrestaShop SA
  *  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  *  International Registered Trademark & Property of PrestaShop SA
  */
@@ -279,6 +279,7 @@ class PayPal extends PaymentModule
         ));
         $this->context->controller->addCSS($this->_path.'views/css/paypal-bo.css', 'all');
 
+        $fields_form = array();
         $fields_form[0]['form'] = array(
             'legend' => array(
                 'title' => $this->l('MODULE SETTINGS'),

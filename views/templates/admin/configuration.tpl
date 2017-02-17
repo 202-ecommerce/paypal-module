@@ -1,5 +1,5 @@
 {*
-* 2007-2016 PrestaShop
+* 2007-2017 PrestaShop
 *
 * NOTICE OF LICENSE
 *
@@ -18,7 +18,7 @@
 * needs please refer to http://www.prestashop.com for more information.
 *
 *  @author    PrestaShop SA <contact@prestashop.com>
-*  @copyright 2007-2016 PrestaShop SA
+*  @copyright 2007-2017 PrestaShop SA
 *  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
 *}
@@ -69,7 +69,7 @@
         <div style="clear:both;"></div>
 
         <div class="active-products">
-            <p><b>{l s='2 PayPal products selected for you'}</b></p>
+            <p><b>{l s='2 PayPal products selected for you' mod='paypal'}</b></p>
             <div class="col-sm-6">
                 <div class="panel">
                     <img class="paypal-products" src="{$path|escape:'html':'UTF-8'}/views/img/paypal.png">
@@ -77,7 +77,7 @@
                         {l s='Accept' mod='paypal'} <b>{l s='PayPal' mod='paypal'}</b> {l s='payments, you can optimize your conversion rate.' mod='paypal'}
                     </p>
                     <p>
-                        {l s='Fast checkout and fast payment. Make online payments simple.' mod='paypal'} <b>{l s='PayPal customers'}</b> {l s='can buy from you quickly if they use One Touch' mod='paypal'}&trade;
+                        {l s='Fast checkout and fast payment. Make online payments simple.' mod='paypal'} <b>{l s='PayPal customers' mod='paypal'}</b> {l s='can buy from you quickly if they use One Touch' mod='paypal'}&trade;
                     </p>
                     <p>
                         <a target="_blank" href="https://www.paypal.com/webapps/mpp/express-checkout">{l s='More Information' mod='paypal'}</a>
@@ -122,7 +122,7 @@
                             {l s='Accept' mod='paypal'} <b>{l s='PayPal' mod='paypal'}</b> {l s='payments, you can optimize your conversion rate.' mod='paypal'} : <b>{$active_products|escape:'html':'UTF-8'}</b>
                         </p>
                         <p>
-                            {l s='Fast checkout and fast payment. Make online payments simple.' mod='paypal'} <b>{l s='PayPal customers'}</b> {l s='can buy from you quickly if they use One Touch' mod='paypal'}&trade;
+                            {l s='Fast checkout and fast payment. Make online payments simple.' mod='paypal'} <b>{l s='PayPal customers' mod='paypal'}</b> {l s='can buy from you quickly if they use One Touch' mod='paypal'}&trade;
                         </p>
                         <p>
                             <a target="_blank" href="https://www.paypal.com/webapps/mpp/express-checkout">{l s='More Information' mod='paypal'}</a>
@@ -150,7 +150,7 @@
 </div>
 <div style="display: none;">
     <div id="content-fancybox-configuration">
-        <form action="{$return_url}" method="post" id="credential-configuration" class="bootstrap">
+        <form action="{$return_url|escape:'javascript':'UTF-8'}" method="post" id="credential-configuration" class="bootstrap">
             <h4>{l s='API Credentials' mod='paypal'}</h4>
             <p>{l s='In order to accept PayPal payments, please fill your API REST credentials.' mod='paypal'}</p>
             <ul>
@@ -166,20 +166,20 @@
             <h4>{l s='Live' mod='paypal'}</h4>
             <p>
                 <label for="live_client_id">{l s='Client ID' mod='paypal'}</label>
-                <input type="text" id="live_client_id" name="live[client_id]" value="{$PAYPAL_LIVE_CLIENTID}"/>
+                <input type="text" id="live_client_id" name="live[client_id]" value="{$PAYPAL_LIVE_CLIENTID|escape:'htmlall':'UTF-8'}"/>
             </p>
             <p>
                 <label for="live_secret">{l s='Secret' mod='paypal'}</label>
-                <input type="password" id="live_secret" name="live[secret]" value="{$PAYPAL_LIVE_SECRET}"/>
+                <input type="password" id="live_secret" name="live[secret]" value="{$PAYPAL_LIVE_SECRET|escape:'htmlall':'UTF-8'}"/>
             </p>
             <h4>{l s='Sandbox' mod='paypal'}</h4>
             <p>
                 <label for="sandbox_client_id">{l s='Client ID' mod='paypal'}</label>
-                <input type="text" id="sandbox_client_id" name="sandbox[client_id]" value="{$PAYPAL_SANDBOX_CLIENTID}"/>
+                <input type="text" id="sandbox_client_id" name="sandbox[client_id]" value="{$PAYPAL_SANDBOX_CLIENTID|escape:'htmlall':'UTF-8'}"/>
             </p>
             <p>
                 <label for="sandbox_secret">{l s='Secret' mod='paypal'}</label>
-                <input type="password" id="sandbox_secret" name="sandbox[secret]" value="{$PAYPAL_SANDBOX_SECRET}"/>
+                <input type="password" id="sandbox_secret" name="sandbox[secret]" value="{$PAYPAL_SANDBOX_SECRET|escape:'htmlall':'UTF-8'}"/>
             </p>
             <hr/>
             <p>

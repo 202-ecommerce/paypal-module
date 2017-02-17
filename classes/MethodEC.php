@@ -90,6 +90,7 @@ class MethodEC extends AbstractMethodPaypal
         {
             $params['experience_profile_id'] = Configuration::get('PAYPAL_EXPERIENCE_PROFILE');
         }
+        $items = array();
         foreach ($products as $product) {
             $items[] = array(
                 'quantity' => $product['cart_quantity'],
