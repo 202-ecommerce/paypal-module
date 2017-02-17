@@ -54,4 +54,26 @@ class PaypalCapture extends ObjectModel
         )
     );
 
+
+    public static function loadByOrderPayPalId($orderPayPalId)
+    {
+        $sql = new DbQuery();
+        $sql->select('id_paypal_capture');
+        $sql->from('paypal_capture');
+        $sql->where('id_paypal_order = '.(int)$orderPayPalId);
+        $id_paypal_capture = Db::getInstance()->getValue($sql);
+
+        return new self($id_paypal_capture);
+    }
+
+    public static function getByOrderId($id_order)
+    {
+        $sql = new DbQuery();
+        $sql->select('*');
+        $sql->from('paypal_order', 'po');
+        $sql->innerJoin('paypal_capture', 'pc', 'po.`id_paypal_order` = pc.`id_paypal_order`');
+        $sql->where('po.id_order = '.(int)$id_order);
+        return Db::getInstance()->getRow($sql);
+
+    }
 }

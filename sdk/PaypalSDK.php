@@ -69,6 +69,7 @@ class PaypalSDK
         {
             return false;
         }
+
         $this->action = 'POST';
         $this->endpoint = 'v1/payments/payment';
         $response = $this->makeCall($this->getBody($body));

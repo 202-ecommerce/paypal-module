@@ -53,20 +53,29 @@ class MethodEC extends AbstractMethodPaypal
             Configuration::get('PAYPAL_SANDBOX')?Configuration::get('PAYPAL_SANDBOX_CLIENTID'):Configuration::get('PAYPAL_LIVE_CLIENTID'),
             Configuration::get('PAYPAL_SANDBOX')?Configuration::get('PAYPAL_SANDBOX_SECRET'):Configuration::get('PAYPAL_LIVE_SECRET'),
             Configuration::get('PAYPAL_SANDBOX'));
-        $cart = Context::getContext()->cart;
-        $currency = Context::getContext()->currency;
+        $context = Context::getContext();
+        $cart = $context->cart;
+        $currency = $context->currency;
+        $customer = $context->customer;
+
+
         $total = (float)$cart->getOrderTotal(true, Cart::BOTH);
         $shipping_cost = $cart->getTotalShippingCost();
         $summary = $cart->getSummaryDetails();
 
         $products = $cart->getProducts();
+        $address = new Address($cart->id_address_delivery);
+        $country = new Country($address->id_country);
+        $state = new State($address->id_state);
 
         $params = array(
             'intent' => Configuration::get('PAYPAL_API_INTENT'), //sale
             'payer' => array(
                 'payment_method' => 'paypal', //credit_card
+                'payer_info' => array(
+                    'email' => $customer->email,
+                )
             ),
-            'note_to_payer' => 'Contact us for any questions on your order.',
             'redirect_urls' => array(
                 'return_url' => Context::getContext()->link->getModuleLink($this->name, 'ec_validation', array(), true),
                 'cancel_url' => Tools::getShopDomain(true, true).'/index.php?controller=order&step=1',
@@ -87,14 +96,12 @@ class MethodEC extends AbstractMethodPaypal
                 'name' => $product['name'],
                 'price' =>  str_replace(',','.' , round($product['price'], 2)),
                 'currency' => $currency->iso_code,
-                'description' => $product['description_short'],
+                'description' => strip_tags($product['description_short']),
                 'tax' => str_replace(',','.' , round($product['total_wt'] - $product['total'],2)),
             );
         }
 
-        $address = new Address($cart->id_address_invoice);
-        $country = new Country($address->id_country);
-        $state = new State($address->id_state);
+
 
         $params['transactions'][] = array(
             'amount' => array(
@@ -123,6 +130,7 @@ class MethodEC extends AbstractMethodPaypal
 
         $return = false;
         $payment = $sdk->createPayment($params);
+
         if (isset($payment->links)) {
             foreach ($payment->links as $redirect_urls) {
                 if ($redirect_urls->method == "REDIRECT") {
@@ -233,5 +241,14 @@ class MethodEC extends AbstractMethodPaypal
         }
 
         return $response;
+    }
+
+    public function void($params)
+    {
+        $sdk = new PaypalSDK(
+            Configuration::get('PAYPAL_SANDBOX')?Configuration::get('PAYPAL_SANDBOX_CLIENTID'):Configuration::get('PAYPAL_LIVE_CLIENTID'),
+            Configuration::get('PAYPAL_SANDBOX')?Configuration::get('PAYPAL_SANDBOX_SECRET'):Configuration::get('PAYPAL_LIVE_SECRET'),
+            Configuration::get('PAYPAL_SANDBOX'));
+        return $sdk->voidAuthorization($params['authorization_id']);
     }
 }

@@ -91,4 +91,14 @@ class PaypalOrder extends ObjectModel
         );
     }
 
+    public static function loadByOrderId($id_order)
+    {
+        $sql = new DbQuery();
+        $sql->select('id_paypal_order');
+        $sql->from('paypal_order');
+        $sql->where('id_order = '.(int)$id_order);
+        $id_paypal_order = Db::getInstance()->getValue($sql);
+        return new self($id_paypal_order);
+    }
+
 }

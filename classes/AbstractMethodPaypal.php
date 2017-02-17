@@ -1,13 +1,13 @@
 <?php
 abstract class AbstractMethodPaypal
 {
-    // Force les classes filles à définir cette méthode
     abstract public function init($params);
     abstract public function validation();
     abstract public function confirmCapture();
     abstract public function check();
     abstract public function refund();
     abstract public function setConfig($params);
+    abstract public function void($params);
 
     public static function load($method)
     {

@@ -150,6 +150,7 @@ class PayPal extends PaymentModule
             || !$this->registerHook('paymentReturn')
             || !$this->registerHook('displayOrderConfirmation')
             || !$this->registerHook('displayAdminOrder')
+            || !$this->registerHook('ActionOrderStatusPostUpdate')
         ) {
             return false;
         }
@@ -564,7 +565,7 @@ class PayPal extends PaymentModule
 
     }
 
-    public function hookdisplayAdminOrder($params)
+    public function hookDisplayAdminOrder($params)
     {
         $id_order = $params['id_order'];
         $order = new Order((int)$id_order);
@@ -613,29 +614,20 @@ class PayPal extends PaymentModule
             ));
         }
 
-        $sql = new DbQuery();
-        $sql->select('*');
-        $sql->from('paypal_order', 'po');
-        $sql->where('po.id_order = '.(int)$id_order);
-        $result = Db::getInstance()->getRow($sql);
-        $refund = array('refundPaypal' => $result['id_paypal_order']);
-
-
-        $sql = new DbQuery();
-        $sql->select('*');
-        $sql->from('paypal_order', 'po');
-        $sql->innerJoin('paypal_capture', 'pc', 'po.`id_paypal_order` = pc.`id_paypal_order`');
-        $sql->where('po.id_order = '.(int)$id_order);
-        $result = Db::getInstance()->getRow($sql);
-        if ($result) {
-            $refund['capture_id'] = $result['id_capture'];
-            if ($result['result'] == "completed") {
+        $paypal_order = PaypalOrder::getOrderById($id_order);
+        $refund = array('refundPaypal' => $paypal_order['id_paypal_order']);
+        
+        $paypal_capture = PaypalCapture::getByOrderId($id_order);
+        
+        if ($paypal_capture) {
+            $refund['capture_id'] = $paypal_capture['id_capture'];
+            if ($paypal_capture['result'] == "completed") {
                 $this->context->smarty->assign(array(
                     'refund_link' => '&'.http_build_query($refund),
                 ));
-            } else {
+            } else if($paypal_capture['result'] != 'voided') {
                 $this->context->smarty->assign(array(
-                    'capture_link' => "&capturePaypal=".$result['id_paypal_order'],
+                    'capture_link' => "&capturePaypal=".$paypal_capture['id_paypal_order'],
                 ));
             }
         } else {
@@ -644,6 +636,25 @@ class PayPal extends PaymentModule
             ));
         }
         return $paypal_msg.$this->display(__FILE__, 'views/templates/hook/paypal_order.tpl');
+    }
+
+    public function hookActionOrderStatusPostUpdate($params)
+    {
+
+        if($params['newOrderStatus']->id == Configuration::get('PS_OS_CANCELED'))
+        {
+            $orderPayPal = PaypalOrder::loadByOrderId($params['id_order']);
+            $method = AbstractMethodPaypal::load('EC');
+            $response = $method->void(array('authorization_id'=>$orderPayPal->id_transaction));
+            if(isset($response->state) && $response->state == 'voided')
+            {
+                $paypalCapture = PaypalCapture::loadByOrderPayPalId($orderPayPal->id);
+                $paypalCapture->result = $response->state;
+                $paypalCapture->save();
+                $orderPayPal->payment_status = $response->state;
+                $orderPayPal->save();
+            }
+        }
     }
 
 }
