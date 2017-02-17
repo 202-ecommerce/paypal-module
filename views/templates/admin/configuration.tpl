@@ -36,12 +36,12 @@
     </script>
 </div>
 <div class="container-fluid paypal-nav">
-<ul class="nav nav-pills">
-    <li class="active"><a data-toggle="pill" href="#paypal_conf"><span>{l s='Products' mod='paypal'}</span></a></li>
-    <li><a data-toggle="pill" href="#paypal_params"><span>{l s='Parametres' mod='paypal'}</span></a></li>
+<ul class="nav nav-pills navbar-separator">
+    <li {if !$ec_paypal_active && !$ec_card_active}class="active"{/if}><a data-toggle="pill" href="#paypal_conf"><span>{l s='Products' mod='paypal'}</span></a></li>
+    <li {if $ec_paypal_active || $ec_card_active}class="active"{/if}><a data-toggle="pill" href="#paypal_params"><span>{l s='Settings' mod='paypal'}</span></a></li>
 </ul>
     <div class="tab-content">
-    <div id="paypal_conf"  class="tab-pane fade in active">
+    <div id="paypal_conf"  class="tab-pane fade {if !$ec_paypal_active && !$ec_card_active}in active{/if}">
         <div class="box half left">
             <div class="logo">
                  <img src="{$path|escape:'html':'UTF-8'}/views/img/paypal_btm.png" alt=""  />
@@ -74,17 +74,17 @@
                 <div class="panel">
                     <img class="paypal-products" src="{$path|escape:'html':'UTF-8'}/views/img/paypal.png">
                     <p>
-                        {l s='Accept PayPal payments, you can optimize your conversion rate.' mod='paypal'}
+                        {l s='Accept' mod='paypal'} <b>{l s='PayPal' mod='paypal'}</b> {l s='payments, you can optimize your conversion rate.' mod='paypal'}
                     </p>
                     <p>
-                        {l s='Fast checkout and fast payment. Make online payments simple. PayPal customers can buy from you quickly if they use One TouchTM' mod='paypal'}
+                        {l s='Fast checkout and fast payment. Make online payments simple.' mod='paypal'} <b>{l s='PayPal customers'}</b> {l s='can buy from you quickly if they use One Touch' mod='paypal'}&trade;
                     </p>
                     <p>
                         <a target="_blank" href="https://www.paypal.com/webapps/mpp/express-checkout">{l s='More Information' mod='paypal'}</a>
                     </p>
                     <div class="bottom">
                         <img src="{$path|escape:'html':'UTF-8'}/views/img/paypal_btm.png" class="product-img">
-                        <a class="btn btn-default pull-right" href="#{*$return_url|escape:'html':'UTF-8'}&method=EXPRESS_CHECKOUT*}"  onclick="display_popup('EXPRESS_CHECKOUT',0)">{l s='Activate' mod='paypal'}</a>
+                        <a class="btn btn-default pull-right" href="#{*$return_url|escape:'html':'UTF-8'}&method=EXPRESS_CHECKOUT*}"  onclick="display_popup('EXPRESS_CHECKOUT',0)">{if $ec_paypal_active}{l s='Modify' mod='paypal'}{else}{l s='Activate' mod='paypal'}{/if}</a>
                     </div>
                 </div>
             </div>
@@ -92,12 +92,12 @@
                 <div class="panel">
                     <img class="paypal-products" src="{$path|escape:'html':'UTF-8'}/views/img/paypal.png">
                     <p>
-                        {l s='Accept credit cards, debit cards and PayPal payments.' mod='paypal'}
+                        {l s='Accept' mod='paypal'} <b>{l s='credit cards' mod='paypal'}</b>, <b>{l s='debit cards' mod='paypal'}</b> {l s='and' mod='paypal'} <b>{l s='PayPal' mod='paypal'}</b> {l s='payments' mod='paypal'}
                     </p>
                     <p>
-                        {l s='Your customers can pay with a selection of local and international debit and credit cards. Make online payments simple. PayPal customers can buy from you quickly if they use One TouchTM' mod='paypal'}
+                        {l s='Your customers can pay with a selection of local and international ' mod='paypal'} <b>{l s='debit and credit cards.' mod='paypal'}</b> {l s='Make online payments simple.' mod='paypal'} <b>{l s='PayPal customers' mod='paypal'}</b> {l s='can buy from you quickly if they use One Touch' mod='paypal'}&trade;
                     </p>
-                    <p><a href="https://www.paypal.com/webapps/mpp/standard">{l s='More Information' mod='paypal'}</a></p>
+                    <p><a target="_blank" href="https://www.paypal.com/webapps/mpp/standard">{l s='More Information' mod='paypal'}</a></p>
                     <div class="bottom">
                         <img src="{$path|escape:'html':'UTF-8'}/views/img/paypal_btm.png" class="product-img">
                         <img src="{$path|escape:'html':'UTF-8'}/views/img/mastercard.png" class="product-img">
@@ -105,32 +105,42 @@
                         <img src="{$path|escape:'html':'UTF-8'}/views/img/discover.png" class="product-img">
                         <img src="{$path|escape:'html':'UTF-8'}/views/img/american_express.png" class="product-img">
                         <img src="{$path|escape:'html':'UTF-8'}/views/img/maestro.png" class="product-img">
-                        <a class="btn btn-default pull-right" href="#{*$return_url|escape:'html':'UTF-8'}&method=EXPRESS_CHECKOUT*}" onclick="display_popup('EXPRESS_CHECKOUT',1)">{l s='Activate' mod='paypal'}</a>
+                        <a class="btn btn-default pull-right" href="#{*$return_url|escape:'html':'UTF-8'}&method=EXPRESS_CHECKOUT*}" onclick="display_popup('EXPRESS_CHECKOUT',1)">{if $ec_card_active}{l s='Modify' mod='paypal'}{else}{l s='Activate' mod='paypal'}{/if}</a>
                     </div>
                 </div>
             </div>
         </div>
 
     </div>
-    <div id="paypal_params" class="tab-pane fade col-sm-12">
+    <div id="paypal_params" class="tab-pane fade col-sm-12 {if $ec_paypal_active || $ec_card_active}in active{/if}">
         <div class="panel parametres">
             <div class="panel-body">
                 <div class="col-sm-8 help-left">
-                    {if $paypal_card}
+                    {if !$paypal_card}
                         <img src="{$path|escape:'html':'UTF-8'}/views/img/paypal.png">
-                        {l s='Accept credit cards, debit cards and PayPal payments.' mod='paypal'} : <b>{$active_products|escape:'html':'UTF-8'}</b>
-                        <p>{l s='Your customers can pay with a selection of local and international debit and credit cards. Make online payments simple. PayPal customers can buy from you quickly if they use One TouchTM' mod='paypal'}</p>
-                        <a href="#"><b>{l s='Learn more about PayPal' mod='paypal'}</b></a>
+                        <p>
+                            {l s='Accept' mod='paypal'} <b>{l s='PayPal' mod='paypal'}</b> {l s='payments, you can optimize your conversion rate.' mod='paypal'} : <b>{$active_products|escape:'html':'UTF-8'}</b>
+                        </p>
+                        <p>
+                            {l s='Fast checkout and fast payment. Make online payments simple.' mod='paypal'} <b>{l s='PayPal customers'}</b> {l s='can buy from you quickly if they use One Touch' mod='paypal'}&trade;
+                        </p>
+                        <p>
+                            <a target="_blank" href="https://www.paypal.com/webapps/mpp/express-checkout">{l s='More Information' mod='paypal'}</a>
+                        </p>
                     {else}
                         <img src="{$path|escape:'html':'UTF-8'}/views/img/paypal.png">
-                        {l s='Accept PayPal payments, you can optimize your conversion rate.' mod='paypal'} : <b>{$active_products|escape:'html':'UTF-8'}</b>
-                        <p>{l s='Fast checkout and fast payment. Make online payments simple. PayPal customers can buy from you quickly if they use One TouchTM' mod='paypal'}</p>
-                        <a href="#"><b>{l s='Learn more about PayPal' mod='paypal'}</b></a>
+                        <p>
+                            {l s='Accept' mod='paypal'} <b>{l s='credit cards' mod='paypal'}</b>, <b>{l s='debit cards' mod='paypal'}</b> {l s='and' mod='paypal'} <b>{l s='PayPal' mod='paypal'}</b> {l s='payments' mod='paypal'}  : <b>{$active_products|escape:'html':'UTF-8'}</b>
+                        </p>
+                        <p>
+                            {l s='Your customers can pay with a selection of local and international ' mod='paypal'} <b>{l s='debit and credit cards.' mod='paypal'}</b> {l s='Make online payments simple.' mod='paypal'} <b>{l s='PayPal customers' mod='paypal'}</b> {l s='can buy from you quickly if they use One Touch' mod='paypal'}&trade;
+                        </p>
+                        <p><a target="_blank" href="https://www.paypal.com/webapps/mpp/standard">{l s='More Information' mod='paypal'}</a></p>
                     {/if}
                 </div>
                 <div class="col-sm-3 help-right">
                     {l s='More Information' mod='paypal'} ?
-                    <a href="#">{l s='Contact us' mod='paypal'}</a>
+                    <a target="_blank" href="https://www.paypal.com/webapps/mpp/contact-us">{l s='Contact us' mod='paypal'}</a>
                 </div>
             </div>
         </div>
@@ -142,10 +152,10 @@
     <div id="content-fancybox-configuration">
         <form action="{$return_url}" method="post" id="credential-configuration" class="bootstrap">
             <h4>{l s='API Credentials' mod='paypal'}</h4>
-            <hr/>
             <p>{l s='In order to accept PayPal payments, please fill your API REST credentials.' mod='paypal'}</p>
             <ul>
                 <li>{l s='Access' mod='paypal'} <a target="_blank" href="https://developer.paypal.com/developer/applications/">{l s='https://developer.paypal.com/developer/applications/' mod='paypal'}</a></li>
+                <li>{l s='Log in or Create a business account' mod='paypal'}</li>
                 <li>{l s='Create a « REST API apps »' mod='paypal'}</li>
                 <li>{l s='Click « Show » en dessous de « Secret: »' mod='paypal'}</li>
                 <li>{l s='Copy/paste your « Client ID » and « Secret » below for each environment' mod='paypal'}</li>
@@ -153,7 +163,16 @@
             <hr/>
             <input type="hidden" id="method" name="method"/>
             <input type="hidden" id="with_card" name="with_card"/>
-            <h5>{l s='Sandbox' mod='paypal'}</h5>
+            <h4>{l s='Live' mod='paypal'}</h4>
+            <p>
+                <label for="live_client_id">{l s='Client ID' mod='paypal'}</label>
+                <input type="text" id="live_client_id" name="live[client_id]" value="{$PAYPAL_LIVE_CLIENTID}"/>
+            </p>
+            <p>
+                <label for="live_secret">{l s='Secret' mod='paypal'}</label>
+                <input type="password" id="live_secret" name="live[secret]" value="{$PAYPAL_LIVE_SECRET}"/>
+            </p>
+            <h4>{l s='Sandbox' mod='paypal'}</h4>
             <p>
                 <label for="sandbox_client_id">{l s='Client ID' mod='paypal'}</label>
                 <input type="text" id="sandbox_client_id" name="sandbox[client_id]" value="{$PAYPAL_SANDBOX_CLIENTID}"/>
@@ -163,15 +182,6 @@
                 <input type="password" id="sandbox_secret" name="sandbox[secret]" value="{$PAYPAL_SANDBOX_SECRET}"/>
             </p>
             <hr/>
-            <h5>{l s='Live' mod='paypal'}</h5>
-            <p>
-                <label for="live_client_id">{l s='Client ID' mod='paypal'}</label>
-                <input type="text" id="live_client_id" name="live[client_id]" value="{$PAYPAL_LIVE_CLIENTID}"/>
-            </p>
-            <p>
-                <label for="live_secret">{l s='Secret' mod='paypal'}</label>
-                <input type="password" id="live_secret" name="live[secret]" value="{$PAYPAL_LIVE_SECRET}"/>
-            </p>
             <p>
                 <button class="btn btn-default"  onclick="$.fancybox.close();return false;">{l s='Cancel' mod='paypal'}</button>
                 <button class="btn btn-info" name="save_credentials">{l s='Confirm API Credentials' mod='paypal'}</button>

@@ -1,6 +1,8 @@
 .paypal-nav .nav {
     margin-bottom: 20px;
     margin-left: 8px;
+    padding-bottom: 2px;
+    border-bottom: 1px solid lightgrey;
 }
 .paypal-nav .nav>li>a {
     margin-right: 30px;
@@ -105,4 +107,14 @@
 #ConfirmLive .btn-info {
     background-color: #25b9d7;
     color: #ffffff;
+}
+
+
+.paypal_block_info{
+    border-color: #A1C4E6 !important;
+    background-color: #DDEAF6 !important;
+}
+
+#paypal_conf .active-products .col-sm-6 .panel{
+    min-height: 240px;
 }

@@ -23,22 +23,24 @@
 *  International Registered Trademark & Property of PrestaShop SA
 *}
 {if !isset($paypal_refunded)}
-    <div class="tab-content panel" id="paymentPaypal">
-        <div class="panel-heading">
-            <i><img src="{$path_logo}"/></i>
-            {l s='Paypal' mod='paypal'}
-        </div>
-        <div class="tab-pane active">
-            {if isset($capture_link)}
-                <a href="{$order_link|escape:'html':'UTF-8'}{$capture_link|escape:'html':'UTF-8'}" class="btn btn-primary">
-                    {l s='Capture paypal' mod='paypal'}
-                </a>
-            {/if}
-            {if isset($refund_link)}
-                <a href="{$order_link|escape:'html':'UTF-8'}&{$refund_link|escape:'html':'UTF-8'}" class="btn btn-primary">
-                    {l s='Refund paypal' mod='paypal'}
-                </a>
-            {/if}
+    <div class="col-lg-7">
+        <div class="tab-content panel" id="paymentPaypal">
+            <div class="panel-heading">
+                <i><img src="{$path_logo}"/></i>
+                {l s='Paypal' mod='paypal'}
+            </div>
+            <div class="tab-pane active">
+                {if isset($capture_link)}
+                    <a href="{$order_link|escape:'html':'UTF-8'}{$capture_link|escape:'html':'UTF-8'}" class="btn btn-primary">
+                        {l s='Capture paypal' mod='paypal'}
+                    </a>
+                {/if}
+                {if isset($refund_link)}
+                    <a href="{$order_link|escape:'html':'UTF-8'}{$refund_link|escape:'html':'UTF-8'}" class="btn btn-primary">
+                        {l s='Refund paypal' mod='paypal'}
+                    </a>
+                {/if}
+            </div>
         </div>
     </div>
 {/if}
