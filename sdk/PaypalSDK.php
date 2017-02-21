@@ -26,7 +26,6 @@
 
 class PaypalSDK
 {
-
     private $action;
     private $endpoint;
     private $token;
@@ -34,7 +33,7 @@ class PaypalSDK
     private $secret;
     private $urlAPI;
 
-    public function __construct($clientId,$secret,$sandbox=0)
+    public function __construct($clientId, $secret, $sandbox=0)
     {
         $this->clientId = $clientId;
         $this->secret = $secret;
@@ -48,15 +47,13 @@ class PaypalSDK
 
     public function createAccessToken($body = false)
     {
-        if(!$body)
-        {
+        if (!$body) {
             $body = 'grant_type=client_credentials';
         }
         $this->action = 'POST';
         $this->endpoint = 'v1/oauth2/token';
         $response = $this->makeCall($body, "application/json", true);
-        if(!isset($response->access_token))
-        {
+        if (!isset($response->access_token)) {
             return false;
         }
         $this->token = $response->access_token;
@@ -65,8 +62,7 @@ class PaypalSDK
 
     public function createPayment($body)
     {
-        if(!$this->createAccessToken())
-        {
+        if (!$this->createAccessToken()) {
             return false;
         }
 
@@ -78,8 +74,7 @@ class PaypalSDK
 
     public function createWebExperience($body)
     {
-        if(!$this->createAccessToken())
-        {
+        if (!$this->createAccessToken()) {
             return false;
         }
 
@@ -91,8 +86,7 @@ class PaypalSDK
 
     public function executePayment($payment_id, $payer_id)
     {
-        if(!$this->createAccessToken())
-        {
+        if (!$this->createAccessToken()) {
             return false;
         }
 
@@ -106,8 +100,7 @@ class PaypalSDK
 
     public function updatePayment($payment_id, $body)
     {
-        if(!$this->createAccessToken())
-        {
+        if (!$this->createAccessToken()) {
             return false;
         }
 
@@ -120,8 +113,7 @@ class PaypalSDK
 
     public function refundSale($body, $sale_id)
     {
-        if(!$this->createAccessToken())
-        {
+        if (!$this->createAccessToken()) {
             return false;
         }
 
@@ -133,8 +125,7 @@ class PaypalSDK
 
     public function showRefund($sale_id)
     {
-        if(!$this->createAccessToken())
-        {
+        if (!$this->createAccessToken()) {
             return false;
         }
 
@@ -146,8 +137,7 @@ class PaypalSDK
 
     public function showAuthorization($authorization_id)
     {
-        if(!$this->createAccessToken())
-        {
+        if (!$this->createAccessToken()) {
             return false;
         }
 
@@ -159,8 +149,7 @@ class PaypalSDK
 
     public function captureAuthorization($body, $authorization_id)
     {
-        if(!$this->createAccessToken())
-        {
+        if (!$this->createAccessToken()) {
             return false;
         }
 
@@ -172,8 +161,7 @@ class PaypalSDK
 
     public function voidAuthorization($authorization_id)
     {
-        if(!$this->createAccessToken())
-        {
+        if (!$this->createAccessToken()) {
             return false;
         }
 
@@ -185,8 +173,7 @@ class PaypalSDK
 
     public function showCapture($capture_id)
     {
-        if(!$this->createAccessToken())
-        {
+        if (!$this->createAccessToken()) {
             return false;
         }
 
@@ -198,8 +185,7 @@ class PaypalSDK
 
     public function refundCapture($body, $capture_id)
     {
-        if(!$this->createAccessToken())
-        {
+        if (!$this->createAccessToken()) {
             return false;
         }
 
@@ -272,6 +258,5 @@ class PaypalSDK
             die('error occured during curl exec. Additioanl info: ' . curl_errno($curl).':'. curl_error($curl));
         }
         return json_decode($response);
-
     }
 }

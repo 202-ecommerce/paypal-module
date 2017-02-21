@@ -163,15 +163,6 @@
             <hr/>
             <input type="hidden" id="method" name="method"/>
             <input type="hidden" id="with_card" name="with_card"/>
-            <h4>{l s='Live' mod='paypal'}</h4>
-            <p>
-                <label for="live_client_id">{l s='Client ID' mod='paypal'}</label>
-                <input type="text" id="live_client_id" name="live[client_id]" value="{$PAYPAL_LIVE_CLIENTID|escape:'htmlall':'UTF-8'}"/>
-            </p>
-            <p>
-                <label for="live_secret">{l s='Secret' mod='paypal'}</label>
-                <input type="password" id="live_secret" name="live[secret]" value="{$PAYPAL_LIVE_SECRET|escape:'htmlall':'UTF-8'}"/>
-            </p>
             <h4>{l s='Sandbox' mod='paypal'}</h4>
             <p>
                 <label for="sandbox_client_id">{l s='Client ID' mod='paypal'}</label>
@@ -180,6 +171,18 @@
             <p>
                 <label for="sandbox_secret">{l s='Secret' mod='paypal'}</label>
                 <input type="password" id="sandbox_secret" name="sandbox[secret]" value="{$PAYPAL_SANDBOX_SECRET|escape:'htmlall':'UTF-8'}"/>
+            </p>
+            <h4>{l s='Live' mod='paypal'}</h4>
+            <ul>
+                <li>{l s='You can switch top "Live" environment on top right' mod='paypal'}</li>
+            </ul>
+            <p>
+                <label for="live_client_id">{l s='Client ID' mod='paypal'}</label>
+                <input type="text" id="live_client_id" name="live[client_id]" value="{$PAYPAL_LIVE_CLIENTID|escape:'htmlall':'UTF-8'}"/>
+            </p>
+            <p>
+                <label for="live_secret">{l s='Secret' mod='paypal'}</label>
+                <input type="password" id="live_secret" name="live[secret]" value="{$PAYPAL_LIVE_SECRET|escape:'htmlall':'UTF-8'}"/>
             </p>
             <hr/>
             <p>

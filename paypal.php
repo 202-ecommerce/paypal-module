@@ -36,7 +36,6 @@ include_once 'classes/PaypalOrder.php';
 
 class PayPal extends PaymentModule
 {
-
     public static $dev = true;
     public $express_checkout;
     public $message;
@@ -61,7 +60,6 @@ class PayPal extends PaymentModule
         $this->description = $this->l('Accepts payments by credit cards (CB, Visa, MasterCard, Amex, Aurore, Cofinoga, 4 stars) with PayPal.');
         $this->confirmUninstall = $this->l('Are you sure you want to delete your details?');
         $this->express_checkout = $this->l('PayPal Express Checkout ');
-
     }
 
     public function install()
@@ -81,9 +79,9 @@ class PayPal extends PaymentModule
 
         if (!Configuration::updateValue('PAYPAL_SANDBOX', 0)
             || !Configuration::updateValue('PAYPAL_API_INTENT', 'sale')
-            || !Configuration::updateValue('PAYPAL_API_ADVANTAGES', 0)
+            || !Configuration::updateValue('PAYPAL_API_ADVANTAGES', 1)
             || !Configuration::updateValue('PAYPAL_API_CARD', 0)
-            || !Configuration::updateValue('PAYPAL_SANDBOX_CLIENTID','')
+            || !Configuration::updateValue('PAYPAL_SANDBOX_CLIENTID', '')
             || !Configuration::updateValue('PAYPAL_SANDBOX_SECRET', '')
             || !Configuration::updateValue('PAYPAL_LIVE_CLIENTID', '')
             || !Configuration::updateValue('PAYPAL_LIVE_SECRET', '')
@@ -93,7 +91,6 @@ class PayPal extends PaymentModule
         }
 
         return true;
-
     }
     
     /**
@@ -102,7 +99,6 @@ class PayPal extends PaymentModule
      */
     private function installSQL()
     {
-
         $sql = array();
 
         $sql[] = "CREATE TABLE IF NOT EXISTS `"._DB_PREFIX_."paypal_order` (
@@ -145,7 +141,6 @@ class PayPal extends PaymentModule
      */
     private function registrationHook()
     {
-
         if (!$this->registerHook('paymentOptions')
             || !$this->registerHook('paymentReturn')
             || !$this->registerHook('displayOrderConfirmation')
@@ -194,7 +189,6 @@ class PayPal extends PaymentModule
      */
     private function uninstallSQL()
     {
-
         $sql = array();
 
         $sql[] = "DROP TABLE IF EXISTS `"._DB_PREFIX_."paypal_capture`";
@@ -234,28 +228,19 @@ class PayPal extends PaymentModule
         }
         */
 
-        if(Configuration::get('PAYPAL_SANDBOX'))
-        {
-            if(Configuration::get('PAYPAL_SANDBOX_CLIENTID') != '' && Configuration::get('PAYPAL_SANDBOX_SECRET') != '')
-            {
+        if (Configuration::get('PAYPAL_SANDBOX')) {
+            if (Configuration::get('PAYPAL_SANDBOX_CLIENTID') != '' && Configuration::get('PAYPAL_SANDBOX_SECRET') != '') {
                 $ec_card_active = Configuration::get('PAYPAL_API_CARD');
                 $ec_paypal_active = !Configuration::get('PAYPAL_API_CARD');
-            }
-            else
-            {
+            } else {
                 $ec_card_active = false;
                 $ec_paypal_active = false;
             }
-        }
-        else
-        {
-            if(Configuration::get('PAYPAL_LIVE_CLIENTID') != '' && Configuration::get('PAYPAL_LIVE_SECRET') != '')
-            {
+        } else {
+            if (Configuration::get('PAYPAL_LIVE_CLIENTID') != '' && Configuration::get('PAYPAL_LIVE_SECRET') != '') {
                 $ec_card_active = Configuration::get('PAYPAL_API_CARD');
                 $ec_paypal_active = !Configuration::get('PAYPAL_API_CARD');
-            }
-            else
-            {
+            } else {
                 $ec_card_active = false;
                 $ec_paypal_active = false;
             }
@@ -400,7 +385,7 @@ class PayPal extends PaymentModule
                 .'#paypal_params'
         );
         $form = $helper->generateForm($fields_form);
-        if(count($this->_errors)) {
+        if (count($this->_errors)) {
             $this->message .= $this->displayError($this->_errors);
         } elseif (Configuration::get('PAYPAL_SANDBOX') == 1) {
             $this->message .= $this->displayWarning($this->l('Your PayPal account is currently configured to accept payments on the Sandbox (test environment). Any transaction will be fictitious. Disable the option, to accept actual payments (production environment) and log in with your PayPal credentials'));
@@ -408,12 +393,10 @@ class PayPal extends PaymentModule
             $this->message .= $this->displayConfirmation($this->l('Your PayPal account is properly connected, you can now receive payments'));
         }
         return $this->message.$this->display(__FILE__, 'views/templates/admin/configuration.tpl').$form.$this->display(__FILE__, 'views/templates/admin/block_info.tpl');
-
     }
 
     private function _postProcess()
     {
-
         if (Tools::isSubmit('paypal_config')) {
             Configuration::updateValue('PAYPAL_SANDBOX', Tools::getValue('paypal_sandbox'));
             Configuration::updateValue('PAYPAL_API_INTENT', Tools::getValue('paypal_intent'));
@@ -429,8 +412,7 @@ class PayPal extends PaymentModule
             Configuration::updateValue('PAYPAL_LIVE_ACCESS', 1);
         }
 */
-        if(Tools::isSubmit('save_credentials'))
-        {
+        if (Tools::isSubmit('save_credentials')) {
             $sandbox = Tools::getValue('sandbox');
             $live = Tools::getValue('live');
 
@@ -443,10 +425,9 @@ class PayPal extends PaymentModule
             Configuration::updateValue('PAYPAL_API_CARD', Tools::getValue('with_card'));
             Configuration::updateValue('PAYPAL_EXPRESS_CHECKOUT', 1);
             Configuration::updateValue('PAYPAL_METHOD', Tools::getValue('method'));
-
         }
 
-        switch (Configuration::get('PAYPAL_METHOD')){
+        switch (Configuration::get('PAYPAL_METHOD')) {
             case 'EXPRESS_CHECKOUT':
                 $method = AbstractMethodPaypal::load('EC');
                 $id_experience_web = $method->setConfig(array(
@@ -459,7 +440,7 @@ class PayPal extends PaymentModule
 
                 if ($id_experience_web) {
                     Configuration::updateValue('PAYPAL_EXPERIENCE_PROFILE', $id_experience_web);
-                }else{
+                } else {
                     $this->_errors[] = $this->l('An error occurred. Please, check your credentials.');
                 }
 
@@ -474,11 +455,11 @@ class PayPal extends PaymentModule
 
                     if ($id_experience_web) {
                         Configuration::updateValue('PAYPAL_EXPERIENCE_PROFILE_CARD', $id_experience_web);
-                    }else{
+                    } else {
                         $this->_errors[] = $this->l('An error occurred. Please, check your credentials.');
                     }
                 }
-            break;
+                break;
         }
     }
 
@@ -501,8 +482,7 @@ class PayPal extends PaymentModule
             $payment_options,
         ];
 
-        if(Configuration::get('PAYPAL_API_CARD'))
-        {
+        if (Configuration::get('PAYPAL_API_CARD')) {
             $payment_options = new PaymentOption();
             $action_text = $this->l('Pay with debit or credit card');
             $payment_options->setLogo(Media::getMediaPath(_PS_MODULE_DIR_.$this->name.'/views/img/logo_card.png'));
@@ -513,17 +493,14 @@ class PayPal extends PaymentModule
         }
 
         return $payments_options;
-
     }
 
     public function hookPaymentReturn($params)
     {
-
     }
 
     public function hookDisplayOrderConfirmation($params)
     {
-
     }
 
     public function validateOrder($id_cart, $id_order_state, $amount_paid, $payment_method = 'Unknown', $message = null, $transaction = array(), $currency_special = null, $dont_touch_amount = false, $secure_key = false, Shop $shop = null)
@@ -554,7 +531,7 @@ class PayPal extends PaymentModule
         $paypal_order->client_token = "";
         $paypal_order->payment_method = $transaction->payer->payment_method;
         $paypal_order->currency = $transaction->transactions[0]->amount->currency;
-        $paypal_order->total_paid = (float) $transaction->transactions[0]->amount->total;
+        $paypal_order->total_paid = (float) $amount_paid;
         $paypal_order->payment_status = $transaction->state;
         $paypal_order->save();
 
@@ -563,7 +540,6 @@ class PayPal extends PaymentModule
             $paypal_capture->id_paypal_order = $paypal_order->id;
             $paypal_capture->save();
         }
-
     }
 
     public function hookDisplayAdminOrder($params)
@@ -575,30 +551,24 @@ class PayPal extends PaymentModule
             $method_ec = AbstractMethodPaypal::load('EC');
             $capture_response = $method_ec->confirmCapture();
 
-            if (isset($capture_response->state) && $capture_response->state == 'completed' && $order->current_state != Configuration::get('PS_OS_PAYMENT'))            {
+            if (isset($capture_response->state) && $capture_response->state == 'completed' && $order->current_state != Configuration::get('PS_OS_PAYMENT')) {
                 $order->setCurrentState(Configuration::get('PS_OS_PAYMENT'));
                 Tools::redirect($_SERVER['HTTP_REFERER']);
-            }
-            elseif($capture_response->name == 'AUTHORIZATION_ALREADY_COMPLETED' && $order->current_state != Configuration::get('PS_OS_PAYMENT'))
-            {
+            } elseif ($capture_response->name == 'AUTHORIZATION_ALREADY_COMPLETED' && $order->current_state != Configuration::get('PS_OS_PAYMENT')) {
                 $order->setCurrentState(Configuration::get('PS_OS_PAYMENT'));
                 Tools::redirect($_SERVER['HTTP_REFERER']);
-            }
-            else
-            {
+            } else {
                 $paypal_msg .= $this->displayWarning($this->l("We have problem during capture operation : ").$capture_response->message);
             }
         }
-        if (Tools::getValue('refundPaypal')){
+        if (Tools::getValue('refundPaypal')) {
             $method_ec = AbstractMethodPaypal::load('EC');
             $refund_response = $method_ec->refund();
 
             if (isset($refund_response->state) && $refund_response->state == 'completed') {
                 $order->setCurrentState(Configuration::get('PS_OS_REFUND'));
                 Tools::redirect($_SERVER['HTTP_REFERER']);
-            }
-            else
-            {
+            } else {
                 $paypal_msg .= $this->displayWarning($this->l("We have problem during refund operation : ").$refund_response->message);
             }
         }
@@ -619,21 +589,32 @@ class PayPal extends PaymentModule
         $refund = array('refundPaypal' => $paypal_order['id_paypal_order']);
         
         $paypal_capture = PaypalCapture::getByOrderId($id_order);
+
+        $refund_or_canceled = false;
+        if ($order->current_state == Configuration::get('PS_OS_CANCELED') || $order->current_state == Configuration::get('PS_OS_REFUND')) {
+            $refund_or_canceled = true;
+        }
         
         if ($paypal_capture) {
             $refund['capture_id'] = $paypal_capture['id_capture'];
             if ($paypal_capture['result'] == "completed") {
                 $this->context->smarty->assign(array(
                     'refund_link' => '&'.http_build_query($refund),
+                    'refund_or_canceled' => $refund_or_canceled,
                 ));
-            } else if($paypal_capture['result'] != 'voided') {
+            } elseif ($paypal_capture['result'] != 'voided') {
                 $this->context->smarty->assign(array(
                     'capture_link' => "&capturePaypal=".$paypal_capture['id_paypal_order'],
+                    'refund_or_canceled' => $refund_or_canceled,
                 ));
             }
+            $this->context->smarty->assign(array(
+                'refund_or_canceled' => $refund_or_canceled,
+            ));
         } else {
             $this->context->smarty->assign(array(
                 'refund_link' => '&'.http_build_query($refund),
+                'refund_or_canceled' => $refund_or_canceled,
             ));
         }
         return $paypal_msg.$this->display(__FILE__, 'views/templates/hook/paypal_order.tpl');
@@ -641,14 +622,11 @@ class PayPal extends PaymentModule
 
     public function hookActionOrderStatusPostUpdate($params)
     {
-
-        if($params['newOrderStatus']->id == Configuration::get('PS_OS_CANCELED'))
-        {
+        if ($params['newOrderStatus']->id == Configuration::get('PS_OS_CANCELED')) {
             $orderPayPal = PaypalOrder::loadByOrderId($params['id_order']);
             $method = AbstractMethodPaypal::load('EC');
             $response = $method->void(array('authorization_id'=>$orderPayPal->id_transaction));
-            if(isset($response->state) && $response->state == 'voided')
-            {
+            if (isset($response->state) && $response->state == 'voided') {
                 $paypalCapture = PaypalCapture::loadByOrderPayPalId($orderPayPal->id);
                 $paypalCapture->result = $response->state;
                 $paypalCapture->save();
@@ -657,5 +635,4 @@ class PayPal extends PaymentModule
             }
         }
     }
-
 }

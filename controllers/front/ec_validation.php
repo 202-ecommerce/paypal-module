@@ -32,7 +32,6 @@ class PaypalEc_validationModuleFrontController extends ModuleFrontController
 
     public function postProcess()
     {
-
         $method_ec = AbstractMethodPaypal::load('EC');
 
         $method_ec->validation();
@@ -41,6 +40,5 @@ class PaypalEc_validationModuleFrontController extends ModuleFrontController
         $customer = new Customer($cart->id_customer);
         $paypal = Module::getInstanceByName('paypal');
         Tools::redirect('index.php?controller=order-confirmation&id_cart='.$cart->id.'&id_module='.$paypal->id.'&id_order='.$paypal->currentOrder.'&key='.$customer->secure_key);
-
     }
 }

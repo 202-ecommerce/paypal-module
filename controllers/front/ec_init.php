@@ -28,11 +28,8 @@ include_once _PS_MODULE_DIR_.'paypal/classes/AbstractMethodPaypal.php';
 
 class PaypalEc_initModuleFrontController extends ModuleFrontController
 {
-
-
     public function postProcess()
     {
-
         $method_ec = AbstractMethodPaypal::load('EC');
 
         $response = $method_ec->init(array('use_card'=>Tools::getValue('credit_card')));
@@ -41,9 +38,5 @@ class PaypalEc_initModuleFrontController extends ModuleFrontController
         } else {
             Tools::redirect('index.php?controller=order&step=1');
         }
-
-
-
     }
-
 }

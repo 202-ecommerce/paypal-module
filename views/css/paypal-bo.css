@@ -118,3 +118,7 @@
 #paypal_conf .active-products .col-sm-6 .panel{
     min-height: 240px;
 }
+
+#credential-configuration ul li {
+    list-style-type: decimal;
+}

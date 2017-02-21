@@ -36,7 +36,6 @@ abstract class AbstractMethodPaypal
 
     public static function load($method)
     {
-
         if (file_exists(_PS_MODULE_DIR_.'paypal/classes/Method'.$method.'.php')) {
             include_once _PS_MODULE_DIR_.'paypal/classes/Method'.$method.'.php';
             return new MethodEC();

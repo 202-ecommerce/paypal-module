@@ -26,7 +26,6 @@
 
 class PaypalOrder extends ObjectModel
 {
-    
     public $id_order;
 
     public $id_cart;
@@ -101,5 +100,4 @@ class PaypalOrder extends ObjectModel
         $id_paypal_order = Db::getInstance()->getValue($sql);
         return new self($id_paypal_order);
     }
-
 }

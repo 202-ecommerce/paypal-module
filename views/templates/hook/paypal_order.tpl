@@ -22,7 +22,8 @@
 *  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
 *}
-{if isset($capture_link) || isset($refund_link)}
+
+{if (isset($capture_link) || isset($refund_link)) && $refund_or_canceled == false}
     <div class="col-lg-7">
         <div class="tab-content panel" id="paymentPaypal">
             <div class="panel-heading">
