@@ -1727,7 +1727,7 @@ class PayPal extends PaymentModule
             WHERE `id_order` = '.(int) $id_order);
 
 
-        return ($paypal_order && in_array($paypal_order['payment_status'],array('completed','approved','settled','submitted_for_settlement')) && $paypal_order['capture'] == 0);
+        return ($paypal_order && in_array($paypal_order['payment_status'],array('Completed','approved','settled','submitted_for_settlement')) && $paypal_order['capture'] == 0);
     }
 
     private function _needValidation($id_order)
@@ -1932,11 +1932,14 @@ class PayPal extends PaymentModule
 
         $payment_method = Configuration::get('PAYPAL_PAYMENT_METHOD');
 
+        $braintree_enabled = Configuration::get('PAYPAL_BRAINTREE_ENABLED');
+
         $id_paypal_braintree = Db::getInstance()->getValue('
                     SELECT `id_paypal_braintree`
                     FROM `'._DB_PREFIX_.'paypal_braintree` 
                     WHERE `id_order` = '.(int) $id_order);
-        if($payment_method == PVZ || $id_paypal_braintree) {
+        
+        if($braintree_enabled == PVZ && $id_paypal_braintree) {
             if(!$amt)
             {
                 $amt = Db::getInstance()->getValue('
@@ -1946,7 +1949,14 @@ class PayPal extends PaymentModule
             }
             include_once(_PS_MODULE_DIR_.'paypal/classes/Braintree.php');
             $braintree = new PrestaBraintree();
-            $result = $braintree->refund($id_transaction,$amt);
+            
+            $transaction_status = $braintree->getTransactionStatus($id_transaction);
+
+            if($transaction_status == 'submitted_for_settlement') {
+                $result = $braintree->void($id_transaction);
+            } else {
+                $result = $braintree->refund($id_transaction,$amt);
+            }
 
             return $result;
         } elseif ($payment_method != PPP) {

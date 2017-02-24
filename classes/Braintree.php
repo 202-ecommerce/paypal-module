@@ -190,11 +190,26 @@ class PrestaBraintree{
         return $result;
     }
 
+    public function getTransactionStatus($transactionId)
+    {
+        $this->initConfig();
+
+        try {
+            $result = $this->gateway->transaction()->find($transactionId);
+
+            return $result->status;
+        } catch(Exception $e) {
+            PrestaShopLogger::addLog($e->getCode().'=>'.$e->getMessage());
+            return false;
+        }
+    }
+
     public function refund($transactionId,$amount)
     {
         $this->initConfig();
         try{
             $result = $this->gateway->transaction()->refund($transactionId,$amount);
+
             if($result->success)
             {
                 return true;
