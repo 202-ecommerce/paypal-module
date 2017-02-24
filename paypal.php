@@ -1932,14 +1932,12 @@ class PayPal extends PaymentModule
 
         $payment_method = Configuration::get('PAYPAL_PAYMENT_METHOD');
 
-        $braintree_enabled = Configuration::get('PAYPAL_BRAINTREE_ENABLED');
-
         $id_paypal_braintree = Db::getInstance()->getValue('
                     SELECT `id_paypal_braintree`
                     FROM `'._DB_PREFIX_.'paypal_braintree` 
                     WHERE `id_order` = '.(int) $id_order);
         
-        if($braintree_enabled == PVZ && $id_paypal_braintree) {
+        if(Configuration::get('PAYPAL_BRAINTREE_ENABLED') && $id_paypal_braintree) {
             if(!$amt)
             {
                 $amt = Db::getInstance()->getValue('
