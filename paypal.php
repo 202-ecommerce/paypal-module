@@ -2608,12 +2608,7 @@ class PayPal extends PaymentModule
         $this->context_modified = false;
         $this->id_currency_origin_cart = $this->context->cart->id_currency;
         $this->id_currency_origin_cookie = $this->context->cookie->id_currency;
-        if(empty($account_braintree[$currency->iso_code]))
-        {
-            $this->context->cart->id_currency = Configuration::get('PS_CURRENCY_DEFAULT');
-            $this->context->cookie->id_currency = Configuration::get('PS_CURRENCY_DEFAULT');
-            $this->context_modified = true;
-        }
+        
         return $account_braintree[$currency->iso_code];
     }
 
