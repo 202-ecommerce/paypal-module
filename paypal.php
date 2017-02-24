@@ -2073,7 +2073,14 @@ class PayPal extends PaymentModule
             }
         }
         if ((array_key_exists('ACK', $response) && $response['ACK'] == 'Success' && $response['REFUNDTRANSACTIONID'] != '') || (isset($response->state) && $response->state == 'completed') || ((Configuration::get('PAYPAL_PAYMENT_METHOD') || Configuration::get('PAYPAL_BRAINTREE_ENABLED')) && $response)) {
-            $message .= $this->l('PayPal refund successful!');
+
+            if( Configuration::get('PAYPAL_BRAINTREE_ENABLED') )
+            {
+                $message .= $this->l('Braintree refund successful!');
+            } else {
+                $message .= $this->l('PayPal refund successful!');
+            }
+
             if (!Db::getInstance()->Execute('UPDATE `'._DB_PREFIX_.'paypal_order` SET `payment_status` = \'Refunded\' WHERE `id_order` = '.(int) $id_order)) {
                 die(Tools::displayError('Error when updating PayPal database'));
             }
