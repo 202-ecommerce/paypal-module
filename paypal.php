@@ -101,7 +101,7 @@ class PayPal extends PaymentModule
     {
         $this->name = 'paypal';
         $this->tab = 'payments_gateways';
-        $this->version = '3.11.3';
+        $this->version = '3.11.4';
         $this->author = 'PrestaShop';
         $this->is_eu_compatible = 1;
 
@@ -2608,7 +2608,7 @@ class PayPal extends PaymentModule
         $this->context_modified = false;
         $this->id_currency_origin_cart = $this->context->cart->id_currency;
         $this->id_currency_origin_cookie = $this->context->cookie->id_currency;
-        
+
         return $account_braintree[$currency->iso_code];
     }
 
