@@ -44,6 +44,8 @@ class PaypalOrder extends ObjectModel
 
     public $payment_status;
 
+    public $total_prestashop;
+
     public $date_add;
 
     public $date_upd;
@@ -65,6 +67,7 @@ class PaypalOrder extends ObjectModel
             'currency' => array('type' => self::TYPE_STRING, 'validate' => 'isString'),
             'total_paid' => array('type' => self::TYPE_FLOAT),
             'payment_status' => array('type' => self::TYPE_STRING, 'validate' => 'isString'),
+            'total_prestashop' => array('type' => self::TYPE_FLOAT),
             'date_add' => array('type' => self::TYPE_DATE, 'validate' => 'isDateFormat'),
             'date_upd' => array('type' => self::TYPE_DATE, 'validate' => 'isDateFormat'),
         )
