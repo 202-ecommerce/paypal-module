@@ -45,7 +45,7 @@ class PayPal extends PaymentModule
     {
         $this->name = 'paypal';
         $this->tab = 'payments_gateways';
-        $this->version = '4.0.1';
+        $this->version = '4.0.0';
         $this->author = 'PrestaShop';
         $this->is_eu_compatible = 1;
         $this->ps_versions_compliancy = array('min' => '1.7', 'max' => _PS_VERSION_);
@@ -149,7 +149,6 @@ class PayPal extends PaymentModule
             || !$this->registerHook('displayAdminOrder')
             || !$this->registerHook('ActionOrderStatusPostUpdate')
             || !$this->registerHook('actionValidateOrder')
-            || !$this->registerHook('DisplayAdminOrderTabOrder')
         ) {
             return false;
         }
@@ -392,12 +391,17 @@ class PayPal extends PaymentModule
         $form = $helper->generateForm($fields_form);
         if (count($this->_errors)) {
             $this->message .= $this->displayError($this->_errors);
-        } elseif (Configuration::get('PAYPAL_SANDBOX') == 1) {
+        } elseif (Configuration::get('PAYPAL_SANDBOX') == 1 && Configuration::get('PAYPAL_SANDBOX_CLIENTID')) {
             $this->message .= $this->displayWarning($this->l('Your PayPal account is currently configured to accept payments on the Sandbox (test environment). Any transaction will be fictitious. Disable the option, to accept actual payments (production environment) and log in with your PayPal credentials'));
-        } elseif (Configuration::get('PAYPAL_SANDBOX') == 0) {
+        } elseif (Configuration::get('PAYPAL_SANDBOX') == 0 && Configuration::get('PAYPAL_LIVE_CLIENTID')) {
             $this->message .= $this->displayConfirmation($this->l('Your PayPal account is properly connected, you can now receive payments'));
         }
-        return $this->message.$this->display(__FILE__, 'views/templates/admin/block_info.tpl').$this->display(__FILE__, 'views/templates/admin/configuration.tpl').$form;
+        $block_info = '';
+        if (Configuration::get('PS_ROUND_TYPE') != Order::ROUND_ITEM) {
+            $block_info = $this->display(__FILE__, 'views/templates/admin/block_info.tpl');
+        }
+
+        return $this->message.$block_info.$this->display(__FILE__, 'views/templates/admin/configuration.tpl').$form;
     }
 
     private function _postProcess()
@@ -420,6 +424,10 @@ class PayPal extends PaymentModule
         if (Tools::isSubmit('save_credentials')) {
             $sandbox = Tools::getValue('sandbox');
             $live = Tools::getValue('live');
+
+            if ($sandbox['client_id'] && $sandbox['secret'] && (!$live['client_id'] || !$live['secret'])) {
+                Configuration::updateValue('PAYPAL_SANDBOX', 1);
+            }
 
             Configuration::updateValue('PAYPAL_SANDBOX_CLIENTID', $sandbox['client_id']);
             Configuration::updateValue('PAYPAL_SANDBOX_SECRET', $sandbox['secret']);
@@ -577,29 +585,23 @@ class PayPal extends PaymentModule
         }
     }
 
-    public function hookdisplayAdminOrderTabOrder($params)
-    {
-        if (Tools::strtolower(Tools::getValue('controller')) == "adminorders" && Tools::getValue('id_order')) {
-            $paypal_order = PaypalOrder::getOrderById(Tools::getValue('id_order'));
-            $preferences = $this->context->link->getAdminLink('AdminPreferences', true);
-            if ($paypal_order['total_paid'] != $paypal_order['total_prestashop']) {
-                $paypal_msg = $this->displayWarning('<p>'.$this->l('Product pricing has been modified as your rounding settings aren\'t compliant with PayPal.').' '.
-                    $this->l('To avoid automatic rounding to customer for PayPal payments, please update your rounding settings.').' '.
-                    '<a target="_blank" href="'.$preferences.'">'.$this->l('Reed more.').'</a></p>'
-                );
-                return $paypal_msg;
-            }
-        }
-    }
-
-
-
 
     public function hookDisplayAdminOrder($params)
     {
+
         $id_order = $params['id_order'];
         $order = new Order((int)$id_order);
         $paypal_msg = '';
+        $paypal_order = PaypalOrder::getOrderById($id_order);
+
+        if ($paypal_order['total_paid'] != $paypal_order['total_prestashop']) {
+            $preferences = $this->context->link->getAdminLink('AdminPreferences', true);
+            $paypal_msg .= $this->displayWarning('<p class="paypal-warning">'.$this->l('Product pricing has been modified as your rounding settings aren\'t compliant with PayPal.').' '.
+                $this->l('To avoid automatic rounding to customer for PayPal payments, please update your rounding settings.').' '.
+                '<a target="_blank" href="'.$preferences.'">'.$this->l('Reed more.').'</a></p>'
+            );
+        }
+
         if (Tools::getValue('capturePaypal')) {
             $method_ec = AbstractMethodPaypal::load('EC');
             $capture_response = $method_ec->confirmCapture();
@@ -611,7 +613,7 @@ class PayPal extends PaymentModule
                 $order->setCurrentState(Configuration::get('PS_OS_PAYMENT'));
                 Tools::redirect($_SERVER['HTTP_REFERER']);
             } else {
-                $paypal_msg .= $this->displayWarning($this->l("We have problem during capture operation : ").$capture_response->message);
+                $paypal_msg .= $this->displayWarning($this->l('We have problem during capture operation : ').$capture_response->message);
             }
         }
         if (Tools::getValue('refundPaypal')) {
@@ -622,7 +624,7 @@ class PayPal extends PaymentModule
                 $order->setCurrentState(Configuration::get('PS_OS_REFUND'));
                 Tools::redirect($_SERVER['HTTP_REFERER']);
             } else {
-                $paypal_msg .= $this->displayWarning($this->l("We have problem during refund operation : ").$refund_response->message);
+                $paypal_msg .= $this->displayWarning($this->l('We have problem during refund operation : ').$refund_response->message);
             }
         }
 
@@ -638,7 +640,7 @@ class PayPal extends PaymentModule
             ));
         }
 
-        $paypal_order = PaypalOrder::getOrderById($id_order);
+
         $refund = array('refundPaypal' => $paypal_order['id_paypal_order']);
         
         $paypal_capture = PaypalCapture::getByOrderId($id_order);

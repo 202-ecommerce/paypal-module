@@ -45,3 +45,6 @@
         </div>
     </div>
 {/if}
+<script>
+    $('.kpi-container').after($('.paypal-warning').parents('.module_warning'));
+</script>
