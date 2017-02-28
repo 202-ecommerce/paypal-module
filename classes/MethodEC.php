@@ -56,10 +56,8 @@ class MethodEC extends AbstractMethodPaypal
         $cart = $context->cart;
         $currency = $context->currency;
         $customer = $context->customer;
+        $paypal = Module::getInstanceByName('paypal');
 
-
-        $total = (float)$cart->getOrderTotal(true, Cart::BOTH);
-        $shipping_cost = $cart->getTotalShippingCost();
         $summary = $cart->getSummaryDetails();
 
         $products = $cart->getProducts();
@@ -87,7 +85,9 @@ class MethodEC extends AbstractMethodPaypal
             $params['experience_profile_id'] = Configuration::get('PAYPAL_EXPERIENCE_PROFILE');
         }
         $items = array();
+        $total_products = $total_tax = $total_cart = $shipping_cost = $total = 0;
         foreach ($products as $product) {
+            $tax_product = str_replace(',', '.', round($product['total_wt'] - $product['total'], 2));
             $items[] = array(
                 'quantity' => $product['cart_quantity'],
                 'name' => $product['name'],
@@ -96,18 +96,69 @@ class MethodEC extends AbstractMethodPaypal
                 'description' => strip_tags($product['description_short']),
                 'tax' => str_replace(',', '.', round($product['total_wt'] - $product['total'], 2)),
             );
+            $total_products = $total_products + str_replace(',', '.', (round($product['price'], 2) * $product['cart_quantity']));
+            $total_tax = $total_tax + $tax_product;
         }
 
+        $discounts = $cart->getCartRules();
+        foreach ($discounts as $discount) {
+            $price_discount = -1 * str_replace(',', '.', round($discount['value_tax_exc'], 2));
+            $tax_discount = -1 * str_replace(',', '.', round($discount['value_real'] - $discount['value_tax_exc'], 2));
+            $items[] = array(
+                'quantity' => 1,
+                'name' => $paypal->l('Discount : ').$discount['name'],
+                'price' =>  $price_discount,
+                'currency' => $currency->iso_code,
+                'description' => strip_tags($discount['description']),
+                'tax' => $tax_discount,
+            );
+            $total_products = $total_products + $price_discount;
+            $total_tax = $total_tax + $tax_discount;
+        }
 
+        if ($cart->gift == 1) {
+            $gift_wrapping_price = str_replace(',', '.', round($this->getGiftWrappingPrice(), 2));
+            $items[] = array(
+                'quantity' => 1,
+                'name' => $paypal->l('Gift wrapping'),
+                'price' =>  $gift_wrapping_price,
+                'currency' => $currency->iso_code,
+                'description' => '',
+                'tax' => 0,
+            );
+            $total_products = $total_products + $gift_wrapping_price;
+        }
+
+        $total = (float)$cart->getOrderTotal(true, Cart::BOTH);
+
+        $subtotal = str_replace(',', '.', round($summary['total_products'], 2));
+
+        if ($subtotal != $total_products) {
+            $subtotal = $total_products;
+        }
+        $tax = str_replace(',', '.', round($summary['total_tax'], 2));
+        if ($tax != $total_products) {
+            $tax = $total_tax;
+        }
+
+        $shipping_cost = $cart->getTotalShippingCost();
+        $shipping = str_replace(',', '.', round($shipping_cost, 2));
+
+        $total_cart = $total_products + $total_tax + $shipping;
+
+        if (($total_cart) != $total) {
+            $total = $total_cart;
+            $params['note_to_payer'] = $paypal->l('Price of your cart was rounded with few centimes');
+        }
 
         $params['transactions'][] = array(
             'amount' => array(
                 'total' => $total,
                 'currency' => $currency->iso_code,
                 'details' => array(
-                    'subtotal' => str_replace(',', '.', round($summary['total_products'], 2)),
-                    'tax' => str_replace(',', '.', round($summary['total_tax'], 2)),
-                    'shipping' => str_replace(',', '.', round($shipping_cost, 2)),
+                    'subtotal' => $subtotal,
+                    'tax' => $tax,
+                    'shipping' => $shipping,
                 ),
             ),
             'item_list' => array(

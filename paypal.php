@@ -39,12 +39,13 @@ class PayPal extends PaymentModule
     public static $dev = true;
     public $express_checkout;
     public $message;
+    public $amount_paid_paypal;
 
     public function __construct()
     {
         $this->name = 'paypal';
         $this->tab = 'payments_gateways';
-        $this->version = '4.0.0';
+        $this->version = '4.0.1';
         $this->author = 'PrestaShop';
         $this->is_eu_compatible = 1;
         $this->ps_versions_compliancy = array('min' => '1.7', 'max' => _PS_VERSION_);
@@ -112,6 +113,7 @@ class PayPal extends PaymentModule
               `currency` VARCHAR(21),
               `total_paid` FLOAT(11),
               `payment_status` VARCHAR(255),
+              `total_prestashop` FLOAT(11),
               `date_add` DATETIME,
               `date_upd` DATETIME
         ) ENGINE = "._MYSQL_ENGINE_;
@@ -146,6 +148,8 @@ class PayPal extends PaymentModule
             || !$this->registerHook('displayOrderConfirmation')
             || !$this->registerHook('displayAdminOrder')
             || !$this->registerHook('ActionOrderStatusPostUpdate')
+            || !$this->registerHook('actionValidateOrder')
+            || !$this->registerHook('DisplayAdminOrderTabOrder')
         ) {
             return false;
         }
@@ -261,6 +265,7 @@ class PayPal extends PaymentModule
             'paypal_card' => Configuration::get('PAYPAL_API_CARD'),
             'ec_card_active' => $ec_card_active,
             'ec_paypal_active' => $ec_paypal_active,
+            'need_rounding' => Configuration::get('PS_ROUND_TYPE') == Order::ROUND_ITEM ? 0 : 1,
         ));
         $this->context->controller->addCSS($this->_path.'views/css/paypal-bo.css', 'all');
 
@@ -392,7 +397,7 @@ class PayPal extends PaymentModule
         } elseif (Configuration::get('PAYPAL_SANDBOX') == 0) {
             $this->message .= $this->displayConfirmation($this->l('Your PayPal account is properly connected, you can now receive payments'));
         }
-        return $this->message.$this->display(__FILE__, 'views/templates/admin/configuration.tpl').$form.$this->display(__FILE__, 'views/templates/admin/block_info.tpl');
+        return $this->message.$this->display(__FILE__, 'views/templates/admin/block_info.tpl').$this->display(__FILE__, 'views/templates/admin/configuration.tpl').$form;
     }
 
     private function _postProcess()
@@ -425,6 +430,12 @@ class PayPal extends PaymentModule
             Configuration::updateValue('PAYPAL_API_CARD', Tools::getValue('with_card'));
             Configuration::updateValue('PAYPAL_EXPRESS_CHECKOUT', 1);
             Configuration::updateValue('PAYPAL_METHOD', Tools::getValue('method'));
+        }
+
+        if (Tools::isSubmit('save_rounding_settings')) {
+            Configuration::updateValue('PAYPAL_SANDBOX', 0);
+            Configuration::updateValue('PS_ROUND_TYPE', Order::ROUND_ITEM);
+            Tools::redirect($this->context->link->getAdminLink('AdminModules', true).'&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name);
         }
 
         switch (Configuration::get('PAYPAL_METHOD')) {
@@ -509,10 +520,16 @@ class PayPal extends PaymentModule
         if ($intent == "authorize") {
             $intent = "authorization";
         }
+
+        $this->amount_paid_paypal = (float)$amount_paid;
+
+        $cart = new Cart((int) $id_cart);
+        $total_ps = (float)$cart->getOrderTotal(true, Cart::BOTH);
+
         parent::validateOrder(
             (int) $id_cart,
             (int) $id_order_state,
-            (float) $amount_paid,
+            (float) $total_ps,
             $payment_method,
             $message,
             array('transaction_id' => $transaction->transactions[0]->related_resources[0]->$intent->id),
@@ -533,6 +550,7 @@ class PayPal extends PaymentModule
         $paypal_order->currency = $transaction->transactions[0]->amount->currency;
         $paypal_order->total_paid = (float) $amount_paid;
         $paypal_order->payment_status = $transaction->state;
+        $paypal_order->total_prestashop = (float) $total_ps;
         $paypal_order->save();
 
         if ($intent == "authorization") {
@@ -541,6 +559,41 @@ class PayPal extends PaymentModule
             $paypal_capture->save();
         }
     }
+
+    public function hookActionValidateOrder($params)
+    {
+        $order = $params['order'];
+        $amount_paid = (float) $this->amount_paid_paypal;
+        if (isset($amount_paid) && $amount_paid != 0 && $order->total_paid != $amount_paid) {
+            $order->total_paid = $amount_paid;
+            $order->total_paid_real = $amount_paid;
+            $order->total_paid_tax_incl = $amount_paid;
+            $order->update();
+
+            $sql = 'UPDATE `'._DB_PREFIX_.'order_payment`
+		    SET `amount` = '.(float)$amount_paid.'
+		    WHERE  `order_reference` = "'.pSQL($order->reference).'"';
+            Db::getInstance()->execute($sql);
+        }
+    }
+
+    public function hookdisplayAdminOrderTabOrder($params)
+    {
+        if (Tools::strtolower(Tools::getValue('controller')) == "adminorders" && Tools::getValue('id_order')) {
+            $paypal_order = PaypalOrder::getOrderById(Tools::getValue('id_order'));
+            $preferences = $this->context->link->getAdminLink('AdminPreferences', true);
+            if ($paypal_order['total_paid'] != $paypal_order['total_prestashop']) {
+                $paypal_msg = $this->displayWarning('<p>'.$this->l('Product pricing has been modified as your rounding settings aren\'t compliant with PayPal.').' '.
+                    $this->l('To avoid automatic rounding to customer for PayPal payments, please update your rounding settings.').' '.
+                    '<a target="_blank" href="'.$preferences.'">'.$this->l('Reed more.').'</a></p>'
+                );
+                return $paypal_msg;
+            }
+        }
+    }
+
+
+
 
     public function hookDisplayAdminOrder($params)
     {
