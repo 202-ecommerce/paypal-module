@@ -120,6 +120,19 @@ class PrestaBraintree{
             }
             else
             {
+                $log = '### Braintree transaction error # '.date('Y-m-d H:i:s').' ###'."\n";
+                $log .= '## cart id # '.$cart->id.' ##'."\n";
+                $log .= '## amount # '.$cart->getOrderTotal().' ##'."\n";
+                $log .= '## Braintree error message ##'."\n";
+
+                $log .= '# '.$result->message.' #'."\n";
+
+                foreach($result->errors->deepAll() AS $error){
+                    $log .= '# error code: '.$error->code.' # message: '.$error->message.' #';
+                }
+
+                file_put_contents(_PS_MODULE_DIR_.'paypal/log/braintree_log.txt', $log, FILE_APPEND);
+
                 $this->error = $result->transaction->status;
             }
 
