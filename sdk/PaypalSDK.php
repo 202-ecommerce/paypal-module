@@ -249,6 +249,7 @@ class PaypalSDK
                 "Content-type: ".$cnt_type,
                 'Content-Length: ' . strlen($body),
                 "Authorization: Bearer ".$this->token,
+                "PayPal-Partner-Attribution-Id: PrestaShop_Cart_EC",
             ));
         }
 

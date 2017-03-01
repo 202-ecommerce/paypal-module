@@ -58,7 +58,7 @@ class PayPal extends PaymentModule
         parent::__construct();
 
         $this->displayName = $this->l('PayPal');
-        $this->description = $this->l('Accepts payments by credit cards (CB, Visa, MasterCard, Amex, Aurore, Cofinoga, 4 stars) with PayPal.');
+        $this->description = $this->l('Benefit from PayPal’s complete payments platform and grow your business online, on mobile and internationally. Accept credit cards, debit cards and PayPal payments.');
         $this->confirmUninstall = $this->l('Are you sure you want to delete your details?');
         $this->express_checkout = $this->l('PayPal Express Checkout ');
     }
@@ -620,7 +620,11 @@ class PayPal extends PaymentModule
             $method_ec = AbstractMethodPaypal::load('EC');
             $refund_response = $method_ec->refund();
 
-            if (isset($refund_response->state) && $refund_response->state == 'completed') {
+            if ((isset($refund_response->state) && $refund_response->state == 'completed')
+                 || (isset($refund_response->message)
+                    && $refund_response->message == "Request was refused.This transaction has already been fully refunded"
+                    && $order->current_state != Configuration::get('PS_OS_REFUND')
+            )) {
                 $order->setCurrentState(Configuration::get('PS_OS_REFUND'));
                 Tools::redirect($_SERVER['HTTP_REFERER']);
             } else {

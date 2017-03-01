@@ -137,7 +137,7 @@ class MethodEC extends AbstractMethodPaypal
             $subtotal = $total_products;
         }
         $tax = str_replace(',', '.', round($summary['total_tax'], 2));
-        if ($tax != $total_products) {
+        if ($tax != $total_tax) {
             $tax = $total_tax;
         }
 
