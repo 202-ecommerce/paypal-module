@@ -1,6 +1,6 @@
 <?php
 /**
- * 2007-2016 PrestaShop
+ * 2007-2017 PrestaShop
  *
  * NOTICE OF LICENSE
  *
@@ -19,13 +19,13 @@
  * needs please refer to http://www.prestashop.com for more information.
  *
  *  @author    PrestaShop SA <contact@prestashop.com>
- *  @copyright 2007-2016 PrestaShop SA
+ *  @copyright 2007-2017 PrestaShop SA
  *  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  *  International Registered Trademark & Property of PrestaShop SA
  */
+
 class PaypalOrder extends ObjectModel
 {
-    
     public $id_order;
 
     public $id_cart;
@@ -43,6 +43,8 @@ class PaypalOrder extends ObjectModel
     public $total_paid;
 
     public $payment_status;
+
+    public $total_prestashop;
 
     public $date_add;
 
@@ -65,6 +67,7 @@ class PaypalOrder extends ObjectModel
             'currency' => array('type' => self::TYPE_STRING, 'validate' => 'isString'),
             'total_paid' => array('type' => self::TYPE_FLOAT),
             'payment_status' => array('type' => self::TYPE_STRING, 'validate' => 'isString'),
+            'total_prestashop' => array('type' => self::TYPE_FLOAT),
             'date_add' => array('type' => self::TYPE_DATE, 'validate' => 'isDateFormat'),
             'date_upd' => array('type' => self::TYPE_DATE, 'validate' => 'isDateFormat'),
         )
@@ -91,4 +94,13 @@ class PaypalOrder extends ObjectModel
         );
     }
 
+    public static function loadByOrderId($id_order)
+    {
+        $sql = new DbQuery();
+        $sql->select('id_paypal_order');
+        $sql->from('paypal_order');
+        $sql->where('id_order = '.(int)$id_order);
+        $id_paypal_order = Db::getInstance()->getValue($sql);
+        return new self($id_paypal_order);
+    }
 }

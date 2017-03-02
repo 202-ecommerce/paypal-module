@@ -1,5 +1,5 @@
 {*
-* 2007-2016 PrestaShop
+* 2007-2017 PrestaShop
 *
 * NOTICE OF LICENSE
 *
@@ -18,12 +18,12 @@
 * needs please refer to http://www.prestashop.com for more information.
 *
 *  @author    PrestaShop SA <contact@prestashop.com>
-*  @copyright 2007-2016 PrestaShop SA
+*  @copyright 2007-2017 PrestaShop SA
 *  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
 *}
 
-<p>{l s='Benefit from many PayPal advantages like :' mod='paypal'}</p>
-<p><img src="{$path|escape:'html':'UTF-8'}views/img/protected.png" style="height: 43px; padding-right: 10px;">{l s='Your purchases are protected' mod='paypal'}*</p>
-<p><img src="{$path|escape:'html':'UTF-8'}views/img/rembourse.png" style=" height: 43px; padding-right: 10px;">{l s='Your return costs refunded' mod='paypal'}*</p>
-<p><i>{l s='* See conditions on the PayPal website' mod='paypal'}</i></p>
+<p>{l s='Benefit from many PayPal advantages such as :' mod='paypal'}</p>
+<p><img src="{$path|escape:'html':'UTF-8'}views/img/protected.png" style="height: 43px; padding-right: 10px;">{l s='Your orders are protected' mod='paypal'}*</p>
+<p><img src="{$path|escape:'html':'UTF-8'}views/img/refund.png" style=" height: 43px; padding-right: 10px;">{l s='Return shipping refunded' mod='paypal'}*</p>
+<p><i>{l s='* See conditions on PayPal website' mod='paypal'}</i></p>

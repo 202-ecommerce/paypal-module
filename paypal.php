@@ -19,7 +19,7 @@
  * needs please refer to http://www.prestashop.com for more information.
  *
  *  @author    PrestaShop SA <contact@prestashop.com>
- *  @copyright 2007-2016 PrestaShop SA
+ *  @copyright 2007-2017 PrestaShop SA
  *  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  *  International Registered Trademark & Property of PrestaShop SA
  */
@@ -29,6 +29,7 @@ use PrestaShop\PrestaShop\Core\Payment\PaymentOption;
 if (!defined('_PS_VERSION_')) {
     exit;
 }
+include_once(_PS_MODULE_DIR_.'paypal/sdk/PaypalSDK.php');
 include_once 'classes/AbstractMethodPaypal.php';
 include_once 'classes/PaypalCapture.php';
 include_once 'classes/PaypalOrder.php';
@@ -36,16 +37,16 @@ include_once 'classes/PaypalOrder.php';
 
 class PayPal extends PaymentModule
 {
-
     public static $dev = true;
     public $express_checkout;
     public $message;
+    public $amount_paid_paypal;
 
     public function __construct()
     {
         $this->name = 'paypal';
         $this->tab = 'payments_gateways';
-        $this->version = '4.0.0';
+        $this->version = '4.1.0';
         $this->author = 'PrestaShop';
         $this->is_eu_compatible = 1;
         $this->ps_versions_compliancy = array('min' => '1.7', 'max' => _PS_VERSION_);
@@ -61,7 +62,6 @@ class PayPal extends PaymentModule
         $this->description = $this->l('Accepts payments by credit cards (CB, Visa, MasterCard, Amex, Aurore, Cofinoga, 4 stars) with PayPal.');
         $this->confirmUninstall = $this->l('Are you sure you want to delete your details?');
         $this->express_checkout = $this->l('PayPal Express Checkout ');
-
     }
 
     public function install()
@@ -86,14 +86,18 @@ class PayPal extends PaymentModule
             || !Configuration::updateValue('PAYPAL_API_SIGNATURE', '')
             || !Configuration::updateValue('PAYPAL_SANDBOX', 0)
             || !Configuration::updateValue('PAYPAL_API_INTENT', 'sale')
-            || !Configuration::updateValue('PAYPAL_API_ADVANTAGES', 0)
+            || !Configuration::updateValue('PAYPAL_API_ADVANTAGES', 1)
             || !Configuration::updateValue('PAYPAL_API_CARD', 0)
+            || !Configuration::updateValue('PAYPAL_SANDBOX_CLIENTID', '')
+            || !Configuration::updateValue('PAYPAL_SANDBOX_SECRET', '')
+            || !Configuration::updateValue('PAYPAL_LIVE_CLIENTID', '')
+            || !Configuration::updateValue('PAYPAL_LIVE_SECRET', '')
+            || !Configuration::updateValue('PAYPAL_METHOD', '')
         ) {
             return false;
         }
 
         return true;
-
     }
     
     /**
@@ -102,7 +106,6 @@ class PayPal extends PaymentModule
      */
     private function installSQL()
     {
-
         $sql = array();
 
         $sql[] = "CREATE TABLE IF NOT EXISTS `"._DB_PREFIX_."paypal_order` (
@@ -116,6 +119,7 @@ class PayPal extends PaymentModule
               `currency` VARCHAR(21),
               `total_paid` FLOAT(11),
               `payment_status` VARCHAR(255),
+              `total_prestashop` FLOAT(11),
               `date_add` DATETIME,
               `date_upd` DATETIME
         ) ENGINE = "._MYSQL_ENGINE_;
@@ -145,11 +149,12 @@ class PayPal extends PaymentModule
      */
     private function registrationHook()
     {
-
         if (!$this->registerHook('paymentOptions')
             || !$this->registerHook('paymentReturn')
             || !$this->registerHook('displayOrderConfirmation')
             || !$this->registerHook('displayAdminOrder')
+            || !$this->registerHook('ActionOrderStatusPostUpdate')
+            || !$this->registerHook('actionValidateOrder')
         ) {
             return false;
         }
@@ -160,12 +165,18 @@ class PayPal extends PaymentModule
 
     public function uninstall()
     {
-        foreach (array(
-                     'PAYPAL_MERCHANT_ID',
-                     'PAYPAL_API_CREDENTIAL',
-                     'PAYPAL_API_PSWD',
-                     'PAYPAL_API_SIGNATURE',
-                     'PAYPAL_API_USERNAME') as $var) {
+        $config = array(
+            'PAYPAL_SANDBOX',
+            'PAYPAL_API_INTENT',
+            'PAYPAL_API_ADVANTAGES',
+            'PAYPAL_API_CARD',
+            'PAYPAL_SANDBOX_CLIENTID',
+            'PAYPAL_SANDBOX_SECRET',
+            'PAYPAL_LIVE_CLIENTID',
+            'PAYPAL_LIVE_SECRET',
+            'PAYPAL_METHOD',
+        );
+        foreach ($config as $var) {
             Configuration::deleteByName($var);
         }
 
@@ -187,7 +198,6 @@ class PayPal extends PaymentModule
      */
     private function uninstallSQL()
     {
-
         $sql = array();
 
         $sql[] = "DROP TABLE IF EXISTS `"._DB_PREFIX_."paypal_capture`";
@@ -214,6 +224,12 @@ class PayPal extends PaymentModule
 
     public function getContent()
     {
+
+      /*  $test = "{\"success\":true,\"data\":{\"url\":\"https:\/\/www.sandbox.paypal.com\/FR\/merchantsignup\/partner\/onboardingentry?token=NTBlNjdiYmEtMjU4Ny00ODcyLTg3NzMtYTkzNTc1NDE5NGJhNG5ET3lva1RVamhkRCtoZWlwRHFRaU5LalhVaUYyVGJxVEdJeHdXWmVXbz0=&context_token=6148968567513348096\"},\"error\":null}";
+//print_r(Tools::jsonDecode($test));
+        $response = $this->getPartnerInfo('EXPRESS_CHECKOUT');
+        print_r($response);die;*/
+
         $this->_postProcess();
         $return_url = $this->context->link->getAdminLink('AdminModules', true).'&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name;
         /*
@@ -226,25 +242,52 @@ class PayPal extends PaymentModule
             }
         }
         */
-         $this->context->smarty->assign(array(
-             'path' => $this->_path,
-             'path_ajax_sandbox' => $this->context->link->getAdminLink('AdminModules',true,array(),array('configure'=>'paypal')),
-             'country' => Country::getNameById($this->context->language->id, $this->context->country->id),
-             'localization' => $this->context->link->getAdminLink('AdminLocalization', true),
-             'active_products' => $this->express_checkout,
-             'return_url' => $return_url,
+
+
+        if (Configuration::get('PAYPAL_SANDBOX')) {
+            if (Configuration::get('PAYPAL_API_USERNAME') != '' && Configuration::get('PAYPAL_API_PSWD') != ''  && Configuration::get('PAYPAL_API_SIGNATURE') != '') {
+                $ec_card_active = Configuration::get('PAYPAL_API_CARD');
+                $ec_paypal_active = !Configuration::get('PAYPAL_API_CARD');
+            } else {
+                $ec_card_active = false;
+                $ec_paypal_active = false;
+            }
+        } else {
+            if (Configuration::get('PAYPAL_API_USERNAME') != '' && Configuration::get('PAYPAL_API_PSWD') != ''  && Configuration::get('PAYPAL_API_SIGNATURE') != '') {
+                $ec_card_active = Configuration::get('PAYPAL_API_CARD');
+                $ec_paypal_active = !Configuration::get('PAYPAL_API_CARD');
+            } else {
+                $ec_card_active = false;
+                $ec_paypal_active = false;
+            }
+        }
+
+        $this->context->smarty->assign(array(
+            'path' => $this->_path,
+            //'path_ajax_sandbox' => $this->context->link->getAdminLink('AdminModules',true,array(),array('configure'=>'paypal')),
+            'country' => Country::getNameById($this->context->language->id, $this->context->country->id),
+            'localization' => $this->context->link->getAdminLink('AdminLocalization', true),
+            'preference' => $this->context->link->getAdminLink('AdminPreferences', true),
+            'active_products' => $this->express_checkout,
+            'return_url' => $return_url,
              'access_token_sandbox' => Configuration::get('PAYPAL_SANDBOX_ACCESS'),
              'access_token_live' => Configuration::get('PAYPAL_LIVE_ACCESS'),
-             'PAYPAL_SANDBOX_CLIENTID' => Configuration::get('PAYPAL_SANDBOX_CLIENTID'),
-             'PAYPAL_SANDBOX_SECRET' => Configuration::get('PAYPAL_SANDBOX_SECRET'),
-             'PAYPAL_LIVE_CLIENTID' => Configuration::get('PAYPAL_LIVE_CLIENTID'),
-             'PAYPAL_LIVE_SECRET' => Configuration::get('PAYPAL_LIVE_SECRET'),
-         ));
-         $this->context->controller->addCSS($this->_path.'views/css/paypal-bo.css', 'all');
-         $fields_form[0]['form'] = array(
+            'PAYPAL_SANDBOX_CLIENTID' => Configuration::get('PAYPAL_SANDBOX_CLIENTID'),
+            'PAYPAL_SANDBOX_SECRET' => Configuration::get('PAYPAL_SANDBOX_SECRET'),
+            'PAYPAL_LIVE_CLIENTID' => Configuration::get('PAYPAL_LIVE_CLIENTID'),
+            'PAYPAL_LIVE_SECRET' => Configuration::get('PAYPAL_LIVE_SECRET'),
+            'paypal_card' => Configuration::get('PAYPAL_API_CARD'),
+            'ec_card_active' => $ec_card_active,
+            'ec_paypal_active' => $ec_paypal_active,
+            'need_rounding' => Configuration::get('PS_ROUND_TYPE') == Order::ROUND_ITEM ? 0 : 1,
+        ));
+        $this->context->controller->addCSS($this->_path.'views/css/paypal-bo.css', 'all');
+
+        $fields_form = array();
+        $fields_form[0]['form'] = array(
             'legend' => array(
-                'title' => $this->l('PARAMETERS of the module'),
-                'image' => $this->_path.'/views/img/paypal_icon.png',
+                'title' => $this->l('MODULE SETTINGS'),
+                'icon' => 'icon-cogs',
             ),
             'input' => array(
                 array(
@@ -266,20 +309,12 @@ class PayPal extends PaymentModule
                         )
                     ),
                 ),
-            ),
-        );
-        $fields_form[1]['form'] = array(
-            'legend' => array(
-                'title' => $this->l('PARAMETRES PAYPAL EXPRESS CHECKOUT'),
-                'image' => $this->_path.'/views/img/paypal_icon.png',
-            ),
-            'input' => array(
                 array(
                     'type' => 'select',
-                    'label' => $this->l('Mode intent'),
+                    'label' => $this->l('Payment action'),
                     'name' => 'paypal_intent',
                     'desc' => $this->l(''),
-                    'hint' => $this->l('Sale: Performs the immediate debit of the customer during an order. Authorization / Capture: Authorization mode is a deferred payment method that requires manually capturing funds when you want to pass money. This mode is used if you want to make sure you have the merchandise before you cash the money for example. Attention, you have 29 days to capture the funds'),
+                    'hint' => $this->l('Sale: the money moves instantly from the buyer�s account to the seller�s account at the time of payment. Authorization/capture: The authorized mode is a deferred mode of payment that requires the funds to be collected manually when you want to transfer the money. This mode is used if you want to ensure that you have the merchandise before depositing the money, for example. Be careful, you have 29 days to collect the funds.'),
                     'options' => array(
                         'query' => array(
                             array(
@@ -287,7 +322,7 @@ class PayPal extends PaymentModule
                                 'name' => $this->l('Sale')
                             ),
                             array(
-                                'id' => 'authorize',
+                                'id' => 'authorization',
                                 'name' => $this->l('Authorize')
                             )
                         ),
@@ -297,10 +332,10 @@ class PayPal extends PaymentModule
                 ),
                 array(
                     'type' => 'switch',
-                    'label' => $this->l('Activate payment by cart'),
+                    'label' => $this->l('Accept credit and debit card payment'),
                     'name' => 'paypal_card',
                     'is_bool' => true,
-                    'hint' => $this->l('Your customers can pay for their purchases with their national or international bank cards, whether they already have a PayPal account or not'),
+                    'hint' => $this->l('Your customers can pay with debit and credit cards as well as local payment systems whether or not they use PayPal'),
                     'values' => array(
                         array(
                             'id' => 'paypal_card_on',
@@ -316,11 +351,11 @@ class PayPal extends PaymentModule
                 ),
                 array(
                     'type' => 'switch',
-                    'label' => $this->l('Show Advantages Paypal for clients during payment'),
+                    'label' => $this->l('Show PayPal benefits to your customers'),
                     'name' => 'paypal_show_advantage',
                     'desc' => $this->l(''),
                     'is_bool' => true,
-                    'hint' => $this->l('Increase your conversion rate by presenting the benefits of PayPal to your customers when selecting the payment method'),
+                    'hint' => $this->l('You can increase your conversion rate by presenting PayPal benefits to your customers on payment methods selection page.'),
                     'values' => array(
                         array(
                             'id' => 'paypal_show_advantage_on',
@@ -368,21 +403,23 @@ class PayPal extends PaymentModule
                 .'#paypal_params'
         );
         $form = $helper->generateForm($fields_form);
-        if(count($this->_errors)) {
+        if (count($this->_errors)) {
             $this->message .= $this->displayError($this->_errors);
         } elseif (Configuration::get('PAYPAL_SANDBOX') == 1) {
             $this->message .= $this->displayWarning($this->l('Your PayPal account is currently configured to accept payments on the Sandbox (test environment). Any transaction will be fictitious. Disable the option, to accept actual payments (production environment) and log in with your PayPal credentials'));
         } elseif (Configuration::get('PAYPAL_SANDBOX') == 0) {
             $this->message .= $this->displayConfirmation($this->l('Your PayPal account is properly connected, you can now receive payments'));
         }
+        $block_info = '';
+        if (Configuration::get('PS_ROUND_TYPE') != Order::ROUND_ITEM) {
+            $block_info = $this->display(__FILE__, 'views/templates/admin/block_info.tpl');
+        }
 
-        return $this->message.$this->display(__FILE__, 'views/templates/admin/configuration.tpl').$form;
-
+        return $this->message.$block_info.$this->display(__FILE__, 'views/templates/admin/configuration.tpl').$form;
     }
 
     private function _postProcess()
     {
-
         if (Tools::isSubmit('paypal_config')) {
             Configuration::updateValue('PAYPAL_SANDBOX', Tools::getValue('paypal_sandbox'));
             Configuration::updateValue('PAYPAL_API_INTENT', Tools::getValue('paypal_intent'));
@@ -398,8 +435,7 @@ class PayPal extends PaymentModule
             Configuration::updateValue('PAYPAL_LIVE_ACCESS', 1);
         }
 */
-        if(Tools::isSubmit('save_credentials'))
-        {
+       /* if (Tools::isSubmit('save_credentials')) {
             $sandbox = Tools::getValue('sandbox');
             $live = Tools::getValue('live');
 
@@ -412,52 +448,42 @@ class PayPal extends PaymentModule
             Configuration::updateValue('PAYPAL_API_CARD', Tools::getValue('with_card'));
             Configuration::updateValue('PAYPAL_EXPRESS_CHECKOUT', 1);
             Configuration::updateValue('PAYPAL_METHOD', Tools::getValue('method'));
-
         }
 
-        switch (Configuration::get('PAYPAL_METHOD')){
+        if (Tools::isSubmit('save_rounding_settings')) {
+            Configuration::updateValue('PAYPAL_SANDBOX', 0);
+            Configuration::updateValue('PS_ROUND_TYPE', Order::ROUND_ITEM);
+            Tools::redirect($this->context->link->getAdminLink('AdminModules', true).'&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name);
+        }
+
+        switch (Configuration::get('PAYPAL_METHOD')) {
             case 'EXPRESS_CHECKOUT':
                 $method = AbstractMethodPaypal::load('EC');
-                $id_experience_web = $method->setConfig(array(
-                    'name' => Configuration::get('PS_SHOP_NAME').microtime(true),
-                    'flow_config' => array(
-                        'landing_page_type' => 'login',
-                        'bank_txn_pending_url' => Context::getContext()->link->getModuleLink($this->name, 'ec_validation', array(), true),
-                    ),
-                ));
-
-                if ($id_experience_web) {
-                    Configuration::updateValue('PAYPAL_EXPERIENCE_PROFILE', $id_experience_web);
-                }else{
-                    $this->_errors[] = $this->l('An error occurred. Please, check your credentials.');
-                }
-
-                if (Configuration::get('PAYPAL_API_CARD')) {
-                    $id_experience_web = $method->setConfig(array(
-                        'name' => Configuration::get('PS_SHOP_NAME').microtime(true),
-                        'flow_config' => array(
-                            'landing_page_type' => 'billing',
-                            'bank_txn_pending_url' => Context::getContext()->link->getModuleLink($this->name, 'ec_validation', array(), true),
-                        ),
-                    ));
-
-                    if ($id_experience_web) {
-                        Configuration::updateValue('PAYPAL_EXPERIENCE_PROFILE_CARD', $id_experience_web);
-                    }else{
-                        $this->_errors[] = $this->l('An error occurred. Please, check your credentials.');
-                    }
-                }
             break;
+        }*/
+
+        if (Tools::getValue('method')) {
+            Configuration::updateValue('PAYPAL_API_CARD', Tools::getValue('with_card'));
+            Configuration::updateValue('PAYPAL_EXPRESS_CHECKOUT', 1);
+            Configuration::updateValue('PAYPAL_METHOD', Tools::getValue('method'));
+
+            $response = $this->getPartnerInfo(Tools::getValue('method'));
+            $result = Tools::jsonDecode($response);
+            if (!$result->error && isset($result->data->url)) {
+                $PartnerboardingURL = $result->data->url;
+               // print_r($PartnerboardingURL);die;
+                Tools::redirectLink($PartnerboardingURL);
+            }
         }
     }
 
     public function hookPaymentOptions($params)
     {
         $payment_options = new PaymentOption();
-        $action_text = $this->l('Pay by Paypal');
+        $action_text = $this->l('Pay with Paypal');
         $payment_options->setLogo(Media::getMediaPath(_PS_MODULE_DIR_.$this->name.'/views/img/paypal_sm.png'));
         if (Configuration::get('PAYPAL_API_ADVANTAGES')) {
-            $action_text .= ' | '.$this->l('It\'s simple, easy, secure');
+            $action_text .= ' | '.$this->l('It\'s easy, simple and secure');
         }
         $this->context->smarty->assign(array(
             'path' => $this->_path,
@@ -470,8 +496,7 @@ class PayPal extends PaymentModule
             $payment_options,
         ];
 
-        if(Configuration::get('PAYPAL_API_CARD'))
-        {
+        if (Configuration::get('PAYPAL_API_CARD')) {
             $payment_options = new PaymentOption();
             $action_text = $this->l('Pay with debit or credit card');
             $payment_options->setLogo(Media::getMediaPath(_PS_MODULE_DIR_.$this->name.'/views/img/logo_card.png'));
@@ -482,32 +507,28 @@ class PayPal extends PaymentModule
         }
 
         return $payments_options;
-
     }
 
     public function hookPaymentReturn($params)
     {
-
     }
 
     public function hookDisplayOrderConfirmation($params)
     {
-
     }
 
     public function validateOrder($id_cart, $id_order_state, $amount_paid, $payment_method = 'Unknown', $message = null, $transaction = array(), $currency_special = null, $dont_touch_amount = false, $secure_key = false, Shop $shop = null)
     {
-        $intent = $transaction->intent;
-        if ($intent == "authorize") {
-            $intent = "authorization";
-        }
+        $this->amount_paid_paypal = (float)$amount_paid;
+        $cart = new Cart((int) $id_cart);
+        $total_ps = (float)$cart->getOrderTotal(true, Cart::BOTH);
         parent::validateOrder(
             (int) $id_cart,
             (int) $id_order_state,
-            (float) $amount_paid,
+            (float) $total_ps,
             $payment_method,
             $message,
-            array('transaction_id' => $transaction->transactions[0]->related_resources[0]->$intent->id),
+            array('transaction_id' => $transaction['PAYMENTINFO_0_TRANSACTIONID']),
             $currency_special,
             $dont_touch_amount,
             $secure_key,
@@ -518,47 +539,84 @@ class PayPal extends PaymentModule
 
         $paypal_order->id_order = $this->currentOrder;
         $paypal_order->id_cart = Context::getContext()->cart->id;
-        $paypal_order->id_transaction = $transaction->transactions[0]->related_resources[0]->$intent->id;
-        $paypal_order->id_payment = $transaction->id;
+        $paypal_order->id_transaction = $transaction['PAYMENTINFO_0_TRANSACTIONID'];
+        $paypal_order->id_payment = $transaction['TOKEN'];
         $paypal_order->client_token = "";
-        $paypal_order->payment_method = $transaction->payer->payment_method;
-        $paypal_order->currency = $transaction->transactions[0]->amount->currency;
-        $paypal_order->total_paid = (float) $transaction->transactions[0]->amount->total;
-        $paypal_order->payment_status = $transaction->state;
+        $paypal_order->payment_method = $transaction['PAYMENTINFO_0_PAYMENTTYPE'];
+        $paypal_order->currency = $transaction['PAYMENTINFO_0_CURRENCYCODE'];
+        $paypal_order->total_paid = (float) $amount_paid;
+        $paypal_order->payment_status = $transaction['PAYMENTINFO_0_PAYMENTSTATUS'];
+        $paypal_order->total_prestashop = (float) $total_ps;
         $paypal_order->save();
 
-        if ($intent == "authorization") {
+        if ($transaction['PAYMENTINFO_0_PAYMENTSTATUS'] = "Pending" && $transaction['PAYMENTINFO_0_PENDINGREASON'] == "authorization") {
             $paypal_capture = new PaypalCapture();
             $paypal_capture->id_paypal_order = $paypal_order->id;
             $paypal_capture->save();
         }
-
     }
 
-    public function hookdisplayAdminOrder($params)
+    public function hookActionValidateOrder($params)
     {
+        $order = $params['order'];
+        $amount_paid = (float) $this->amount_paid_paypal;
+        if (isset($amount_paid) && $amount_paid != 0 && $order->total_paid != $amount_paid) {
+            $order->total_paid = $amount_paid;
+            $order->total_paid_real = $amount_paid;
+            $order->total_paid_tax_incl = $amount_paid;
+            $order->update();
 
+            $sql = 'UPDATE `'._DB_PREFIX_.'order_payment`
+		    SET `amount` = '.(float)$amount_paid.'
+		    WHERE  `order_reference` = "'.pSQL($order->reference).'"';
+            Db::getInstance()->execute($sql);
+        }
+    }
+
+
+    public function hookDisplayAdminOrder($params)
+    {
+        $id_order = $params['id_order'];
+        $order = new Order((int)$id_order);
         $paypal_msg = '';
+        $paypal_order = PaypalOrder::getOrderById($id_order);
+
+        if ($paypal_order['total_paid'] != $paypal_order['total_prestashop']) {
+            $preferences = $this->context->link->getAdminLink('AdminPreferences', true);
+            $paypal_msg .= $this->displayWarning('<p class="paypal-warning">'.$this->l('Product pricing has been modified as your rounding settings aren\'t compliant with PayPal.').' '.
+                $this->l('To avoid automatic rounding to customer for PayPal payments, please update your rounding settings.').' '.
+                '<a target="_blank" href="'.$preferences.'">'.$this->l('Reed more.').'</a></p>'
+            );
+        }
+
         if (Tools::getValue('capturePaypal')) {
             $method_ec = AbstractMethodPaypal::load('EC');
             $capture_response = $method_ec->confirmCapture();
-            if (isset($capture_response->name)) {
-                $paypal_msg .= $this->displayWarning("We have problem during capture operation. Please try again later.");
+            //print_r($capture_response);die;
+            if ($order->current_state != Configuration::get('PS_OS_PAYMENT') && $capture_response['ACK'] == 'Success') {
+                $order->setCurrentState(_PS_OS_PAYMENT_);
+                Tools::redirect($_SERVER['HTTP_REFERER']);
+            } elseif (isset($refund_response['L_LONGMESSAGE0'])) {
+                $paypal_msg .= $this->displayWarning($this->l("We have problem during capture operation : ").$capture_response['L_LONGMESSAGE0']);
             }
         }
         if (Tools::getValue('refundPaypal')) {
             $method_ec = AbstractMethodPaypal::load('EC');
             $refund_response = $method_ec->refund();
-            if (isset($refund_response->name)) {
-                $paypal_msg .= $this->displayWarning("We have problem during refund operation. Please try again later.");
+            //print_r($refund_response);die;
+            if (isset($refund_response['REFUNDTRANSACTIONID'])) {
+                $order->setCurrentState(Configuration::get('PS_OS_REFUND'));
+                Tools::redirect($_SERVER['HTTP_REFERER']);
+            } elseif (isset($refund_response['L_LONGMESSAGE0'])) {
+                $paypal_msg .= $this->displayWarning($this->l("We have problem during refund operation : ").$refund_response['L_LONGMESSAGE0']);
             }
         }
-        $id_order = $params['id_order'];
-        $order = new Order((int)$id_order);
+
         $current_state = $order->getCurrentState();
         $order_link = Context::getContext()->link->getAdminLink('AdminOrders')."&id_order=".$id_order."&vieworder";
         $this->context->smarty->assign(array(
-            'link_suivi' => $order_link,
+            'path_logo' => Tools::getHttpHost(true).'/modules/paypal/views/img/paypal_icon.png',
+            'order_link' => $order_link,
         ));
         if ($current_state == Configuration::get('PS_OS_REFUND')) {
             $this->context->smarty->assign(array(
@@ -566,38 +624,69 @@ class PayPal extends PaymentModule
             ));
         }
 
-        $sql = new DbQuery();
-        $sql->select('*');
-        $sql->from('paypal_order', 'po');
-        $sql->where('po.id_order = '.(int)$id_order);
-        $result = Db::getInstance()->getRow($sql);
-
-        $refund = array('refundPaypal' => $result['id_paypal_order']);
-
-
-        $sql = new DbQuery();
-        $sql->select('*');
-        $sql->from('paypal_order', 'po');
-        $sql->innerJoin('paypal_capture', 'pc', 'po.`id_paypal_order` = pc.`id_paypal_order`');
-        $sql->where('po.id_order = '.(int)$id_order);
-        $result = Db::getInstance()->getRow($sql);
-        if ($result) {
-            $refund['capture_id'] = $result['id_capture'];
-            if ($result['result'] == "completed") {
+        $paypal_order = PaypalOrder::getOrderById($id_order);
+        $refund = array('refundPaypal' => $paypal_order['id_paypal_order']);
+        
+        $paypal_capture = PaypalCapture::getByOrderId($id_order);
+        
+        if ($paypal_capture) {
+            //print_r($paypal_capture);die;
+            $refund['capture_id'] = $paypal_capture['id_capture'];
+            if ($paypal_capture['result'] == "Completed") {
                 $this->context->smarty->assign(array(
-                    'refund_link' => http_build_query($refund),
+                    'refund_link' => '&'.http_build_query($refund),
                 ));
-            } else {
+            } elseif ($paypal_capture['result'] != 'voided') {
                 $this->context->smarty->assign(array(
-                    'capture_link' => "&capturePaypal=".$result['id_paypal_order'],
+                    'capture_link' => "&capturePaypal=".$paypal_capture['id_paypal_order'],
                 ));
             }
         } else {
             $this->context->smarty->assign(array(
-                'refund_link' => http_build_query($refund),
+                'refund_link' => '&'.http_build_query($refund),
             ));
         }
-        return $paypal_msg.$this->display(__FILE__, 'views/templates/hook/paypal_commande.tpl');
+        return $paypal_msg.$this->display(__FILE__, 'views/templates/hook/paypal_order.tpl');
     }
 
+    public function hookActionOrderStatusPostUpdate($params)
+    {
+        if ($params['newOrderStatus']->id == Configuration::get('PS_OS_CANCELED')) {
+            $orderPayPal = PaypalOrder::loadByOrderId($params['id_order']);
+            $method = AbstractMethodPaypal::load('EC');
+            $response = $method->void(array('authorization_id'=>$orderPayPal->id_transaction));
+
+            if (isset($response['AUTHORIZATIONID']) && $response['ACK'] == 'Success') {
+                $paypalCapture = PaypalCapture::loadByOrderPayPalId($orderPayPal->id);
+                $paypalCapture->result = 'voided';
+                $paypalCapture->save();
+                $orderPayPal->payment_status = 'voided';
+                $orderPayPal->save();
+            }
+        }
+    }
+
+    public function getPartnerInfo($method)
+    {
+        $return_url = $this->context->link->getAdminLink('AdminModules', true).'&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name;
+        if (Configuration::get('PS_SSL_ENABLED')) {
+            $shop_url = Tools::getShopDomainSsl(true);
+        } else {
+            $shop_url = Tools::getShopDomain(true);
+        }
+
+        $partner_info = array(
+            'email' => Configuration::get('PS_SHOP_EMAIL'),
+            'shop_url' => $return_url,
+            'address1' => Configuration::get('PS_SHOP_ADDR1'),
+            'city' => Configuration::get('PS_SHOP_CITY'),
+            'country_code' => Tools::strtoupper($this->context->country->iso_code),
+            'postal_code' => Configuration::get('PS_SHOP_CODE'),
+        );
+
+        $sdk = new PaypalSDK(Configuration::get('PAYPAL_SANDBOX'));
+        $response = $sdk->getUrlOnboarding($partner_info);
+        // print_r($response);die;
+        return $response;
+    }
 }

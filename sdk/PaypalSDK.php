@@ -1,6 +1,6 @@
 <?php
 /**
- * 2007-2016 PrestaShop
+ * 2007-2017 PrestaShop
  *
  * NOTICE OF LICENSE
  *
@@ -19,14 +19,13 @@
  * needs please refer to http://www.prestashop.com for more information.
  *
  *  @author    PrestaShop SA <contact@prestashop.com>
- *  @copyright 2007-2016 PrestaShop SA
+ *  @copyright 2007-2017 PrestaShop SA
  *  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  *  International Registered Trademark & Property of PrestaShop SA
  */
 
 class PaypalSDK
 {
-
     private $action;
     private $endpoint;
     private $token;
@@ -34,199 +33,58 @@ class PaypalSDK
     private $secret;
     private $urlAPI;
 
-    public function __construct($clientId,$secret,$sandbox=0)
+    public function __construct($sandbox=0)
     {
-        $this->clientId = $clientId;
-        $this->secret = $secret;
+        $this->clientId = '';
+        $this->secret = '';
         $this->action = 'POST';
         if ($sandbox) {
-            $this->urlAPI = 'https://api.sandbox.paypal.com/';
+            $this->urlAPI = 'https://api-3t.sandbox.paypal.com/nvp';
         } else {
-            $this->urlAPI = 'https://api.paypal.com/';
+            $this->urlAPI = 'https://api-3t.paypal.com/nvp';
         }
     }
 
-    public function createAccessToken($body = false)
+    public function getUrlOnboarding($body)
     {
-        if(!$body)
-        {
-            $body = 'grant_type=client_credentials';
-        }
-        $this->action = 'POST';
-        $this->endpoint = 'v1/oauth2/token';
-        $response = $this->makeCall($body, "application/json", true);
-        if(!isset($response->access_token))
-        {
-            return false;
-        }
-        $this->token = $response->access_token;
-        return true;
-    }
-
-    public function createPayment($body)
-    {
-        if(!$this->createAccessToken())
-        {
-            return false;
-        }
-        $this->action = 'POST';
-        $this->endpoint = 'v1/payments/payment';
-        $response = $this->makeCall($this->getBody($body));
+        $response = $this->makeCallSI(http_build_query($body, '', '&'));
         return $response;
     }
 
-    public function createWebExperience($body)
+    public function getCredentials()
     {
-        if(!$this->createAccessToken())
-        {
-            return false;
-        }
-
-        $this->action = 'POST';
-        $this->endpoint = 'v1/payment-experience/web-profiles';
-        $response = $this->makeCall($this->getBody($body));
-        return $response;
-    }
-
-    public function executePayment($payment_id, $payer_id)
-    {
-        if(!$this->createAccessToken())
-        {
-            return false;
-        }
-
-        $this->action = 'POST';
-        $this->endpoint = 'v1/payments/payment/'.$payment_id.'/execute';
-        $body = array('payer_id' => $payer_id);
-        $response = $this->makeCall($this->getBody($body));
-
-        return $response;
-    }
-
-    public function updatePayment($payment_id, $body)
-    {
-        if(!$this->createAccessToken())
-        {
-            return false;
-        }
-
-        $this->action = 'PATCH';
-        $this->endpoint = 'v1/payments/payment/'.$payment_id;
-        $response = $this->makeCall($this->getBody($body));
-
-        return $response;
-    }
-
-    public function refundSale($body, $sale_id)
-    {
-        if(!$this->createAccessToken())
-        {
-            return false;
-        }
-
-        $this->action = 'POST';
-        $this->endpoint = 'v1/payments/sale/'.$sale_id.'/refund';
-        $response = $this->makeCall($this->getBody($body));
-        return $response;
-    }
-
-    public function showRefund($sale_id)
-    {
-        if(!$this->createAccessToken())
-        {
-            return false;
-        }
-
         $this->action = 'GET';
-        $this->endpoint = 'v1/payments/refund/'.$sale_id;
-        $response = $this->makeCall(null);
+        $this->endpoint = '/v1/identity/applications/@classic/owner/HM5T4HLJMQG6Q/credentials';
+        $this->makeCall(null, $this->endpoint, $this->action);
+
+        return $this->response;
+    }
+
+
+
+    public function makeCallPaypal($body)
+    {
+        $response = $this->makeCall(http_build_query($body, '', '&'));
         return $response;
     }
 
-    public function showAuthorization($authorization_id)
+    protected function makeCallSI($body = null, $need_user = false)
     {
-        if(!$this->createAccessToken())
-        {
-            return false;
-        }
 
-        $this->action = 'GET';
-        $this->endpoint = 'v1/payments/authorization/'.$authorization_id;
-        $response = $this->makeCall(null);
+        $curl = curl_init();
+
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($curl, CURLOPT_URL, "http://paypal-sandbox.pp-ps-auth.com/getUrl?".$body);
+
+
+        $response = curl_exec($curl);
+
+
+
         return $response;
     }
 
-    public function captureAuthorization($body, $authorization_id)
-    {
-        if(!$this->createAccessToken())
-        {
-            return false;
-        }
-
-        $this->action = 'POST';
-        $this->endpoint = 'v1/payments/authorization/'.$authorization_id.'/capture';
-        $response = $this->makeCall($this->getBody($body));
-        return $response;
-    }
-
-    public function voidAuthorization($authorization_id)
-    {
-        if(!$this->createAccessToken())
-        {
-            return false;
-        }
-
-        $this->action = 'POST';
-        $this->endpoint = 'v1/payments/authorization/'.$authorization_id.'/void';
-        $response = $this->makeCall(null);
-        return $response;
-    }
-
-    public function showCapture($capture_id)
-    {
-        if(!$this->createAccessToken())
-        {
-            return false;
-        }
-
-        $this->action = 'GET';
-        $this->endpoint = 'v1/payments/capture/'.$capture_id;
-        $response = $this->makeCall(null);
-        return $response;
-    }
-
-    public function refundCapture($body, $capture_id)
-    {
-        if(!$this->createAccessToken())
-        {
-            return false;
-        }
-
-        $this->action = 'POST';
-        $this->endpoint = 'v1/payments/capture/'.$capture_id.'/refund';
-        $response = $this->makeCall($this->getBody($body));
-        return $response;
-    }
-
-
-    protected function getBody(array $fields)
-    {
-        $return = true;
-
-        // if fields not empty
-        if (empty($fields)) {
-            $return = false;
-        }
-
-        // if not empty
-        if ($return) {
-            return json_encode($fields);
-        }
-
-        return $return;
-    }
-
-    protected function makeCall($body = null, $cnt_type = "application/json", $need_user = false)
+    protected function makeCall($body = null, $need_user = false)
     {
         $curl = curl_init();
         if ($this->action == "GET") {
@@ -248,29 +106,17 @@ class PaypalSDK
         if ($this->action == "POST" || $this->action == "PUT" || $this->action == "DELETE") {
             curl_setopt($curl, CURLOPT_POSTFIELDS, $body);
         }
-        if ($need_user) {
-            /*
-            curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-                "Accept: application/json",
-                "Accept-Language: en_US",
-                "Authorization: Basic ".base64_encode($this->clientId.':'.$this->secret)
-            ));
-            //*/
-            curl_setopt($curl, CURLOPT_USERPWD, $this->clientId.':'.$this->secret);
-        } else {
-            curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-                "Content-type: ".$cnt_type,
-                'Content-Length: ' . strlen($body),
-                "Authorization: Bearer ".$this->token,
-            ));
-        }
 
         $response = curl_exec($curl);
+        $result = explode('&', $response);
+        foreach ($result as $value) {
+            $tmp = explode('=', $value);
+            $return[$tmp[0]] = urldecode(!isset($tmp[1]) ? $tmp[0] : $tmp[1]);
+        }
 
         if (curl_errno($curl)) {
             die('error occured during curl exec. Additioanl info: ' . curl_errno($curl).':'. curl_error($curl));
         }
-        return json_decode($response);
-
+        return $return;
     }
 }
