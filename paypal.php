@@ -826,10 +826,10 @@ class PayPal extends PaymentModule
 
         // JS FOR OPC BRAINTREE
         if ((Configuration::get('PAYPAL_PAYMENT_METHOD') == PVZ || Configuration::get('PAYPAL_BRAINTREE_ENABLED')) && version_compare(PHP_VERSION, '5.4.0', '>=') && $this->context->controller instanceof OrderOpcController) {
-            $process .= '<script src="https://js.braintreegateway.com/web/3.7.0/js/client.min.js"></script>
-	<script src="https://js.braintreegateway.com/web/3.7.0/js/hosted-fields.min.js"></script>
-	<script src="https://js.braintreegateway.com/web/3.7.0/js/data-collector.min.js"></script>
-	<script src="https://js.braintreegateway.com/web/3.7.0/js/three-d-secure.min.js"></script>';
+            $process .= '<script src="https://js.braintreegateway.com/web/3.9.0/js/client.min.js"></script>
+	<script src="https://js.braintreegateway.com/web/3.9.0/js/hosted-fields.min.js"></script>
+	<script src="https://js.braintreegateway.com/web/3.9.0/js/data-collector.min.js"></script>
+	<script src="https://js.braintreegateway.com/web/3.9.0/js/three-d-secure.min.js"></script>';
         }
 
         return $process;
@@ -1335,12 +1335,15 @@ class PayPal extends PaymentModule
                 $order_state = OrderHistory::getLastOrderState($order->id);
             }
 
+            $order_payment = strtolower($order->payment);
+
             $this->context->smarty->assign(
                 array(
                     'authorization' => (int) Configuration::get('PAYPAL_OS_AUTHORIZATION'),
                     'base_url' => Tools::getHttpHost(true).__PS_BASE_URI__,
                     'module_name' => $this->name,
                     'order_state' => $order_state,
+                    'order_payment' => $order_payment,
                     'params' => $params,
                     'id_currency' => $currency->getSign(),
                     'rest_to_capture' => Tools::ps_round($cpt->getRestToPaid($order), '6'),
@@ -1841,6 +1844,7 @@ class PayPal extends PaymentModule
                 Configuration::updateValue('PAYPAL_LOGIN_TPL', (int) Tools::getValue('paypal_login_client_template'));
 
                 Configuration::updateValue('PAYPAL_BRAINTREE_ENABLED', (int) Tools::getValue('braintree_enabled'));
+                Configuration::updateValue('PAYPAL_USE_3D_SECURE',(int) Tools::getValue('check3Dsecure'));
 
                 if($sandbox && $sandbox != (int) Tools::getValue('sandbox_mode')){
                     $switch_sandbox = true;

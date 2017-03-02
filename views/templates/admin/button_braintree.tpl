@@ -31,6 +31,9 @@
 	{l s='Your Braintree account is configured in live mode. You can sell on Euro only. You can join the Braintree support on 08 05 54 27 14' mod='paypal'}
 {/if}
 </span>
+<p>{l s='Activate 3D Secure?' mod='paypal'}</p>
+<input type="radio" id="threedsecure_on" name="use_threedsecure" value="1"{if $PayPal_check3Dsecure == 1} checked="checked"{/if}/> <label for="threedsecure_on">{l s='Yes' mod='paypal'}</label><br />
+<input type="radio" id="threedsecure_off" name="use_threedsecure" value="0"{if $PayPal_check3Dsecure == 0} checked="checked"{/if}/> <label for="threedsecure_off">{l s='No' mod='paypal'}</label>
 {else}
 <div id="button_braintree">
 </div>
