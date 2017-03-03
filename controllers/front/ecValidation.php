@@ -26,17 +26,19 @@
 
 include_once _PS_MODULE_DIR_.'paypal/classes/AbstractMethodPaypal.php';
 
-class PaypalEc_initModuleFrontController extends ModuleFrontController
+class PaypalEcValidationModuleFrontController extends ModuleFrontController
 {
+    public $name = 'paypal';
+
     public function postProcess()
     {
         $method_ec = AbstractMethodPaypal::load('EC');
 
-        $response = $method_ec->init(array('use_card'=>Tools::getValue('credit_card')));
-        if ($response) {
-            Tools::redirect($response);
-        } else {
-            Tools::redirect('index.php?controller=order&step=1');
-        }
+        $method_ec->validation();
+
+        $cart = Context::getContext()->cart;
+        $customer = new Customer($cart->id_customer);
+        $paypal = Module::getInstanceByName('paypal');
+        Tools::redirect('index.php?controller=order-confirmation&id_cart='.$cart->id.'&id_module='.$paypal->id.'&id_order='.$paypal->currentOrder.'&key='.$customer->secure_key);
     }
 }

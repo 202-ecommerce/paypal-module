@@ -453,7 +453,7 @@ class PayPal extends PaymentModule
                     'name' => Configuration::get('PS_SHOP_NAME').microtime(true),
                     'flow_config' => array(
                         'landing_page_type' => 'login',
-                        'bank_txn_pending_url' => Context::getContext()->link->getModuleLink($this->name, 'ec_validation', array(), true),
+                        'bank_txn_pending_url' => Context::getContext()->link->getModuleLink($this->name, 'ecValidation', array(), true),
                     ),
                 ));
 
@@ -506,7 +506,7 @@ class PayPal extends PaymentModule
             $action_text = $this->l('Pay with debit or credit card');
             $payment_options->setLogo(Media::getMediaPath(_PS_MODULE_DIR_.$this->name.'/views/img/logo_card.png'));
             $payment_options->setCallToActionText($action_text);
-            $payment_options->setAction($this->context->link->getModuleLink($this->name, 'ec_init', array('credit_card'=>'1'), true));
+            $payment_options->setAction($this->context->link->getModuleLink($this->name, 'ecInit', array('credit_card'=>'1'), true));
             $payment_options->setAdditionalInformation($this->context->smarty->fetch('module:paypal/views/templates/front/payment_infos_card.tpl'));
             $payments_options[] = $payment_options;
         }
@@ -596,7 +596,8 @@ class PayPal extends PaymentModule
 
         if ($paypal_order['total_paid'] != $paypal_order['total_prestashop']) {
             $preferences = $this->context->link->getAdminLink('AdminPreferences', true);
-            $paypal_msg .= $this->displayWarning('<p class="paypal-warning">'.$this->l('Product pricing has been modified as your rounding settings aren\'t compliant with PayPal.').' '.
+            $paypal_msg .= $this->displayWarning(
+                '<p class="paypal-warning">'.$this->l('Product pricing has been modified as your rounding settings aren\'t compliant with PayPal.').' '.
                 $this->l('To avoid automatic rounding to customer for PayPal payments, please update your rounding settings.').' '.
                 '<a target="_blank" href="'.$preferences.'">'.$this->l('Reed more.').'</a></p>'
             );

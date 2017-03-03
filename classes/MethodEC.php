@@ -161,6 +161,7 @@ class MethodEC extends AbstractMethodPaypal
                     'shipping' => $shipping,
                 ),
             ),
+            'custom' => "PS_"._PS_VERSION_."_Module_".$paypal->version,
             'item_list' => array(
                 'items' => $items,
                 "shipping_address" => array(
