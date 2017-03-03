@@ -36,11 +36,6 @@
                         {l s='Capture paypal' mod='paypal'}
                     </a>
                 {/if}
-                {if isset($refund_link)}
-                    <a href="{$order_link|escape:'html':'UTF-8'}{$refund_link|escape:'html':'UTF-8'}" class="btn btn-primary">
-                        {l s='Refund paypal' mod='paypal'}
-                    </a>
-                {/if}
             </div>
         </div>
     </div>

@@ -259,8 +259,10 @@ class MethodEC extends AbstractMethodPaypal
             Configuration::get('PAYPAL_SANDBOX')?Configuration::get('PAYPAL_SANDBOX_SECRET'):Configuration::get('PAYPAL_LIVE_SECRET'),
             Configuration::get('PAYPAL_SANDBOX')
         );
-        $id_paypal_order = Tools::getValue('refundPaypal');
-        $paypal_order = new PaypalOrder($id_paypal_order);
+
+        $paypal_order = PaypalOrder::loadByOrderId(Tools::getValue('id_order'));
+        $id_paypal_order = $paypal_order->id;
+
         $body = array(
             'amount' => array(
                 'total' => number_format($paypal_order->total_paid, 2, ".", ","),
@@ -268,8 +270,10 @@ class MethodEC extends AbstractMethodPaypal
             )
         );
 
-        if (Tools::getValue('capture_id')) {
-            $response = $sdk->refundCapture($body, Tools::getValue('capture_id'));
+        $capture = PaypalCapture::loadByOrderPayPalId($id_paypal_order);
+
+        if ($capture->id_capture) {
+            $response = $sdk->refundCapture($body, $capture->id_capture);
             if (isset($response->id)) {
                 Db::getInstance()->update(
                     'paypal_capture',

@@ -149,6 +149,7 @@ class PayPal extends PaymentModule
             || !$this->registerHook('displayAdminOrder')
             || !$this->registerHook('ActionOrderStatusPostUpdate')
             || !$this->registerHook('actionValidateOrder')
+            || !$this->registerHook('actionOrderStatusUpdate')
         ) {
             return false;
         }
@@ -592,9 +593,23 @@ class PayPal extends PaymentModule
         $id_order = $params['id_order'];
         $order = new Order((int)$id_order);
         $paypal_msg = '';
-        $paypal_order = PaypalOrder::getOrderById($id_order);
+        $paypal_order = PaypalOrder::loadByOrderId($id_order);
+        if (!Validate::isLoadedObject($paypal_order)) {
+            return false;
+        }
 
-        if ($paypal_order['total_paid'] != $paypal_order['total_prestashop']) {
+        if (Tools::getValue('not_payed_capture')) {
+            $paypal_msg .= $this->displayWarning(
+                '<p class="paypal-warning">'.$this->l('You couldn\'t refund order, it\'s not payed yet.').'</p>'
+            );
+        }
+        if (Tools::getValue('error_refund')) {
+            $paypal_msg .= $this->displayWarning(
+                '<p class="paypal-warning">'.$this->l('We have unexpected problem during refund operation. See massages for more details').'</p>'
+            );
+        }
+
+        if ($paypal_order->total_paid != $paypal_order->total_prestashop) {
             $preferences = $this->context->link->getAdminLink('AdminPreferences', true);
             $paypal_msg .= $this->displayWarning(
                 '<p class="paypal-warning">'.$this->l('Product pricing has been modified as your rounding settings aren\'t compliant with PayPal.').' '.
@@ -617,73 +632,47 @@ class PayPal extends PaymentModule
                 $paypal_msg .= $this->displayWarning($this->l('We have problem during capture operation : ').$capture_response->message);
             }
         }
-        if (Tools::getValue('refundPaypal')) {
-            $method_ec = AbstractMethodPaypal::load('EC');
-            $refund_response = $method_ec->refund();
 
-            if ((isset($refund_response->state) && $refund_response->state == 'completed')
-                 || (isset($refund_response->message)
-                    && $refund_response->message == "Request was refused.This transaction has already been fully refunded"
-                    && $order->current_state != Configuration::get('PS_OS_REFUND')
-            )) {
-                $order->setCurrentState(Configuration::get('PS_OS_REFUND'));
-                Tools::redirect($_SERVER['HTTP_REFERER']);
-            } else {
-                $paypal_msg .= $this->displayWarning($this->l('We have problem during refund operation : ').$refund_response->message);
-            }
-        }
 
-        $current_state = $order->getCurrentState();
         $order_link = Context::getContext()->link->getAdminLink('AdminOrders')."&id_order=".$id_order."&vieworder";
         $this->context->smarty->assign(array(
             'path_logo' => Tools::getHttpHost(true).'/modules/paypal/views/img/paypal_icon.png',
             'order_link' => $order_link,
         ));
-        if ($current_state == Configuration::get('PS_OS_REFUND')) {
-            $this->context->smarty->assign(array(
-                'paypal_refunded' => true,
-            ));
-        }
 
 
-        $refund = array('refundPaypal' => $paypal_order['id_paypal_order']);
-        
         $paypal_capture = PaypalCapture::getByOrderId($id_order);
 
         $refund_or_canceled = false;
-        if ($order->current_state == Configuration::get('PS_OS_CANCELED') || $order->current_state == Configuration::get('PS_OS_REFUND')) {
+        if ($order->current_state == Configuration::get('PS_OS_CANCELED')
+            || $order->current_state == Configuration::get('PS_OS_REFUND')
+            || ($paypal_capture && $paypal_capture['id_capture'] && $paypal_capture['result'] == "completed")
+        ) {
             $refund_or_canceled = true;
         }
         
         if ($paypal_capture) {
-            $refund['capture_id'] = $paypal_capture['id_capture'];
-            if ($paypal_capture['result'] == "completed") {
-                $this->context->smarty->assign(array(
-                    'refund_link' => '&'.http_build_query($refund),
-                    'refund_or_canceled' => $refund_or_canceled,
-                ));
-            } elseif ($paypal_capture['result'] != 'voided') {
+            if ($paypal_capture['result'] != 'voided') {
                 $this->context->smarty->assign(array(
                     'capture_link' => "&capturePaypal=".$paypal_capture['id_paypal_order'],
-                    'refund_or_canceled' => $refund_or_canceled,
                 ));
             }
-            $this->context->smarty->assign(array(
-                'refund_or_canceled' => $refund_or_canceled,
-            ));
-        } else {
-            $this->context->smarty->assign(array(
-                'refund_link' => '&'.http_build_query($refund),
-                'refund_or_canceled' => $refund_or_canceled,
-            ));
         }
+        $this->context->smarty->assign(array(
+            'refund_or_canceled' => $refund_or_canceled,
+        ));
         return $paypal_msg.$this->display(__FILE__, 'views/templates/hook/paypal_order.tpl');
     }
+
+
 
     public function hookActionOrderStatusPostUpdate($params)
     {
         if ($params['newOrderStatus']->id == Configuration::get('PS_OS_CANCELED')) {
             $orderPayPal = PaypalOrder::loadByOrderId($params['id_order']);
+            if (!Validate::isLoadedObject($orderPayPal)) {
+                return false;
+            }
             $method = AbstractMethodPaypal::load('EC');
             $response = $method->void(array('authorization_id'=>$orderPayPal->id_transaction));
             if (isset($response->state) && $response->state == 'voided') {
@@ -692,6 +681,53 @@ class PayPal extends PaymentModule
                 $paypalCapture->save();
                 $orderPayPal->payment_status = $response->state;
                 $orderPayPal->save();
+            }
+        }
+    }
+
+    public function hookActionOrderStatusUpdate($params)
+    {
+        $paypal_order = PaypalOrder::loadByOrderId($params['id_order']);
+        if (!Validate::isLoadedObject($paypal_order)) {
+            return false;
+        }
+        if ($params['newOrderStatus']->id == Configuration::get('PS_OS_REFUND')) {
+            $capture = PaypalCapture::loadByOrderPayPalId($paypal_order->id);
+            if (Validate::isLoadedObject($capture) && !$capture->id_capture) {
+                $orderMessage = new Message();
+                $orderMessage->message = $this->l('You couldn\'t refund order, it\'s not payed yet.');
+                $orderMessage->id_order = $params['id_order'];
+                $orderMessage->id_customer = $this->context->customer->id;
+                $orderMessage->private = 1;
+                $orderMessage->save();
+                Tools::redirect($_SERVER['HTTP_REFERER'].'&not_payed_capture=1');
+            }
+            $method = AbstractMethodPaypal::load('EC');
+            $refund_response = $method->refund();
+            $orderMessage = new Message();
+
+            if (isset($refund_response->id)) {
+                $orderMessage->message = $this->l('Refund id : ').$refund_response->id.";\r";
+                $orderMessage->message .= $this->l('Refund state : ').$refund_response->state.";\r";
+                $orderMessage->message .= $this->l('Refund amount : ').$refund_response->amount->total." ".$refund_response->amount->currency.";\r";
+                $orderMessage->message .= $this->l('Sale id : ').$refund_response->sale_id.";\r";
+                $orderMessage->message .= $this->l('Parent payment : ').$refund_response->parent_payment.";\r";
+                $orderMessage->message .= $this->l('Creation time : ').$refund_response->create_time.";\r";
+            } else {
+                $orderMessage->message = "";
+                foreach ($refund_response as $key => $msg) {
+                    $orderMessage->message .= $key." : ".$msg.";\r";
+                }
+            }
+
+            $orderMessage->id_order = $params['id_order'];
+            $orderMessage->id_customer = $this->context->customer->id;
+            $orderMessage->private = 1;
+
+            $orderMessage->save();
+
+            if (!isset($refund_response->id) && $refund_response->message != "Request was refused.This transaction has already been fully refunded") {
+                Tools::redirect($_SERVER['HTTP_REFERER'].'&error_refund=1');
             }
         }
     }
