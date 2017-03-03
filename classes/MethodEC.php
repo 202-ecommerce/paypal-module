@@ -74,7 +74,7 @@ class MethodEC extends AbstractMethodPaypal
                 )
             ),
             'redirect_urls' => array(
-                'return_url' => Context::getContext()->link->getModuleLink($this->name, 'ec_validation', array(), true),
+                'return_url' => Context::getContext()->link->getModuleLink($this->name, 'ecValidation', array(), true),
                 'cancel_url' => Tools::getShopDomain(true, true).'/index.php?controller=order&step=1',
             ),
         );

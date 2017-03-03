@@ -468,7 +468,7 @@ class PayPal extends PaymentModule
                         'name' => Configuration::get('PS_SHOP_NAME').microtime(true),
                         'flow_config' => array(
                             'landing_page_type' => 'billing',
-                            'bank_txn_pending_url' => Context::getContext()->link->getModuleLink($this->name, 'ec_validation', array(), true),
+                            'bank_txn_pending_url' => Context::getContext()->link->getModuleLink($this->name, 'ecValidation', array(), true),
                         ),
                     ));
 
@@ -494,7 +494,7 @@ class PayPal extends PaymentModule
             'path' => $this->_path,
         ));
         $payment_options->setCallToActionText($action_text);
-        $payment_options->setAction($this->context->link->getModuleLink($this->name, 'ec_init', array('credit_card'=>'0'), true));
+        $payment_options->setAction($this->context->link->getModuleLink($this->name, 'ecInit', array('credit_card'=>'0'), true));
         $payment_options->setAdditionalInformation($this->context->smarty->fetch('module:paypal/views/templates/front/payment_infos.tpl'));
 
         $payments_options = [
