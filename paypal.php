@@ -147,7 +147,7 @@ class PayPal extends PaymentModule
             || !$this->registerHook('paymentReturn')
             || !$this->registerHook('displayOrderConfirmation')
             || !$this->registerHook('displayAdminOrder')
-            || !$this->registerHook('ActionOrderStatusPostUpdate')
+            || !$this->registerHook('actionOrderStatusPostUpdate')
             || !$this->registerHook('actionValidateOrder')
             || !$this->registerHook('actionOrderStatusUpdate')
         ) {
@@ -608,6 +608,11 @@ class PayPal extends PaymentModule
                 '<p class="paypal-warning">'.$this->l('We have unexpected problem during refund operation. See massages for more details').'</p>'
             );
         }
+        if (Tools::getValue('error_capture')) {
+            $paypal_msg .= $this->displayWarning(
+                '<p class="paypal-warning">'.$this->l('We have unexpected problem during capture operation. See massages for more details').'</p>'
+            );
+        }
 
         if ($paypal_order->total_paid != $paypal_order->total_prestashop) {
             $preferences = $this->context->link->getAdminLink('AdminPreferences', true);
@@ -618,49 +623,6 @@ class PayPal extends PaymentModule
             );
         }
 
-        if (Tools::getValue('capturePaypal')) {
-            $method_ec = AbstractMethodPaypal::load('EC');
-            $capture_response = $method_ec->confirmCapture();
-
-            if (isset($capture_response->state) && $capture_response->state == 'completed' && $order->current_state != Configuration::get('PS_OS_PAYMENT')) {
-                $order->setCurrentState(Configuration::get('PS_OS_PAYMENT'));
-                Tools::redirect($_SERVER['HTTP_REFERER']);
-            } elseif ($capture_response->name == 'AUTHORIZATION_ALREADY_COMPLETED' && $order->current_state != Configuration::get('PS_OS_PAYMENT')) {
-                $order->setCurrentState(Configuration::get('PS_OS_PAYMENT'));
-                Tools::redirect($_SERVER['HTTP_REFERER']);
-            } else {
-                $paypal_msg .= $this->displayWarning($this->l('We have problem during capture operation : ').$capture_response->message);
-            }
-        }
-
-
-        $order_link = Context::getContext()->link->getAdminLink('AdminOrders')."&id_order=".$id_order."&vieworder";
-        $this->context->smarty->assign(array(
-            'path_logo' => Tools::getHttpHost(true).'/modules/paypal/views/img/paypal_icon.png',
-            'order_link' => $order_link,
-        ));
-
-
-        $paypal_capture = PaypalCapture::getByOrderId($id_order);
-
-        $refund_or_canceled = false;
-        if ($order->current_state == Configuration::get('PS_OS_CANCELED')
-            || $order->current_state == Configuration::get('PS_OS_REFUND')
-            || ($paypal_capture && $paypal_capture['id_capture'] && $paypal_capture['result'] == "completed")
-        ) {
-            $refund_or_canceled = true;
-        }
-        
-        if ($paypal_capture) {
-            if ($paypal_capture['result'] != 'voided') {
-                $this->context->smarty->assign(array(
-                    'capture_link' => "&capturePaypal=".$paypal_capture['id_paypal_order'],
-                ));
-            }
-        }
-        $this->context->smarty->assign(array(
-            'refund_or_canceled' => $refund_or_canceled,
-        ));
         return $paypal_msg.$this->display(__FILE__, 'views/templates/hook/paypal_order.tpl');
     }
 
@@ -668,21 +630,8 @@ class PayPal extends PaymentModule
 
     public function hookActionOrderStatusPostUpdate($params)
     {
-        if ($params['newOrderStatus']->id == Configuration::get('PS_OS_CANCELED')) {
-            $orderPayPal = PaypalOrder::loadByOrderId($params['id_order']);
-            if (!Validate::isLoadedObject($orderPayPal)) {
-                return false;
-            }
-            $method = AbstractMethodPaypal::load('EC');
-            $response = $method->void(array('authorization_id'=>$orderPayPal->id_transaction));
-            if (isset($response->state) && $response->state == 'voided') {
-                $paypalCapture = PaypalCapture::loadByOrderPayPalId($orderPayPal->id);
-                $paypalCapture->result = $response->state;
-                $paypalCapture->save();
-                $orderPayPal->payment_status = $response->state;
-                $orderPayPal->save();
-            }
-        }
+
+
     }
 
     public function hookActionOrderStatusUpdate($params)
@@ -691,6 +640,19 @@ class PayPal extends PaymentModule
         if (!Validate::isLoadedObject($paypal_order)) {
             return false;
         }
+
+        if ($params['newOrderStatus']->id == Configuration::get('PS_OS_CANCELED')) {
+            $method = AbstractMethodPaypal::load('EC');
+            $response = $method->void(array('authorization_id'=>$paypal_order->id_transaction));
+            if (isset($response->state) && $response->state == 'voided') {
+                $paypalCapture = PaypalCapture::loadByOrderPayPalId($paypal_order->id);
+                $paypalCapture->result = $response->state;
+                $paypalCapture->save();
+                $paypal_order->payment_status = $response->state;
+                $paypal_order->save();
+            }
+        }
+
         if ($params['newOrderStatus']->id == Configuration::get('PS_OS_REFUND')) {
             $capture = PaypalCapture::loadByOrderPayPalId($paypal_order->id);
             if (Validate::isLoadedObject($capture) && !$capture->id_capture) {
@@ -730,5 +692,41 @@ class PayPal extends PaymentModule
                 Tools::redirect($_SERVER['HTTP_REFERER'].'&error_refund=1');
             }
         }
+
+        if ($params['newOrderStatus']->id == Configuration::get('PS_OS_PAYMENT')) {
+            $capture = PaypalCapture::loadByOrderPayPalId($paypal_order->id);
+            if (!Validate::isLoadedObject($capture)) {
+                return false;
+            }
+            $method = AbstractMethodPaypal::load('EC');
+            $capture_response = $method->confirmCapture();
+            $orderMessage = new Message();
+
+            if (isset($capture_response->id)) {
+                $orderMessage->message = $this->l('Capture id : ').$capture_response->id.";\r";
+                $orderMessage->message .= $this->l('Capture state : ').$capture_response->state.";\r";
+                $orderMessage->message .= $this->l('Capture amount : ').$capture_response->amount->total." ".$capture_response->amount->currency.";\r";
+                $orderMessage->message .= $this->l('Transaction fee : ').$capture_response->transaction_fee->value." ".$capture_response->transaction_fee->currency.";\r";
+                $orderMessage->message .= $this->l('Parent payment : ').$capture_response->parent_payment.";\r";
+                $orderMessage->message .= $this->l('Creation time : ').$capture_response->create_time.";\r";
+            } else {
+                $orderMessage->message = "";
+                foreach ($capture_response as $key => $msg) {
+                    $orderMessage->message .= $key." : ".$msg.";\r";
+                }
+            }
+
+            $orderMessage->id_order = $params['id_order'];
+            $orderMessage->id_customer = $this->context->customer->id;
+            $orderMessage->private = 1;
+
+            $orderMessage->save();
+
+            if (!isset($capture_response->id) && $capture_response->name != "AUTHORIZATION_ALREADY_COMPLETED") {
+                Tools::redirect($_SERVER['HTTP_REFERER'].'&error_capture=1');
+            }
+
+        }
+
     }
 }

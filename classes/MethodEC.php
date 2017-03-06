@@ -223,7 +223,8 @@ class MethodEC extends AbstractMethodPaypal
             Configuration::get('PAYPAL_SANDBOX')?Configuration::get('PAYPAL_SANDBOX_SECRET'):Configuration::get('PAYPAL_LIVE_SECRET'),
             Configuration::get('PAYPAL_SANDBOX')
         );
-        $paypal_order = new PaypalOrder(Tools::getValue('capturePaypal'));
+        $paypal_order = PaypalOrder::loadByOrderId(Tools::getValue('id_order'));
+        $id_paypal_order = $paypal_order->id;
         $body = array(
             'amount' => array(
                 'total' => number_format($paypal_order->total_paid, 2, ".", ","),
@@ -232,7 +233,6 @@ class MethodEC extends AbstractMethodPaypal
             'is_final_capture' => true,
 
         );
-
         $response = $sdk->captureAuthorization($body, $paypal_order->id_transaction);
         if (isset($response->state) && $response->state == 'completed' || isset($response->name) && $response->name == 'AUTHORIZATION_ALREADY_COMPLETED') {
             Db::getInstance()->update(
@@ -242,7 +242,7 @@ class MethodEC extends AbstractMethodPaypal
                     'capture_amount' => $response->amount->total,
                     'result' => 'completed',
                 ),
-                'id_paypal_order = ' . (int)Tools::getValue('capturePaypal')
+                'id_paypal_order = ' . (int)$id_paypal_order
             );
         }
         return $response;
@@ -254,6 +254,7 @@ class MethodEC extends AbstractMethodPaypal
 
     public function refund()
     {
+
         $sdk = new PaypalSDK(
             Configuration::get('PAYPAL_SANDBOX')?Configuration::get('PAYPAL_SANDBOX_CLIENTID'):Configuration::get('PAYPAL_LIVE_CLIENTID'),
             Configuration::get('PAYPAL_SANDBOX')?Configuration::get('PAYPAL_SANDBOX_SECRET'):Configuration::get('PAYPAL_LIVE_SECRET'),
