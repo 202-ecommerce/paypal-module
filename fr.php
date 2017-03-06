@@ -145,8 +145,8 @@ $_MODULE['<{paypal}prestashop>back_office_87e8014ca4e3b9c66834e626c72caeb9'] = '
 $_MODULE['<{paypal}prestashop>back_office_01d5f6aa1996398fc309837e6d7058c7'] = '(Euro uniquement)';
 $_MODULE['<{paypal}prestashop>back_office_da56bd27822c4be66ceefd6feab0de0c'] = 'Braintree';
 $_MODULE['<{paypal}prestashop>back_office_e8c466b9c179e229ae67f339a8e2476a'] = 'Souscrivez ou ouvrez un compte PayPal Professionnel';
-$_MODULE['<{paypal}prestashop>back_office_0e96222f0238ebd077c0e983e91ab4ee'] = 'https://altfarm.mediaplex.com/ad/ck/3484-148727-12439-23?ID=2';
-$_MODULE['<{paypal}prestashop>back_office_d67850bd126f070221dcfd5fa6317043'] = 'https://altfarm.mediaplex.com/ad/ck/3484-148727-12439-23?ID=4';
+$_MODULE['<{paypal}prestashop>back_office_0e96222f0238ebd077c0e983e91ab4ee'] = 'S\'inscrire';
+$_MODULE['<{paypal}prestashop>back_office_d67850bd126f070221dcfd5fa6317043'] = 'S\'inscrire';
 $_MODULE['<{paypal}prestashop>back_office_cf64055b9b156287d8791c48c6ea3e13'] = 'https://altfarm.mediaplex.com/ad/ck/3484-148727-12439-23?ID=4';
 $_MODULE['<{paypal}prestashop>back_office_b26917587d98330d93f87808fc9d7267'] = 'Souscrivez';
 $_MODULE['<{paypal}prestashop>back_office_109a4d46d869464f431abe4cf7228c24'] = 'https://altfarm.mediaplex.com/ad/ck/3484-148727-12439-23?ID=3';
