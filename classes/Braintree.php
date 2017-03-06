@@ -120,6 +120,19 @@ class PrestaBraintree{
             }
             else
             {
+                $log = '### Braintree transaction error # '.date('Y-m-d H:i:s').' ###'."\n";
+                $log .= '## cart id # '.$cart->id.' ##'."\n";
+                $log .= '## amount # '.$cart->getOrderTotal().' ##'."\n";
+                $log .= '## Braintree error message ##'."\n";
+
+                $log .= '# '.$result->message.' #'."\n";
+
+                foreach($result->errors->deepAll() AS $error){
+                    $log .= '# error code: '.$error->code.' # message: '.$error->message.' #';
+                }
+
+                file_put_contents(_PS_MODULE_DIR_.'paypal/log/braintree_log.txt', $log, FILE_APPEND);
+
                 $this->error = $result->transaction->status;
             }
 
@@ -190,11 +203,26 @@ class PrestaBraintree{
         return $result;
     }
 
+    public function getTransactionStatus($transactionId)
+    {
+        $this->initConfig();
+
+        try {
+            $result = $this->gateway->transaction()->find($transactionId);
+
+            return $result->status;
+        } catch(Exception $e) {
+            PrestaShopLogger::addLog($e->getCode().'=>'.$e->getMessage());
+            return false;
+        }
+    }
+
     public function refund($transactionId,$amount)
     {
         $this->initConfig();
         try{
             $result = $this->gateway->transaction()->refund($transactionId,$amount);
+
             if($result->success)
             {
                 return true;

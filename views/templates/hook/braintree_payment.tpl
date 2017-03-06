@@ -61,10 +61,10 @@
 
 
  	{if !$opc}
-	<script src="https://js.braintreegateway.com/web/3.7.0/js/client.min.js"></script>
-	<script src="https://js.braintreegateway.com/web/3.7.0/js/hosted-fields.min.js"></script>
-	<script src="https://js.braintreegateway.com/web/3.7.0/js/data-collector.min.js"></script>
-	<script src="https://js.braintreegateway.com/web/3.7.0/js/three-d-secure.min.js"></script>
+	<script src="https://js.braintreegateway.com/web/3.9.0/js/client.min.js"></script>
+	<script src="https://js.braintreegateway.com/web/3.9.0/js/hosted-fields.min.js"></script>
+	<script src="https://js.braintreegateway.com/web/3.9.0/js/data-collector.min.js"></script>
+	<script src="https://js.braintreegateway.com/web/3.9.0/js/three-d-secure.min.js"></script>
  	{/if}
 {literal}
 	<script>

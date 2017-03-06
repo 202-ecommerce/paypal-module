@@ -101,7 +101,7 @@ class PayPal extends PaymentModule
     {
         $this->name = 'paypal';
         $this->tab = 'payments_gateways';
-        $this->version = '3.11.3';
+        $this->version = '3.11.4';
         $this->author = 'PrestaShop';
         $this->is_eu_compatible = 1;
 
@@ -826,10 +826,10 @@ class PayPal extends PaymentModule
 
         // JS FOR OPC BRAINTREE
         if ((Configuration::get('PAYPAL_PAYMENT_METHOD') == PVZ || Configuration::get('PAYPAL_BRAINTREE_ENABLED')) && version_compare(PHP_VERSION, '5.4.0', '>=') && $this->context->controller instanceof OrderOpcController) {
-            $process .= '<script src="https://js.braintreegateway.com/web/3.7.0/js/client.min.js"></script>
-	<script src="https://js.braintreegateway.com/web/3.7.0/js/hosted-fields.min.js"></script>
-	<script src="https://js.braintreegateway.com/web/3.7.0/js/data-collector.min.js"></script>
-	<script src="https://js.braintreegateway.com/web/3.7.0/js/three-d-secure.min.js"></script>';
+            $process .= '<script src="https://js.braintreegateway.com/web/3.9.0/js/client.min.js"></script>
+	<script src="https://js.braintreegateway.com/web/3.9.0/js/hosted-fields.min.js"></script>
+	<script src="https://js.braintreegateway.com/web/3.9.0/js/data-collector.min.js"></script>
+	<script src="https://js.braintreegateway.com/web/3.9.0/js/three-d-secure.min.js"></script>';
         }
 
         return $process;
@@ -1335,12 +1335,15 @@ class PayPal extends PaymentModule
                 $order_state = OrderHistory::getLastOrderState($order->id);
             }
 
+            $order_payment = strtolower($order->payment);
+
             $this->context->smarty->assign(
                 array(
                     'authorization' => (int) Configuration::get('PAYPAL_OS_AUTHORIZATION'),
                     'base_url' => Tools::getHttpHost(true).__PS_BASE_URI__,
                     'module_name' => $this->name,
                     'order_state' => $order_state,
+                    'order_payment' => $order_payment,
                     'params' => $params,
                     'id_currency' => $currency->getSign(),
                     'rest_to_capture' => Tools::ps_round($cpt->getRestToPaid($order), '6'),
@@ -1727,7 +1730,7 @@ class PayPal extends PaymentModule
             WHERE `id_order` = '.(int) $id_order);
 
 
-        return ($paypal_order && in_array($paypal_order['payment_status'],array('completed','approved','settled','submitted_for_settlement')) && $paypal_order['capture'] == 0);
+        return ($paypal_order && in_array($paypal_order['payment_status'],array('Completed','approved','settled','submitted_for_settlement')) && $paypal_order['capture'] == 0);
     }
 
     private function _needValidation($id_order)
@@ -1841,6 +1844,7 @@ class PayPal extends PaymentModule
                 Configuration::updateValue('PAYPAL_LOGIN_TPL', (int) Tools::getValue('paypal_login_client_template'));
 
                 Configuration::updateValue('PAYPAL_BRAINTREE_ENABLED', (int) Tools::getValue('braintree_enabled'));
+                Configuration::updateValue('PAYPAL_USE_3D_SECURE',(int) Tools::getValue('check3Dsecure'));
 
                 if($sandbox && $sandbox != (int) Tools::getValue('sandbox_mode')){
                     $switch_sandbox = true;
@@ -1936,7 +1940,8 @@ class PayPal extends PaymentModule
                     SELECT `id_paypal_braintree`
                     FROM `'._DB_PREFIX_.'paypal_braintree` 
                     WHERE `id_order` = '.(int) $id_order);
-        if($payment_method == PVZ || $id_paypal_braintree) {
+        
+        if(Configuration::get('PAYPAL_BRAINTREE_ENABLED') && $id_paypal_braintree) {
             if(!$amt)
             {
                 $amt = Db::getInstance()->getValue('
@@ -1946,7 +1951,14 @@ class PayPal extends PaymentModule
             }
             include_once(_PS_MODULE_DIR_.'paypal/classes/Braintree.php');
             $braintree = new PrestaBraintree();
-            $result = $braintree->refund($id_transaction,$amt);
+            
+            $transaction_status = $braintree->getTransactionStatus($id_transaction);
+
+            if($transaction_status == 'submitted_for_settlement') {
+                $result = $braintree->void($id_transaction);
+            } else {
+                $result = $braintree->refund($id_transaction,$amt);
+            }
 
             return $result;
         } elseif ($payment_method != PPP) {
@@ -2065,7 +2077,14 @@ class PayPal extends PaymentModule
             }
         }
         if ((array_key_exists('ACK', $response) && $response['ACK'] == 'Success' && $response['REFUNDTRANSACTIONID'] != '') || (isset($response->state) && $response->state == 'completed') || ((Configuration::get('PAYPAL_PAYMENT_METHOD') || Configuration::get('PAYPAL_BRAINTREE_ENABLED')) && $response)) {
-            $message .= $this->l('PayPal refund successful!');
+
+            if( Configuration::get('PAYPAL_BRAINTREE_ENABLED') && !is_array($response)  )
+            {
+                $message .= $this->l('Braintree refund successful!');
+            } else {
+                $message .= $this->l('PayPal refund successful!');
+            }
+
             if (!Db::getInstance()->Execute('UPDATE `'._DB_PREFIX_.'paypal_order` SET `payment_status` = \'Refunded\' WHERE `id_order` = '.(int) $id_order)) {
                 die(Tools::displayError('Error when updating PayPal database'));
             }
@@ -2600,12 +2619,7 @@ class PayPal extends PaymentModule
         $this->context_modified = false;
         $this->id_currency_origin_cart = $this->context->cart->id_currency;
         $this->id_currency_origin_cookie = $this->context->cookie->id_currency;
-        if(empty($account_braintree[$currency->iso_code]))
-        {
-            $this->context->cart->id_currency = Configuration::get('PS_CURRENCY_DEFAULT');
-            $this->context->cookie->id_currency = Configuration::get('PS_CURRENCY_DEFAULT');
-            $this->context_modified = true;
-        }
+
         return $account_braintree[$currency->iso_code];
     }
 
