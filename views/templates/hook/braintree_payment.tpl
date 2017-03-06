@@ -241,6 +241,12 @@
 						});
 
 
+						{/literal}{else}{literal}
+
+						document.querySelector('input[name="payment_method_nonce"]').value = payload.nonce;
+
+						form.submit();
+
 						{/literal}{/if}{literal}
 
 					});
