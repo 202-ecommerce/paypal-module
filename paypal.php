@@ -485,6 +485,16 @@ class PayPal extends PaymentModule
 
     public function hookPaymentOptions($params)
     {
+        $not_refunded = 0;
+        foreach ($params['cart']->getProducts() as $key => $product) {
+            if ($product['is_virtual']) {
+                $not_refunded = 1;
+                break;
+            }
+        }
+        $this->context->smarty->assign([
+            'not_refunded' => $not_refunded,
+        ]);
         $payment_options = new PaymentOption();
         $action_text = $this->l('Pay with Paypal');
         $payment_options->setLogo(Media::getMediaPath(_PS_MODULE_DIR_.$this->name.'/views/img/paypal_sm.png'));
