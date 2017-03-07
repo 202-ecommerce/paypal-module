@@ -492,9 +492,7 @@ class PayPal extends PaymentModule
                 break;
             }
         }
-        $this->context->smarty->assign([
-            'not_refunded' => $not_refunded,
-        ]);
+
         $payment_options = new PaymentOption();
         $action_text = $this->l('Pay with Paypal');
         $payment_options->setLogo(Media::getMediaPath(_PS_MODULE_DIR_.$this->name.'/views/img/paypal_sm.png'));
@@ -506,8 +504,9 @@ class PayPal extends PaymentModule
         ));
         $payment_options->setCallToActionText($action_text);
         $payment_options->setAction($this->context->link->getModuleLink($this->name, 'ecInit', array('credit_card'=>'0'), true));
-        $payment_options->setAdditionalInformation($this->context->smarty->fetch('module:paypal/views/templates/front/payment_infos.tpl'));
-
+        if (!$not_refunded) {
+            $payment_options->setAdditionalInformation($this->context->smarty->fetch('module:paypal/views/templates/front/payment_infos.tpl'));
+        }
         $payments_options = [
             $payment_options,
         ];
