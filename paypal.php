@@ -1844,7 +1844,7 @@ class PayPal extends PaymentModule
                 Configuration::updateValue('PAYPAL_LOGIN_TPL', (int) Tools::getValue('paypal_login_client_template'));
 
                 Configuration::updateValue('PAYPAL_BRAINTREE_ENABLED', (int) Tools::getValue('braintree_enabled'));
-                Configuration::updateValue('PAYPAL_USE_3D_SECURE',(int) Tools::getValue('check3Dsecure'));
+                Configuration::updateValue('PAYPAL_USE_3D_SECURE',(int) Tools::getValue('use_threedsecure'));
 
                 if($sandbox && $sandbox != (int) Tools::getValue('sandbox_mode')){
                     $switch_sandbox = true;
