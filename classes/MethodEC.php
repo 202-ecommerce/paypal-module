@@ -286,10 +286,10 @@ class MethodEC extends AbstractMethodPaypal
             }
         } else {
             $response = $sdk->refundSale($body, $paypal_order->id_transaction);
-            if (isset($response->id)) {
-                $paypal_order->result = $response->state;
-                $paypal_order->update();
-            }
+        }
+        if (isset($response->id)) {
+            $paypal_order->payment_status = 'refunded';
+            $paypal_order->update();
         }
 
         return $response;

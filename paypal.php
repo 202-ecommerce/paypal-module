@@ -603,6 +603,7 @@ class PayPal extends PaymentModule
         $order = new Order((int)$id_order);
         $paypal_msg = '';
         $paypal_order = PaypalOrder::loadByOrderId($id_order);
+        $paypal_capture = PaypalCapture::loadByOrderPayPalId($paypal_order->id);
         if (!Validate::isLoadedObject($paypal_order)) {
             return false;
         }
@@ -615,6 +616,16 @@ class PayPal extends PaymentModule
         if (Tools::getValue('error_refund')) {
             $paypal_msg .= $this->displayWarning(
                 '<p class="paypal-warning">'.$this->l('We have unexpected problem during refund operation. See massages for more details').'</p>'
+            );
+        }
+        if ($order->current_state == Configuration::get('PS_OS_REFUND') &&  $paypal_order->payment_status == 'refunded') {
+            $paypal_msg .= $this->displayWarning(
+                '<p class="paypal-warning">'.$this->l('Your order is fully refunded by PayPal.').'</p>'
+            );
+        }
+        if ($order->current_state == Configuration::get('PS_OS_PAYMENT') && Validate::isLoadedObject($paypal_capture) && $paypal_capture->id_capture) {
+            $paypal_msg .= $this->displayWarning(
+                '<p class="paypal-warning">'.$this->l('Your order is fully captured by PayPal.').'</p>'
             );
         }
         if (Tools::getValue('error_capture')) {
