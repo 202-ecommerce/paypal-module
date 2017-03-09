@@ -205,8 +205,7 @@ function displayAjax($context)
                     $return['error'][] = $paypal->l('An error occured during the payment');
                 }
 
-                if(isset($payment->payment_instruction))
-                {
+                if (isset($payment->payment_instruction)) {
                     $order = Order::getOrderByCartId($id_cart);
                     $paypal_plus_pui = new PaypalPlusPui();
                     $paypal_plus_pui->id_order = $order->id;

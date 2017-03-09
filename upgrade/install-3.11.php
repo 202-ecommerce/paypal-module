@@ -56,8 +56,7 @@ function upgrade_module_3_11($object, $install = false)
             return false;
         }
 
-        if (_PS_VERSION_ >= '1.5')
-        {
+        if (_PS_VERSION_ >= '1.5') {
             $object->registerHook('actionOrderStatusPostUpdate');
             $object->registerHook('displayOrderConfirmation');
         }
@@ -67,4 +66,3 @@ function upgrade_module_3_11($object, $install = false)
     }
     return true;
 }
-

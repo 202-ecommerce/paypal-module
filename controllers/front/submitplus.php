@@ -234,8 +234,7 @@ class PayPalSubmitplusModuleFrontController extends ModuleFrontController
                         );
                         $return['error'][] = $this->module->l('An error occured during the payment');
                     }
-                    if(isset($payment->payment_instruction))
-                    {
+                    if (isset($payment->payment_instruction)) {
                         $id_order = Order::getOrderByCartId($this->id_cart);
 
                         $paypal_plus_pui = new PaypalPlusPui();

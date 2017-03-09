@@ -128,7 +128,7 @@ class CallApiPaypalPlus extends ApiPaypalPlus
     }
     
     
-    public function patch($id_payment,$address)
+    public function patch($id_payment, $address)
     {
         /*
         $totalCartWithTax = $cart->getOrderTotal(true);
@@ -204,7 +204,7 @@ class CallApiPaypalPlus extends ApiPaypalPlus
             'Content-Type:application/json',
             'Authorization:Bearer '.$accessToken,
         );
-        $body = str_replace('\/transactions\/0\/item_list\/shipping_address', '/transactions/0/item_list/shipping_address',Tools::jsonEncode($payment) );
+        $body = str_replace('\/transactions\/0\/item_list\/shipping_address', '/transactions/0/item_list/shipping_address', Tools::jsonEncode($payment));
         return $this->sendByCURL(URL_PPP_PATCH.$id_payment, $body, $header, false, 'PATCH');
     }
 }

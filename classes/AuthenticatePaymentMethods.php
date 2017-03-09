@@ -113,8 +113,7 @@ class AuthenticatePaymentMethods
             'SN'=>array(WPS, ECS),
         );
         $return = isset($payment_method[$iso_code]) ? $payment_method[$iso_code] : false;
-        if(Configuration::get('VZERO_ENABLED'))
-        {
+        if (Configuration::get('VZERO_ENABLED')) {
             $return[] = PVZ;
         }
         return $return;
@@ -203,8 +202,7 @@ class AuthenticatePaymentMethods
 
 
         $return = isset($payment_method[$iso_code]) ? $payment_method[$iso_code] : $payment_method['GB'];
-        if(Configuration::get('VZERO_ENABLED'))
-        {
+        if (Configuration::get('VZERO_ENABLED')) {
             $return[] = PVZ;
         }
         return $return;

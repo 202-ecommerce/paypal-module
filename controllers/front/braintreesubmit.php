@@ -54,14 +54,12 @@ class PayPalBraintreeSubmitModuleFrontController extends ModuleFrontController
         $braintree = new PrestaBraintree();
         $id_account_braintree = $paypal->set_good_context();
 
-        if(empty($this->context->cart->id))
-        {
+        if (empty($this->context->cart->id)) {
             $paypal->reset_context();
             $this->redirectFailedPayment($paypal->l('failed load cart'));
         }
 
-        if(Configuration::get('PAYPAL_USE_3D_SECURE') && in_array(Tools::getValue('card_type'),array('Visa','MasterCard') )&& Tools::getValue('liabilityShifted') == 'false' && Tools::getValue('liabilityShiftPossible') == 'false')
-        {
+        if (Configuration::get('PAYPAL_USE_3D_SECURE') && in_array(Tools::getValue('card_type'), array('Visa','MasterCard'))&& Tools::getValue('liabilityShifted') == 'false' && Tools::getValue('liabilityShiftPossible') == 'false') {
             $paypal->reset_context();
             $this->redirectFailedPayment($this->getErrorMessageByCode('gateway_rejected'));
         }
@@ -71,15 +69,15 @@ class PayPalBraintreeSubmitModuleFrontController extends ModuleFrontController
         switch($cart_status) {
             case 'alreadyUse':
                 $order_id = Order::getOrderByCartId($this->context->cart->id);
-                $this->redirectConfirmation($paypal->id,$this->context->cart->id,$order_id);
+                $this->redirectConfirmation($paypal->id, $this->context->cart->id, $order_id);
                 break;
             case 'alreadyTry':
                 $braintree_transaction = $braintree->checkStatus($this->context->cart->id);
                 if ($braintree_transaction instanceof Braintree_Transaction && $braintree->isValidStatus($braintree_transaction->status)) {
-                    $transactionDetail = $this->getDetailsTransaction($braintree_transaction->id,$braintree_transaction->status);
-                    $paypal->validateOrder($this->context->cart->id, (Configuration::get('PAYPAL_CAPTURE')?Configuration::get('PAYPAL_BRAINTREE_OS_AWAITING'):Configuration::get('PS_OS_PAYMENT')), $braintree_transaction->amount, 'Braintree', $paypal->l('Payment accepted.'),$transactionDetail,$this->context->cart->id_currency,false,$this->context->customer->secure_key);
+                    $transactionDetail = $this->getDetailsTransaction($braintree_transaction->id, $braintree_transaction->status);
+                    $paypal->validateOrder($this->context->cart->id, (Configuration::get('PAYPAL_CAPTURE')?Configuration::get('PAYPAL_BRAINTREE_OS_AWAITING'):Configuration::get('PS_OS_PAYMENT')), $braintree_transaction->amount, 'Braintree', $paypal->l('Payment accepted.'), $transactionDetail, $this->context->cart->id_currency, false, $this->context->customer->secure_key);
                     $order_id = Order::getOrderByCartId($this->context->cart->id);
-                    $this->redirectConfirmation($paypal->id,$this->context->cart->id,$order_id);
+                    $this->redirectConfirmation($paypal->id, $this->context->cart->id, $order_id);
                     break;
                 }
             default:
@@ -87,40 +85,36 @@ class PayPalBraintreeSubmitModuleFrontController extends ModuleFrontController
                 
                 $transaction = $braintree->sale($this->context->cart, $id_account_braintree, Tools::getValue('payment_method_nonce'), Tools::getValue('deviceData'));
 
-                if(!$transaction)
-                {
+                if (!$transaction) {
                     $paypal->reset_context();
                     $this->redirectFailedPayment($this->getErrorMessageByCode($braintree->error));
                 }
-                $transactionDetail = $this->getDetailsTransaction($transaction->id,$transaction->status);
-                $paypal->validateOrder($this->context->cart->id, (Configuration::get('PAYPAL_CAPTURE')?Configuration::get('PAYPAL_BRAINTREE_OS_AWAITING'):Configuration::get('PS_OS_PAYMENT')), $transaction->amount, 'Braintree', $paypal->l('Payment accepted.'),$transactionDetail,$this->context->cart->id_currency,false,$this->context->customer->secure_key);
+                $transactionDetail = $this->getDetailsTransaction($transaction->id, $transaction->status);
+                $paypal->validateOrder($this->context->cart->id, (Configuration::get('PAYPAL_CAPTURE')?Configuration::get('PAYPAL_BRAINTREE_OS_AWAITING'):Configuration::get('PS_OS_PAYMENT')), $transaction->amount, 'Braintree', $paypal->l('Payment accepted.'), $transactionDetail, $this->context->cart->id_currency, false, $this->context->customer->secure_key);
                 $paypal->reset_context();
                 $order_id = Order::getOrderByCartId($this->context->cart->id);
-                $braintree->updateTransaction($id_braintree_presta,$transaction->id,$order_id);
-                $this->redirectConfirmation($paypal->id,$this->context->cart->id,$order_id);
+                $braintree->updateTransaction($id_braintree_presta, $transaction->id, $order_id);
+                $this->redirectConfirmation($paypal->id, $this->context->cart->id, $order_id);
                 break;
         }
     }
 
     public function redirectFailedPayment($error = '')
     {
-        if(Configuration::get('PS_ORDER_PROCESS_TYPE'))
-        {
+        if (Configuration::get('PS_ORDER_PROCESS_TYPE')) {
             Tools::redirect('index.php?controller=order-opc&isPaymentStep=true&bt_error_msg='.urlencode($error));
-        }
-        else
-        {
+        } else {
             Tools::redirect('index.php?controller=order&step=3&bt_error_msg='.urlencode($error));
         }
 
     }
 
-    public function redirectConfirmation($id_paypal,$id_cart,$id_order)
+    public function redirectConfirmation($id_paypal, $id_cart, $id_order)
     {
         Tools::redirect($this->context->link->getPageLink('order-confirmation.php?id_module='.$id_paypal.'&id_cart='.$id_cart.'&id_order='.$id_order.'&key='.Context::getContext()->customer->secure_key.'&braintree=1'));
     }
     
-    public function getDetailsTransaction($transaction_id,$status)
+    public function getDetailsTransaction($transaction_id, $status)
     {
         $currency = new Currency($this->context->cart->id_currency);
         return array(

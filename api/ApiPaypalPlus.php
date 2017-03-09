@@ -62,12 +62,9 @@ class ApiPaypalPlus
                 curl_setopt($ch, CURLOPT_HTTPHEADER, $http_header);
             }
             if ($body) {
-                if($customRequest === false)
-                {
+                if ($customRequest === false) {
                     curl_setopt($ch, CURLOPT_POST, true);
-                }
-                else
-                {
+                } else {
                     curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $customRequest);
                 }
 
@@ -108,8 +105,7 @@ class ApiPaypalPlus
             return false;
         } else {
 
-            if($this->context->cookie->paypal_access_token_time_max > time())
-            {
+            if ($this->context->cookie->paypal_access_token_time_max > time()) {
                 return $this->context->cookie->paypal_access_token_access_token;
             }
 

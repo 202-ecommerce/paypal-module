@@ -85,4 +85,3 @@ function upgrade_module_3_11_2($object, $install = false)
     }
     return true;
 }
-
