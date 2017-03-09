@@ -530,6 +530,15 @@ class PayPal extends PaymentModule
 
     public function hookDisplayOrderConfirmation($params)
     {
+        $paypal_order = PaypalOrder::loadByOrderId($params['order']->id);
+        if (!Validate::isLoadedObject($paypal_order)) {
+            return;
+        }
+        $this->context->smarty->assign(array(
+            'transaction_id' => $paypal_order->id_transaction,
+        ));
+        $this->context->controller->registerJavascript($this->name.'-order_confirmation_js', $this->_path.'/views/js/order_confirmation.js');
+        return $this->context->smarty->fetch('module:paypal/views/templates/hook/order_confirmation.tpl');
     }
 
     public function validateOrder($id_cart, $id_order_state, $amount_paid, $payment_method = 'Unknown', $message = null, $transaction = array(), $currency_special = null, $dont_touch_amount = false, $secure_key = false, Shop $shop = null)
