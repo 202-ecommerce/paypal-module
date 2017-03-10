@@ -84,7 +84,7 @@
                     </p>
                     <div class="bottom">
                         <img src="{$path|escape:'html':'UTF-8'}/views/img/paypal_btm.png" class="product-img">
-                        <a class="btn btn-default pull-right" href="{$return_url|escape:'html':'UTF-8'}&method=EXPRESS_CHECKOUT&with_card=0" >{if $ec_paypal_active}{l s='Modify' mod='paypal'}{else}{l s='Activate' mod='paypal'}{/if}</a>
+                        <a class="btn btn-default pull-right" href="{$return_url|escape:'html':'UTF-8'}&method=EXPRESS_CHECKOUT&with_card=0{if $ec_paypal_active}modify=1{/if}" >{if $ec_paypal_active}{l s='Modify' mod='paypal'}{else}{l s='Activate' mod='paypal'}{/if}</a>
                     </div>
                 </div>
             </div>
@@ -105,7 +105,7 @@
                         <img src="{$path|escape:'html':'UTF-8'}/views/img/discover.png" class="product-img">
                         <img src="{$path|escape:'html':'UTF-8'}/views/img/american_express.png" class="product-img">
                         <img src="{$path|escape:'html':'UTF-8'}/views/img/maestro.png" class="product-img">
-                        <a class="btn btn-default pull-right" href="#{*$return_url|escape:'html':'UTF-8'}&method=EXPRESS_CHECKOUT&with_card=1*}" onclick="display_popup('EXPRESS_CHECKOUT',1)">{if $ec_card_active}{l s='Modify' mod='paypal'}{else}{l s='Activate' mod='paypal'}{/if}</a>
+                        <a class="btn btn-default pull-right" href="{$return_url|escape:'html':'UTF-8'}&method=EXPRESS_CHECKOUT&with_card=1&{if $ec_card_active}modify=1{/if}">{if $ec_card_active}{l s='Modify' mod='paypal'}{else}{l s='Activate' mod='paypal'}{/if}</a>
                     </div>
                 </div>
             </div>
@@ -148,51 +148,7 @@
 
 </div>
 </div>
-<div style="display: none;">
-    <div id="content-fancybox-configuration">
-        <form action="{$return_url|escape:'javascript':'UTF-8'}" method="post" id="credential-configuration" class="bootstrap">
-            <h4>{l s='API Credentials' mod='paypal'}</h4>
-            <p>{l s='In order to accept PayPal payments, please fill your API REST credentials.' mod='paypal'}</p>
-            <ul>
-                <li>{l s='Access' mod='paypal'} <a target="_blank" href="https://developer.paypal.com/developer/applications/">{l s='https://developer.paypal.com/developer/applications/' mod='paypal'}</a></li>
-                <li>{l s='Log in or Create a business account' mod='paypal'}</li>
-                <li>{l s='Create a « REST API apps »' mod='paypal'}</li>
-                <li>{l s='Click « Show » en dessous de « Secret: »' mod='paypal'}</li>
-                <li>{l s='Copy/paste your « Client ID » and « Secret » below for each environment' mod='paypal'}</li>
-            </ul>
-            <hr/>
-            <input type="hidden" id="method" name="method"/>
-            <input type="hidden" id="with_card" name="with_card"/>
-            <h4>{l s='Sandbox' mod='paypal'}</h4>
-            <p>
-                <label for="sandbox_client_id">{l s='Client ID' mod='paypal'}</label>
-                <input type="text" id="sandbox_client_id" name="sandbox[client_id]" value="{$PAYPAL_SANDBOX_CLIENTID|escape:'htmlall':'UTF-8'}"/>
-            </p>
-            <p>
-                <label for="sandbox_secret">{l s='Secret' mod='paypal'}</label>
-                <input type="password" id="sandbox_secret" name="sandbox[secret]" value="{$PAYPAL_SANDBOX_SECRET|escape:'htmlall':'UTF-8'}"/>
-            </p>
-            <h4>{l s='Live' mod='paypal'}</h4>
-            <ul>
-                <li>{l s='You can switch top "Live" environment on top right' mod='paypal'}</li>
-            </ul>
-            <p>
-                <label for="live_client_id">{l s='Client ID' mod='paypal'}</label>
-                <input type="text" id="live_client_id" name="live[client_id]" value="{$PAYPAL_LIVE_CLIENTID|escape:'htmlall':'UTF-8'}"/>
-            </p>
-            <p>
-                <label for="live_secret">{l s='Secret' mod='paypal'}</label>
-                <input type="password" id="live_secret" name="live[secret]" value="{$PAYPAL_LIVE_SECRET|escape:'htmlall':'UTF-8'}"/>
-            </p>
-            <hr/>
-            <p>
-                <button class="btn btn-default"  onclick="$.fancybox.close();return false;">{l s='Cancel' mod='paypal'}</button>
-                <button class="btn btn-info" name="save_credentials">{l s='Confirm API Credentials' mod='paypal'}</button>
-            </p>
-        </form>
-    </div>
 
-</div>
 
 <div style="display: none;">
     <div id="content-rounding-settings">
@@ -213,19 +169,6 @@
 </div>
 
 <script type="text/javascript">
-    function display_popup(method,with_card)
-    {
-        $('#method').val(method);
-        $('#with_card').val(with_card);
-        $.fancybox.open([
-            {
-                type: 'inline',
-                autoScale: true,
-                minHeight: 30,
-                content: $('#content-fancybox-configuration').html(),
-            }
-        ]);
-    }
 
     function display_rounding()
     {

@@ -1,5 +1,5 @@
 {*
-* 2007-2016 PrestaShop
+* 2007-2017 PrestaShop
 *
 * NOTICE OF LICENSE
 *
@@ -18,27 +18,8 @@
 * needs please refer to http://www.prestashop.com for more information.
 *
 *  @author    PrestaShop SA <contact@prestashop.com>
-*  @copyright 2007-2016 PrestaShop SA
+*  @copyright 2007-2017 PrestaShop SA
 *  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
 *}
-{if !isset($paypal_refunded)}
-    <div class="tab-content panel" id="paymentPaypal">
-        <div class="panel-heading">
-            <i class="icon-money"></i>
-            {l s='Paypal' mod='paypal'}
-        </div>
-        <div class="tab-pane active">
-            {if isset($capture_link)}
-                <a href="{$link_suivi|escape:'html':'UTF-8'}{$capture_link|escape:'html':'UTF-8'}" class="btn btn-primary">
-                    {l s='Capture paypal' mod='paypal'}
-                </a>
-            {/if}
-            {if isset($refund_link)}
-                <a href="{$link_suivi|escape:'html':'UTF-8'}&{$refund_link|escape:'html':'UTF-8'}" class="btn btn-primary">
-                    {l s='Refund paypal' mod='paypal'}
-                </a>
-            {/if}
-        </div>
-    </div>
-{/if}
+<li id="paypal_transaction_id">{l s='Paypal transaction id :'} {$transaction_id}</li>
