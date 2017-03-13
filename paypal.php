@@ -463,6 +463,7 @@ class PayPal extends PaymentModule
                 if ($id_experience_web) {
                     Configuration::updateValue('PAYPAL_EXPERIENCE_PROFILE', $id_experience_web);
                 } else {
+                    Configuration::updateValue('PAYPAL_EXPERIENCE_PROFILE', '');
                     $this->_errors[] = $this->l('An error occurred. Please, check your credentials.');
                 }
 
@@ -478,6 +479,7 @@ class PayPal extends PaymentModule
                     if ($id_experience_web) {
                         Configuration::updateValue('PAYPAL_EXPERIENCE_PROFILE_CARD', $id_experience_web);
                     } else {
+                        Configuration::updateValue('PAYPAL_EXPERIENCE_PROFILE_CARD', '');
                         $this->_errors[] = $this->l('An error occurred. Please, check your credentials.');
                     }
                 }
@@ -487,24 +489,39 @@ class PayPal extends PaymentModule
 
     public function hookPaymentOptions($params)
     {
-        $payment_options = new PaymentOption();
-        $action_text = $this->l('Pay with Paypal');
-        $payment_options->setLogo(Media::getMediaPath(_PS_MODULE_DIR_.$this->name.'/views/img/paypal_sm.png'));
-        if (Configuration::get('PAYPAL_API_ADVANTAGES')) {
-            $action_text .= ' | '.$this->l('It\'s easy, simple and secure');
+        $not_refunded = 0;
+        foreach ($params['cart']->getProducts() as $key => $product) {
+            if ($product['is_virtual']) {
+                $not_refunded = 1;
+                break;
+            }
         }
-        $this->context->smarty->assign(array(
-            'path' => $this->_path,
-        ));
-        $payment_options->setCallToActionText($action_text);
-        $payment_options->setAction($this->context->link->getModuleLink($this->name, 'ecInit', array('credit_card'=>'0'), true));
-        $payment_options->setAdditionalInformation($this->context->smarty->fetch('module:paypal/views/templates/front/payment_infos.tpl'));
 
-        $payments_options = [
-            $payment_options,
-        ];
+        $payments_options = '';
 
-        if (Configuration::get('PAYPAL_API_CARD')) {
+        if (Configuration::get('PAYPAL_EXPERIENCE_PROFILE') != '') {
+            $payment_options = new PaymentOption();
+            $action_text = $this->l('Pay with Paypal');
+            $payment_options->setLogo(Media::getMediaPath(_PS_MODULE_DIR_.$this->name.'/views/img/paypal_sm.png'));
+            if (Configuration::get('PAYPAL_API_ADVANTAGES')) {
+                $action_text .= ' | '.$this->l('It\'s easy, simple and secure');
+            }
+            $this->context->smarty->assign(array(
+                'path' => $this->_path,
+            ));
+            $payment_options->setCallToActionText($action_text);
+            $payment_options->setAction($this->context->link->getModuleLink($this->name, 'ecInit', array('credit_card'=>'0'), true));
+            if (!$not_refunded) {
+                $payment_options->setAdditionalInformation($this->context->smarty->fetch('module:paypal/views/templates/front/payment_infos.tpl'));
+            }
+            $payments_options = [
+                $payment_options,
+            ];
+        }
+
+        
+
+        if (Configuration::get('PAYPAL_API_CARD') && Configuration::get('PAYPAL_EXPERIENCE_PROFILE_CARD') !=  '') {
             $payment_options = new PaymentOption();
             $action_text = $this->l('Pay with debit or credit card');
             $payment_options->setLogo(Media::getMediaPath(_PS_MODULE_DIR_.$this->name.'/views/img/logo_card.png'));
@@ -523,6 +540,15 @@ class PayPal extends PaymentModule
 
     public function hookDisplayOrderConfirmation($params)
     {
+        $paypal_order = PaypalOrder::loadByOrderId($params['order']->id);
+        if (!Validate::isLoadedObject($paypal_order)) {
+            return;
+        }
+        $this->context->smarty->assign(array(
+            'transaction_id' => $paypal_order->id_transaction,
+        ));
+        $this->context->controller->registerJavascript($this->name.'-order_confirmation_js', $this->_path.'/views/js/order_confirmation.js');
+        return $this->context->smarty->fetch('module:paypal/views/templates/hook/order_confirmation.tpl');
     }
 
     public function validateOrder($id_cart, $id_order_state, $amount_paid, $payment_method = 'Unknown', $message = null, $transaction = array(), $currency_special = null, $dont_touch_amount = false, $secure_key = false, Shop $shop = null)
@@ -596,6 +622,7 @@ class PayPal extends PaymentModule
         $order = new Order((int)$id_order);
         $paypal_msg = '';
         $paypal_order = PaypalOrder::loadByOrderId($id_order);
+        $paypal_capture = PaypalCapture::loadByOrderPayPalId($paypal_order->id);
         if (!Validate::isLoadedObject($paypal_order)) {
             return false;
         }
@@ -608,6 +635,16 @@ class PayPal extends PaymentModule
         if (Tools::getValue('error_refund')) {
             $paypal_msg .= $this->displayWarning(
                 '<p class="paypal-warning">'.$this->l('We have unexpected problem during refund operation. See massages for more details').'</p>'
+            );
+        }
+        if ($order->current_state == Configuration::get('PS_OS_REFUND') &&  $paypal_order->payment_status == 'refunded') {
+            $paypal_msg .= $this->displayWarning(
+                '<p class="paypal-warning">'.$this->l('Your order is fully refunded by PayPal.').'</p>'
+            );
+        }
+        if ($order->current_state == Configuration::get('PS_OS_PAYMENT') && Validate::isLoadedObject($paypal_capture) && $paypal_capture->id_capture) {
+            $paypal_msg .= $this->displayWarning(
+                '<p class="paypal-warning">'.$this->l('Your order is fully captured by PayPal.').'</p>'
             );
         }
         if (Tools::getValue('error_capture')) {
