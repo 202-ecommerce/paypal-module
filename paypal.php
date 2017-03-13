@@ -317,6 +317,7 @@ class PayPal extends PaymentModule
                         'name' => 'name'
                     ),
                 ),
+                /*
                 array(
                     'type' => 'switch',
                     'label' => $this->l('Accept credit and debit card payment'),
@@ -336,6 +337,7 @@ class PayPal extends PaymentModule
                         )
                     ),
                 ),
+                */
                 array(
                     'type' => 'switch',
                     'label' => $this->l('Show PayPal benefits to your customers'),
