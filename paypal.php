@@ -461,6 +461,7 @@ class PayPal extends PaymentModule
                 if ($id_experience_web) {
                     Configuration::updateValue('PAYPAL_EXPERIENCE_PROFILE', $id_experience_web);
                 } else {
+                    Configuration::updateValue('PAYPAL_EXPERIENCE_PROFILE', '');
                     $this->_errors[] = $this->l('An error occurred. Please, check your credentials.');
                 }
 
@@ -476,6 +477,7 @@ class PayPal extends PaymentModule
                     if ($id_experience_web) {
                         Configuration::updateValue('PAYPAL_EXPERIENCE_PROFILE_CARD', $id_experience_web);
                     } else {
+                        Configuration::updateValue('PAYPAL_EXPERIENCE_PROFILE_CARD', '');
                         $this->_errors[] = $this->l('An error occurred. Please, check your credentials.');
                     }
                 }
@@ -493,25 +495,31 @@ class PayPal extends PaymentModule
             }
         }
 
-        $payment_options = new PaymentOption();
-        $action_text = $this->l('Pay with Paypal');
-        $payment_options->setLogo(Media::getMediaPath(_PS_MODULE_DIR_.$this->name.'/views/img/paypal_sm.png'));
-        if (Configuration::get('PAYPAL_API_ADVANTAGES')) {
-            $action_text .= ' | '.$this->l('It\'s easy, simple and secure');
-        }
-        $this->context->smarty->assign(array(
-            'path' => $this->_path,
-        ));
-        $payment_options->setCallToActionText($action_text);
-        $payment_options->setAction($this->context->link->getModuleLink($this->name, 'ecInit', array('credit_card'=>'0'), true));
-        if (!$not_refunded) {
-            $payment_options->setAdditionalInformation($this->context->smarty->fetch('module:paypal/views/templates/front/payment_infos.tpl'));
-        }
-        $payments_options = [
-            $payment_options,
-        ];
+        $payments_options = '';
 
-        if (Configuration::get('PAYPAL_API_CARD')) {
+        if (Configuration::get('PAYPAL_EXPERIENCE_PROFILE') != '') {
+            $payment_options = new PaymentOption();
+            $action_text = $this->l('Pay with Paypal');
+            $payment_options->setLogo(Media::getMediaPath(_PS_MODULE_DIR_.$this->name.'/views/img/paypal_sm.png'));
+            if (Configuration::get('PAYPAL_API_ADVANTAGES')) {
+                $action_text .= ' | '.$this->l('It\'s easy, simple and secure');
+            }
+            $this->context->smarty->assign(array(
+                'path' => $this->_path,
+            ));
+            $payment_options->setCallToActionText($action_text);
+            $payment_options->setAction($this->context->link->getModuleLink($this->name, 'ecInit', array('credit_card'=>'0'), true));
+            if (!$not_refunded) {
+                $payment_options->setAdditionalInformation($this->context->smarty->fetch('module:paypal/views/templates/front/payment_infos.tpl'));
+            }
+            $payments_options = [
+                $payment_options,
+            ];
+        }
+
+        
+
+        if (Configuration::get('PAYPAL_API_CARD') && Configuration::get('PAYPAL_EXPERIENCE_PROFILE_CARD') !=  '') {
             $payment_options = new PaymentOption();
             $action_text = $this->l('Pay with debit or credit card');
             $payment_options->setLogo(Media::getMediaPath(_PS_MODULE_DIR_.$this->name.'/views/img/logo_card.png'));
