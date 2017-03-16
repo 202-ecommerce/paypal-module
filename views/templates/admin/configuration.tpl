@@ -174,7 +174,7 @@
             </p>
             <h4>{l s='Live' mod='paypal'}</h4>
             <ul>
-                <li>{l s='You can switch top "Live" environment on top right' mod='paypal'}</li>
+                <li>{l s='You can switch to "Live" environment on top right' mod='paypal'}</li>
             </ul>
             <p>
                 <label for="live_client_id">{l s='Client ID' mod='paypal'}</label>
